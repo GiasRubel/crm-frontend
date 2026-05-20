@@ -1,3 +1,5 @@
+"use client";
+
 import React from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 const data = [
@@ -30,6 +32,27 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null;
 };
 export function OrderTimeCard() {
+  const [isMounted, setIsMounted] = React.useState(false);
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return (
+      <div className="bg-white p-6 rounded-2xl shadow-sm h-full flex flex-col animate-pulse">
+        <div className="flex justify-between items-start mb-2">
+          <div className="space-y-2 w-full">
+            <div className="h-6 bg-slate-200 rounded w-1/3"></div>
+            <div className="h-4 bg-slate-200 rounded w-1/4"></div>
+          </div>
+        </div>
+        <div className="flex-1 flex items-center justify-center min-h-[200px]">
+          <div className="w-32 h-32 rounded-full border-8 border-slate-100 border-t-slate-200"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm h-full flex flex-col">
       <div className="flex justify-between items-start mb-2">

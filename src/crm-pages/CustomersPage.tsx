@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from 'react';
 import { Search, Plus, Eye, Pencil, Trash2, X, Check } from 'lucide-react';
 interface Customer {
