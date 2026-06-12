@@ -1,3 +1,5 @@
+import { keycloak } from "./keycloak";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
 
 class ApiError extends Error {
@@ -9,12 +11,29 @@ class ApiError extends Error {
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
+  
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(options.headers as Record<string, string>),
+  };
+
+  // Attach Keycloak access token if authenticated on the client side
+  if (typeof window !== "undefined" && keycloak.authenticated) {
+    try {
+      // Refresh token if it will expire in less than 30 seconds
+      await keycloak.updateToken(30);
+      if (keycloak.token) {
+        headers["Authorization"] = `Bearer ${keycloak.token}`;
+      }
+    } catch (error) {
+      console.error("Failed to refresh Keycloak token before request", error);
+    }
+  }
+
   const response = await fetch(url, {
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
+    headers,
+    cache: "no-store",
   });
 
   if (!response.ok) {

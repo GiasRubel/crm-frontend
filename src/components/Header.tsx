@@ -3,6 +3,7 @@
 import React from 'react';
 import { usePathname } from 'next/navigation';
 import { Search, Bell, User, Settings, LogOut } from 'lucide-react';
+import { useAuth } from "@/providers/keycloak-provider";
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
@@ -30,6 +31,17 @@ const pageTitles: Record<string, string> = {
 export function Header() {
   const pathname = usePathname();
   const currentTitle = (pathname && pageTitles[pathname]) || 'CRM Pro';
+  const { user, logout } = useAuth();
+
+  const fullName = user
+    ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username || user.email
+    : "Loading...";
+
+  const initials = user
+    ? ((user.firstName?.[0] || '') + (user.lastName?.[0] || '')).toUpperCase() || user.username?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase()
+    : "??";
+
+  const roleName = user?.role || "User";
 
   return (
     <header className="bg-white h-20 px-8 flex items-center justify-between sticky top-0 z-20 border-b border-gray-100 lg:border-none">
@@ -67,11 +79,11 @@ export function Header() {
             <div className="flex items-center gap-3 cursor-pointer p-1 rounded-full hover:bg-slate-50 transition-colors">
               <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
                 <AvatarImage src="" />
-                <AvatarFallback className="bg-amber-100 text-amber-700 font-bold">DB</AvatarFallback>
+                <AvatarFallback className="bg-amber-100 text-amber-700 font-bold">{initials}</AvatarFallback>
               </Avatar>
               <div className="hidden md:block pr-2">
-                <p className="text-sm font-semibold text-gray-700 leading-tight">Delicious Burger</p>
-                <p className="text-xs text-gray-500">Administrator</p>
+                <p className="text-sm font-semibold text-gray-700 leading-tight">{fullName}</p>
+                <p className="text-xs text-gray-500">{roleName}</p>
               </div>
             </div>
           </DropdownMenuTrigger>
@@ -89,7 +101,7 @@ export function Header() {
             <DropdownMenuSeparator />
             <DropdownMenuItem 
               className="text-destructive focus:text-destructive cursor-pointer"
-              onClick={() => window.location.href = '/auth/login'}
+              onClick={logout}
             >
               <LogOut className="mr-2 h-4 w-4" />
               <span>Log out</span>

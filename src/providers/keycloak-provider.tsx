@@ -2,11 +2,22 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { keycloak } from "@/lib/keycloak";
+import { apiClient } from "@/lib/api-client";
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+}
 
 type AuthContextType = {
   authenticated: boolean;
   isLoading: boolean;
   token?: string;
+  user: UserProfile | null;
   login: () => void;
   register: () => void;
   logout: () => void;
@@ -21,6 +32,7 @@ export function KeycloakProvider({ children }: { children: React.ReactNode }) {
   const [authenticated, setAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [token, setToken] = useState<string | undefined>();
+  const [user, setUser] = useState<UserProfile | null>(null);
 
   useEffect(() => {
     // Prevent duplicate Keycloak initialization in React 18/19 strict mode
@@ -33,9 +45,17 @@ export function KeycloakProvider({ children }: { children: React.ReactNode }) {
     }
 
     initPromise
-      .then((auth) => {
+      .then(async (auth) => {
         setAuthenticated(auth);
         setToken(keycloak.token);
+        if (auth) {
+          try {
+            const profile = await apiClient.get<UserProfile>("/users/me");
+            setUser(profile);
+          } catch (error) {
+            console.error("Failed to load user profile from backend", error);
+          }
+        }
         setIsLoading(false);
       })
       .catch((error) => {
@@ -81,6 +101,7 @@ export function KeycloakProvider({ children }: { children: React.ReactNode }) {
         authenticated,
         isLoading,
         token,
+        user,
         login,
         register,
         logout,

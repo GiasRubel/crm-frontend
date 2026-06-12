@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuth } from "@/providers/keycloak-provider";
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -30,6 +31,7 @@ import { cn } from "@/lib/utils";
 export function Sidebar() {
   const pathname = usePathname();
   const [isCrmOpen, setIsCrmOpen] = useState(true);
+  const { logout } = useAuth();
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', id: 'dashboard', href: '/dashboard' },
@@ -161,7 +163,7 @@ export function Sidebar() {
         <Button 
           variant="ghost" 
           className="w-full justify-start gap-3 h-11 px-4 text-rose-500 hover:bg-rose-50 hover:text-rose-600 rounded-xl"
-          onClick={() => window.location.href = '/auth/login'}
+          onClick={logout}
         >
           <LogOut size={18} />
           <span className="font-medium">Logout</span>
