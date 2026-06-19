@@ -59,6 +59,7 @@ export function CustomersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Modals & Notifications
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -109,7 +110,7 @@ export function CustomersPage() {
     }, 300);
 
     return () => clearTimeout(delayDebounce);
-  }, [page, searchTerm, statusFilter]);
+  }, [page, searchTerm, statusFilter, refreshTrigger]);
 
   // Open modal for Create/Edit
   const handleOpenModal = (customer?: Customer) => {
@@ -168,8 +169,11 @@ export function CustomersPage() {
       } else {
         await apiClient.post('/customers', formData);
         setSuccessMsg(`Customer "${formData.firstName} ${formData.lastName}" created successfully. Invitation email sent!`);
+        setSearchTerm('');
+        setStatusFilter('');
       }
       setPage(1);
+      setRefreshTrigger(prev => prev + 1);
       handleCloseModal();
     } catch (err: any) {
       setErrorMsg(err.message || 'Failed to save customer');
@@ -188,6 +192,7 @@ export function CustomersPage() {
       setSuccessMsg('Customer deleted successfully.');
       setDeleteId(null);
       setPage(1);
+      setRefreshTrigger(prev => prev + 1);
     } catch (err: any) {
       setErrorMsg(err.message || 'Failed to delete customer');
       setDeleteId(null);
