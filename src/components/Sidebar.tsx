@@ -14,6 +14,7 @@ import {
   User,
   HelpCircle,
   Users2,
+  UsersRound,
   UserCheck,
   TrendingUp,
   Target,
@@ -42,6 +43,7 @@ export function Sidebar() {
 
   const crmItems = [
     { icon: UserCheck, label: 'Customers', id: 'customers', href: '/customers' },
+    { icon: UsersRound, label: 'Teams', id: 'teams', href: '/teams' },
     { icon: TrendingUp, label: 'Leads', id: 'leads', href: '/leads' },
     { icon: Target, label: 'Opportunities', id: 'opportunities', href: '/opportunities' },
     { icon: Activity, label: 'Activities', id: 'activities', href: '/activities' },

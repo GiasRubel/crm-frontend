@@ -1,220 +1,406 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
+import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
+import { z } from "zod";
 import {
-  Search,
-  Plus,
-  Eye,
-  Pencil,
-  Trash2,
-  X,
-  Check,
-  Mail,
-  Building,
-  Phone,
-  MapPin,
-  Calendar,
   AlertCircle,
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  Building,
+  Calendar,
+  Check,
   ChevronLeft,
   ChevronRight,
-  User,
-  Info
-} from 'lucide-react';
-import { apiClient } from "@/lib/api-client";
+  Info,
+  Loader2,
+  Mail,
+  MapPin,
+  MoreHorizontal,
+  Pencil,
+  Phone,
+  Plus,
+  Search,
+  Trash2,
+  UserPlus,
+  Users,
+  UsersRound,
+  X,
+} from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/providers/keycloak-provider";
+import { useCustomers, useDebouncedValue } from "@/features/customers/hooks/useCustomers";
+import {
+  Customer,
+  CustomerQuery,
+  CustomerSortField,
+  CustomerStatus,
+} from "@/features/customers/types";
+import { teamApi } from "@/features/teams/services/teamApi";
+import { userApi } from "@/features/users/services/userApi";
+import { staffDisplayName } from "@/features/users/types";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
-interface Customer {
-  id: string;
-  keycloakId: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  phone: string;
-  company?: string;
-  address?: string;
-  notes?: string;
-  status: 'active' | 'inactive' | 'prospect';
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
+// ── Form schema ───────────────────────────────────────────────────────────────
+
+const customerFormSchema = z.object({
+  email: z.email("Enter a valid email address").max(254),
+  firstName: z.string().trim().min(1, "First name is required").max(100),
+  lastName: z.string().trim().min(1, "Last name is required").max(100),
+  phone: z
+    .string()
+    .trim()
+    .regex(/^\+?[0-9\s().-]{6,}$/, "Enter a valid phone number")
+    .max(30),
+  company: z.string().max(150).optional(),
+  address: z.string().max(500).optional(),
+  notes: z.string().max(2000).optional(),
+  status: z.enum(["active", "inactive", "prospect"]),
+});
+
+type CustomerFormValues = z.infer<typeof customerFormSchema>;
+
+const emptyFormValues: CustomerFormValues = {
+  email: "",
+  firstName: "",
+  lastName: "",
+  phone: "",
+  company: "",
+  address: "",
+  notes: "",
+  status: "active",
+};
+
+// ── Small presentational helpers ──────────────────────────────────────────────
+
+const statusStyles: Record<CustomerStatus, string> = {
+  active: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  inactive: "bg-slate-100 text-slate-500 border-slate-200",
+  prospect: "bg-amber-50 text-amber-700 border-amber-200",
+};
+
+function StatusBadge({ status }: { status: CustomerStatus }) {
+  return (
+    <Badge variant="outline" className={cn("capitalize font-semibold", statusStyles[status])}>
+      {status}
+    </Badge>
+  );
 }
 
-interface Meta {
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
+function StatCard({
+  label,
+  value,
+  icon: Icon,
+  accent,
+}: {
+  label: string;
+  value: number | undefined;
+  icon: React.ElementType;
+  accent: string;
+}) {
+  return (
+    <Card className="py-4">
+      <CardContent className="flex items-center gap-3 px-4">
+        <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center shrink-0", accent)}>
+          <Icon size={20} />
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider truncate">{label}</p>
+          <p className="text-xl font-bold text-gray-900">{value ?? "—"}</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
+
+const inputClasses =
+  "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5] transition-all disabled:bg-gray-50 disabled:text-gray-500";
+
+function SortableHead({
+  field,
+  sortBy,
+  sortOrder,
+  onToggle,
+  children,
+  className,
+}: {
+  field: CustomerSortField;
+  sortBy: CustomerSortField;
+  sortOrder: "asc" | "desc";
+  onToggle: (field: CustomerSortField) => void;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const indicator =
+    sortBy !== field ? (
+      <ArrowUpDown size={13} className="text-gray-300" />
+    ) : sortOrder === "asc" ? (
+      <ArrowUp size={13} className="text-[#3F51B5]" />
+    ) : (
+      <ArrowDown size={13} className="text-[#3F51B5]" />
+    );
+
+  return (
+    <TableHead className={className}>
+      <button
+        type="button"
+        onClick={() => onToggle(field)}
+        className="flex items-center gap-1.5 text-xs uppercase tracking-wider font-semibold text-gray-500 hover:text-gray-800 transition-colors"
+      >
+        {children}
+        {indicator}
+      </button>
+    </TableHead>
+  );
+}
+
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return <p className="text-xs text-red-600 mt-1">{message}</p>;
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
 
 export function CustomersPage() {
   const { user } = useAuth();
-  console.log("CurrentUser in CustomersPage:", user);
-  const isStaffAdmin = user?.role === 'Admin' || user?.role === 'Administrator';
+  const isStaffAdmin = user?.role === "Admin" || user?.role === "Administrator";
 
-  // State
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [meta, setMeta] = useState<Meta>({ total: 0, page: 1, limit: 10, totalPages: 1 });
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  // Filters / paging / sorting
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<CustomerStatus | "">("");
   const [page, setPage] = useState(1);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [limit, setLimit] = useState(10);
+  const [sortBy, setSortBy] = useState<CustomerSortField>("createdAt");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
-  // Modals & Notifications
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const debouncedSearch = useDebouncedValue(searchTerm, 300);
+
+  const query: CustomerQuery = useMemo(
+    () => ({
+      page,
+      limit,
+      search: debouncedSearch,
+      status: statusFilter,
+      sortBy,
+      sortOrder,
+    }),
+    [page, limit, debouncedSearch, statusFilter, sortBy, sortOrder],
+  );
+
+  const {
+    customersQuery,
+    statsQuery,
+    createCustomerMutation,
+    updateCustomerMutation,
+    deleteCustomerMutation,
+    assignCustomerMutation,
+    resendInvitationMutation,
+  } = useCustomers(query);
+
+  const customers = customersQuery.data?.data ?? [];
+  const meta = customersQuery.data?.meta;
+  const stats = statsQuery.data;
+
+  // Dialogs & notifications
+  const [formOpen, setFormOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [viewingCustomer, setViewingCustomer] = useState<Customer | null>(null);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [deletingCustomer, setDeletingCustomer] = useState<Customer | null>(null);
+  const [assigningCustomer, setAssigningCustomer] = useState<Customer | null>(null);
+  const [assignTeamId, setAssignTeamId] = useState("");
+  const [assignOwnerId, setAssignOwnerId] = useState("");
+  const [assignError, setAssignError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
-  // Form Fields
-  const [formData, setFormData] = useState({
-    email: '',
-    firstName: '',
-    lastName: '',
-    phone: '',
-    company: '',
-    address: '',
-    notes: '',
-    status: 'active' as 'active' | 'inactive' | 'prospect',
+  // Assignment pickers — only fetched while the assign dialog is open
+  const assignDialogOpen = isStaffAdmin && !!assigningCustomer;
+  const assignTeamsQuery = useQuery({
+    queryKey: ["teams", "list", { limit: 100, isActive: true }],
+    queryFn: () => teamApi.getAll({ limit: 100, isActive: true }),
+    enabled: assignDialogOpen,
+  });
+  const assignStaffQuery = useQuery({
+    queryKey: ["users", "staff"],
+    queryFn: () => userApi.getStaff(),
+    enabled: assignDialogOpen,
   });
 
-  // Fetch customer list with debounce
-  useEffect(() => {
-    const fetchCustomers = async () => {
-      setIsLoading(true);
-      setErrorMsg(null);
-      try {
-        let endpoint = `/customers?page=${page}&limit=10`;
-        if (searchTerm.trim()) {
-          endpoint += `&search=${encodeURIComponent(searchTerm.trim())}`;
-        }
-        if (statusFilter) {
-          endpoint += `&status=${statusFilter}`;
-        }
-        const response = await apiClient.get<{ data: Customer[]; meta: Meta }>(endpoint);
-        setCustomers(response.data);
-        setMeta(response.meta);
-      } catch (err: any) {
-        console.error("Error loading customers", err);
-        setErrorMsg(err.message || 'Failed to load customers from server');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const assignTeams = assignTeamsQuery.data?.data ?? [];
+  const selectedAssignTeam = assignTeams.find((t) => t.id === assignTeamId);
+  // When a team is chosen, the owner must be one of its members
+  const assignOwnerOptions = selectedAssignTeam
+    ? (assignStaffQuery.data ?? []).filter((s) =>
+        selectedAssignTeam.members.some((m) => m.keycloakId === s.keycloakId),
+      )
+    : (assignStaffQuery.data ?? []);
 
-    const delayDebounce = setTimeout(() => {
-      fetchCustomers();
-    }, 300);
+  const form = useForm<CustomerFormValues>({
+    resolver: standardSchemaResolver(customerFormSchema),
+    defaultValues: emptyFormValues,
+  });
 
-    return () => clearTimeout(delayDebounce);
-  }, [page, searchTerm, statusFilter, refreshTrigger]);
+  const isSaving = createCustomerMutation.isPending || updateCustomerMutation.isPending;
 
-  // Open modal for Create/Edit
-  const handleOpenModal = (customer?: Customer) => {
-    setErrorMsg(null);
-    if (customer) {
-      setEditingCustomer(customer);
-      setFormData({
-        email: customer.email,
-        firstName: customer.firstName,
-        lastName: customer.lastName,
-        phone: customer.phone,
-        company: customer.company || '',
-        address: customer.address || '',
-        notes: customer.notes || '',
-        status: customer.status,
-      });
+  // ── Handlers ────────────────────────────────────────────────────────────────
+
+  const resetToFirstPage = () => setPage(1);
+
+  const toggleSort = (field: CustomerSortField) => {
+    if (sortBy === field) {
+      setSortOrder((o) => (o === "asc" ? "desc" : "asc"));
     } else {
-      setEditingCustomer(null);
-      setFormData({
-        email: '',
-        firstName: '',
-        lastName: '',
-        phone: '',
-        company: '',
-        address: '',
-        notes: '',
-        status: 'active',
-      });
+      setSortBy(field);
+      setSortOrder(field === "createdAt" || field === "updatedAt" ? "desc" : "asc");
     }
-    setIsModalOpen(true);
+    resetToFirstPage();
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
+  const openCreate = () => {
+    form.reset(emptyFormValues);
     setEditingCustomer(null);
+    setFormError(null);
+    setFormOpen(true);
   };
 
-  // Create/Update Customer
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setErrorMsg(null);
-    setSuccessMsg(null);
+  const openEdit = (customer: Customer) => {
+    form.reset({
+      email: customer.email,
+      firstName: customer.firstName,
+      lastName: customer.lastName,
+      phone: customer.phone,
+      company: customer.company ?? "",
+      address: customer.address ?? "",
+      notes: customer.notes ?? "",
+      status: customer.status,
+    });
+    setEditingCustomer(customer);
+    setFormError(null);
+    setFormOpen(true);
+  };
 
-    // Validate phone number as required
-    if (!formData.phone.trim()) {
-      setErrorMsg('Phone number is required');
-      setIsSubmitting(false);
-      return;
-    }
+  const closeForm = () => {
+    if (isSaving) return;
+    setFormOpen(false);
+    setEditingCustomer(null);
+    setFormError(null);
+  };
+
+  const notifySuccess = (message: string) => {
+    setSuccessMsg(message);
+    setErrorMsg(null);
+  };
+
+  const onSubmit = async (values: CustomerFormValues) => {
+    setFormError(null);
+    const payload = {
+      ...values,
+      company: values.company?.trim() || undefined,
+      address: values.address?.trim() || undefined,
+      notes: values.notes?.trim() || undefined,
+    };
 
     try {
       if (editingCustomer) {
-        await apiClient.patch(`/customers/${editingCustomer.id}`, formData);
-        setSuccessMsg(`Customer "${formData.firstName} ${formData.lastName}" updated successfully.`);
+        await updateCustomerMutation.mutateAsync({ id: editingCustomer.id, data: payload });
+        notifySuccess(`Customer "${values.firstName} ${values.lastName}" updated successfully.`);
       } else {
-        await apiClient.post('/customers', formData);
-        setSuccessMsg(`Customer "${formData.firstName} ${formData.lastName}" created successfully. Invitation email sent!`);
-        setSearchTerm('');
-        setStatusFilter('');
+        await createCustomerMutation.mutateAsync(payload);
+        notifySuccess(
+          `Customer "${values.firstName} ${values.lastName}" created — a password setup invitation was emailed to ${values.email}.`,
+        );
+        resetToFirstPage();
       }
-      setPage(1);
-      setRefreshTrigger(prev => prev + 1);
-      handleCloseModal();
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to save customer');
-    } finally {
-      setIsSubmitting(false);
+      setFormOpen(false);
+      setEditingCustomer(null);
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : "Failed to save customer");
     }
   };
 
-  // Delete Customer
-  const handleDelete = async (id: string) => {
-    setIsSubmitting(true);
-    setErrorMsg(null);
-    setSuccessMsg(null);
+  const handleDelete = async () => {
+    if (!deletingCustomer) return;
     try {
-      await apiClient.delete(`/customers/${id}`);
-      setSuccessMsg('Customer deleted successfully.');
-      setDeleteId(null);
-      setPage(1);
-      setRefreshTrigger(prev => prev + 1);
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to delete customer');
-      setDeleteId(null);
-    } finally {
-      setIsSubmitting(false);
+      await deleteCustomerMutation.mutateAsync(deletingCustomer.id);
+      notifySuccess(
+        `Customer "${deletingCustomer.firstName} ${deletingCustomer.lastName}" and their sign-in account were deleted.`,
+      );
+      setDeletingCustomer(null);
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : "Failed to delete customer");
+      setDeletingCustomer(null);
     }
   };
 
-  // Resend Invite Email
+  const openAssign = (customer: Customer) => {
+    setAssignTeamId(customer.assignedTeamId ?? "");
+    setAssignOwnerId(customer.assignedToId ?? "");
+    setAssignError(null);
+    setAssigningCustomer(customer);
+  };
+
+  const handleAssign = async () => {
+    if (!assigningCustomer) return;
+    setAssignError(null);
+    try {
+      await assignCustomerMutation.mutateAsync({
+        id: assigningCustomer.id,
+        data: {
+          assignedTeamId: assignTeamId || null,
+          assignedToId: assignOwnerId || null,
+        },
+      });
+      notifySuccess(
+        `Routing updated for "${assigningCustomer.firstName} ${assigningCustomer.lastName}".`,
+      );
+      setAssigningCustomer(null);
+    } catch (err) {
+      setAssignError(err instanceof Error ? err.message : "Failed to update assignment");
+    }
+  };
+
   const handleResendInvite = async (customer: Customer) => {
-    setIsSubmitting(true);
-    setErrorMsg(null);
-    setSuccessMsg(null);
     try {
-      await apiClient.post(`/customers/${customer.id}/resend`, {});
-      setSuccessMsg(`Invitation email resent to ${customer.email} successfully.`);
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to resend invitation email');
-    } finally {
-      setIsSubmitting(false);
+      await resendInvitationMutation.mutateAsync(customer.id);
+      notifySuccess(`Invitation email resent to ${customer.email}.`);
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : "Failed to resend invitation email");
     }
   };
+
+  const sortProps = { sortBy, sortOrder, onToggle: toggleSort };
+
+  // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
     <div className="p-6 lg:p-8 bg-[#F4F5F7] min-h-screen">
@@ -223,18 +409,28 @@ export function CustomersPage() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">Customers</h1>
-            <p className="text-sm text-gray-500">Manage client profiles, access credentials, and lifecycle status.</p>
+            <p className="text-sm text-gray-500">
+              Manage client profiles, sign-in access, and lifecycle status.
+            </p>
           </div>
           {isStaffAdmin && (
-            <button
-              onClick={() => handleOpenModal()}
-              disabled={isSubmitting}
-              className="flex items-center gap-2 bg-[#3F51B5] hover:bg-[#303F9F] text-white px-4 py-2.5 rounded-lg shadow-sm font-medium transition-colors disabled:opacity-50"
+            <Button
+              onClick={openCreate}
+              className="bg-[#3F51B5] hover:bg-[#303F9F] text-white gap-2"
             >
               <Plus size={18} />
               Add Customer
-            </button>
+            </Button>
           )}
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <StatCard label="Total" value={stats?.total} icon={Users} accent="bg-[#3F51B5]/10 text-[#3F51B5]" />
+          <StatCard label="Active" value={stats?.active} icon={Check} accent="bg-emerald-50 text-emerald-600" />
+          <StatCard label="Prospects" value={stats?.prospect} icon={Search} accent="bg-amber-50 text-amber-600" />
+          <StatCard label="Inactive" value={stats?.inactive} icon={X} accent="bg-slate-100 text-slate-500" />
+          <StatCard label="New this month" value={stats?.newThisMonth} icon={UserPlus} accent="bg-sky-50 text-sky-600" />
         </div>
 
         {/* Notifications */}
@@ -250,45 +446,58 @@ export function CustomersPage() {
           </div>
         )}
 
-        {errorMsg && (
+        {(errorMsg || customersQuery.isError) && (
           <div className="bg-red-50 border border-red-200 text-red-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-3">
               <AlertCircle className="text-red-600 shrink-0" size={20} />
-              <span className="text-sm font-medium">{errorMsg}</span>
+              <span className="text-sm font-medium">
+                {errorMsg ??
+                  (customersQuery.error instanceof Error
+                    ? customersQuery.error.message
+                    : "Failed to load customers")}
+              </span>
             </div>
-            <button onClick={() => setErrorMsg(null)} className="text-red-500 hover:text-red-700">
+            <button
+              onClick={() => {
+                setErrorMsg(null);
+                if (customersQuery.isError) customersQuery.refetch();
+              }}
+              className="text-red-500 hover:text-red-700"
+            >
               <X size={18} />
             </button>
           </div>
         )}
 
-        {/* Filters & Table Card */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          {/* Filtering Header */}
+        {/* Filters & Table */}
+        <Card className="py-0 overflow-hidden">
           <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row gap-4 items-center justify-between">
             <div className="relative w-full md:max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-              <input
+              <Input
                 type="text"
                 placeholder="Search by name, email, company, or phone..."
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
-                  setPage(1);
+                  resetToFirstPage();
                 }}
-                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5] transition-all"
+                className="pl-10"
               />
             </div>
 
             <div className="flex w-full md:w-auto items-center gap-3 justify-end">
+              {customersQuery.isFetching && !customersQuery.isLoading && (
+                <Loader2 size={16} className="animate-spin text-gray-400" />
+              )}
               <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Status:</label>
               <select
                 value={statusFilter}
                 onChange={(e) => {
-                  setStatusFilter(e.target.value);
-                  setPage(1);
+                  setStatusFilter(e.target.value as CustomerStatus | "");
+                  resetToFirstPage();
                 }}
-                className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5] transition-all"
+                className={cn(inputClasses, "w-auto py-1.5")}
               >
                 <option value="">All Statuses</option>
                 <option value="active">Active</option>
@@ -298,457 +507,564 @@ export function CustomersPage() {
             </div>
           </div>
 
-          {/* Table */}
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-50/75 border-b border-gray-100 text-xs uppercase text-gray-500 font-semibold tracking-wider">
-                  <th className="px-6 py-4">Customer</th>
-                  <th className="px-6 py-4">Phone</th>
-                  <th className="px-6 py-4">Company</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4">Created At</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 text-sm">
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-gray-400">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gray-50/75 hover:bg-gray-50/75">
+                  <SortableHead field="lastName" className="px-6" {...sortProps}>Customer</SortableHead>
+                  <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500">
+                    Phone
+                  </TableHead>
+                  <SortableHead field="company" className="px-6" {...sortProps}>Company</SortableHead>
+                  <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500">
+                    Assigned To
+                  </TableHead>
+                  <SortableHead field="status" className="px-6" {...sortProps}>Status</SortableHead>
+                  <SortableHead field="createdAt" className="px-6" {...sortProps}>Created</SortableHead>
+                  <TableHead className="px-6 text-right text-xs uppercase tracking-wider font-semibold text-gray-500">
+                    Actions
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {customersQuery.isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="px-6 py-12 text-center text-gray-400">
                       <div className="flex justify-center items-center gap-2">
-                        <div className="w-5 h-5 border-2 border-gray-300 border-t-[#3F51B5] rounded-full animate-spin" />
+                        <Loader2 size={18} className="animate-spin" />
                         <span>Fetching customers...</span>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ) : customers.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                      No customer profiles matched the filters.
-                    </td>
-                  </tr>
+                  <TableRow>
+                    <TableCell colSpan={7} className="px-6 py-16 text-center">
+                      <div className="flex flex-col items-center gap-2 text-gray-500">
+                        <Users size={32} className="text-gray-300" />
+                        <p className="font-medium">No customers found</p>
+                        <p className="text-sm text-gray-400">
+                          {debouncedSearch || statusFilter
+                            ? "Try adjusting your search or filters."
+                            : isStaffAdmin
+                              ? "Add your first customer to get started."
+                              : "Customers will appear here once added."}
+                        </p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
                 ) : (
                   customers.map((customer) => (
-                    <tr
-                      key={customer.id}
-                      className={`hover:bg-gray-50/50 transition-colors ${deleteId === customer.id ? 'bg-red-50/50' : ''}`}
-                    >
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col">
-                          <span className="font-semibold text-gray-900">
-                            {customer.firstName} {customer.lastName}
-                          </span>
-                          <span className="text-xs text-gray-500">{customer.email}</span>
+                    <TableRow key={customer.id} className="hover:bg-gray-50/50">
+                      <TableCell className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 bg-[#3F51B5]/10 text-[#3F51B5] rounded-full flex items-center justify-center font-bold text-xs uppercase shrink-0">
+                            {customer.firstName[0]}
+                            {customer.lastName[0]}
+                          </div>
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-semibold text-gray-900 truncate">
+                              {customer.firstName} {customer.lastName}
+                            </span>
+                            <span className="text-xs text-gray-500 truncate">{customer.email}</span>
+                          </div>
                         </div>
-                      </td>
-                      <td className="px-6 py-4 text-gray-600 font-medium">{customer.phone}</td>
-                      <td className="px-6 py-4 text-gray-600">
+                      </TableCell>
+                      <TableCell className="px-6 py-4 text-gray-600 font-medium">{customer.phone}</TableCell>
+                      <TableCell className="px-6 py-4 text-gray-600">
                         {customer.company ? (
                           <div className="flex items-center gap-1.5">
-                            <Building size={14} className="text-gray-400" />
-                            <span>{customer.company}</span>
+                            <Building size={14} className="text-gray-400 shrink-0" />
+                            <span className="truncate">{customer.company}</span>
                           </div>
                         ) : (
                           <span className="text-gray-300">—</span>
                         )}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
-                            customer.status === 'active'
-                              ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                              : customer.status === 'inactive'
-                              ? 'bg-slate-50 text-slate-500 border-slate-200'
-                              : 'bg-amber-50 text-amber-700 border-amber-100'
-                          }`}
-                        >
-                          {customer.status.charAt(0).toUpperCase() + customer.status.slice(1)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-gray-500">
-                        {customer.createdAt ? new Date(customer.createdAt).toLocaleDateString() : 'N/A'}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        {deleteId === customer.id ? (
-                          <div className="flex items-center justify-end gap-2">
-                            <span className="text-xs text-red-600 font-semibold mr-1">Delete profile?</span>
-                            <button
-                              onClick={() => handleDelete(customer.id)}
-                              disabled={isSubmitting}
-                              className="text-red-700 hover:bg-red-100 p-1.5 rounded-lg transition-colors"
-                              title="Confirm Delete"
-                            >
-                              <Check size={16} />
-                            </button>
-                            <button
-                              onClick={() => setDeleteId(null)}
-                              className="text-gray-500 hover:bg-gray-100 p-1.5 rounded-lg transition-colors"
-                              title="Cancel"
-                            >
-                              <X size={16} />
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              onClick={() => setViewingCustomer(customer)}
-                              className="text-gray-400 hover:text-gray-700 hover:bg-gray-100 p-1.5 rounded-lg transition-all"
-                              title="View details"
-                            >
-                              <Eye size={18} />
-                            </button>
-
-                            {isStaffAdmin && (
-                              <>
-                                <button
-                                  onClick={() => handleOpenModal(customer)}
-                                  disabled={isSubmitting}
-                                  className="text-gray-400 hover:text-[#3F51B5] hover:bg-[#EEF0FB] p-1.5 rounded-lg transition-all"
-                                  title="Edit profile"
-                                >
-                                  <Pencil size={18} />
-                                </button>
-                                <button
-                                  onClick={() => handleResendInvite(customer)}
-                                  disabled={isSubmitting}
-                                  className="text-gray-400 hover:text-[#3F51B5] hover:bg-[#EEF0FB] p-1.5 rounded-lg transition-all"
-                                  title="Resend invitation email"
-                                >
-                                  <Mail size={18} />
-                                </button>
-                                <button
-                                  onClick={() => setDeleteId(customer.id)}
-                                  disabled={isSubmitting}
-                                  className="text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition-all"
-                                  title="Delete customer"
-                                >
-                                  <Trash2 size={18} />
-                                </button>
-                              </>
+                      </TableCell>
+                      <TableCell className="px-6 py-4">
+                        {customer.assignedToName || customer.assignedTeamName ? (
+                          <div className="flex flex-col min-w-0">
+                            {customer.assignedToName && (
+                              <span className="text-gray-700 font-medium truncate">
+                                {customer.assignedToName}
+                              </span>
+                            )}
+                            {customer.assignedTeamName && (
+                              <span className="text-xs text-indigo-600 truncate flex items-center gap-1">
+                                <UsersRound size={11} className="shrink-0" />
+                                {customer.assignedTeamName}
+                              </span>
                             )}
                           </div>
+                        ) : (
+                          <span className="text-gray-300">Unassigned</span>
                         )}
-                      </td>
-                    </tr>
+                      </TableCell>
+                      <TableCell className="px-6 py-4">
+                        <StatusBadge status={customer.status} />
+                      </TableCell>
+                      <TableCell className="px-6 py-4 text-gray-500">
+                        {customer.createdAt ? new Date(customer.createdAt).toLocaleDateString() : "—"}
+                      </TableCell>
+                      <TableCell className="px-6 py-4 text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-700">
+                              <MoreHorizontal size={18} />
+                              <span className="sr-only">Open actions</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setViewingCustomer(customer)}>
+                              <Info size={15} /> View details
+                            </DropdownMenuItem>
+                            {isStaffAdmin && (
+                              <>
+                                <DropdownMenuItem onClick={() => openEdit(customer)}>
+                                  <Pencil size={15} /> Edit profile
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => openAssign(customer)}>
+                                  <UsersRound size={15} /> Assign owner / team
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleResendInvite(customer)}
+                                  disabled={resendInvitationMutation.isPending}
+                                >
+                                  <Mail size={15} /> Resend invitation
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  variant="destructive"
+                                  onClick={() => setDeletingCustomer(customer)}
+                                >
+                                  <Trash2 size={15} /> Delete customer
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
                   ))
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
 
-          {/* Pagination Footer */}
-          {!isLoading && customers.length > 0 && (
+          {/* Pagination footer */}
+          {!customersQuery.isLoading && meta && meta.total > 0 && (
             <div className="p-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-              <span>
-                Showing Page {meta.page} of {meta.totalPages} (Total {meta.total} records)
-              </span>
+              <div className="flex items-center gap-3">
+                <span>
+                  {(meta.page - 1) * meta.limit + 1}–{Math.min(meta.page * meta.limit, meta.total)} of{" "}
+                  {meta.total} customers
+                </span>
+                <select
+                  value={limit}
+                  onChange={(e) => {
+                    setLimit(Number(e.target.value));
+                    resetToFirstPage();
+                  }}
+                  className={cn(inputClasses, "w-auto py-1 text-xs")}
+                >
+                  <option value={10}>10 / page</option>
+                  <option value={25}>25 / page</option>
+                  <option value={50}>50 / page</option>
+                </select>
+              </div>
               <div className="flex items-center gap-1">
-                <button
+                <Button
+                  variant="outline"
+                  size="icon"
                   onClick={() => setPage((p) => Math.max(p - 1, 1))}
-                  disabled={page === 1}
-                  className="p-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40 transition-colors"
+                  disabled={page <= 1}
                 >
                   <ChevronLeft size={16} />
-                </button>
-                <span className="px-3 text-sm font-bold text-gray-700">{page}</span>
-                <button
+                </Button>
+                <span className="px-3 text-sm font-bold text-gray-700">
+                  {meta.page} / {meta.totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="icon"
                   onClick={() => setPage((p) => Math.min(p + 1, meta.totalPages))}
-                  disabled={page === meta.totalPages}
-                  className="p-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40 transition-colors"
+                  disabled={page >= meta.totalPages}
                 >
                   <ChevronRight size={16} />
-                </button>
+                </Button>
               </div>
             </div>
           )}
-        </div>
+        </Card>
       </div>
 
-      {/* Detail View Modal */}
-      {viewingCustomer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden transform transition-all scale-100 border border-gray-100 flex flex-col max-h-[90vh]">
-            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 shrink-0">
-              <div className="flex items-center gap-2 text-[#3F51B5]">
-                <Info size={20} />
-                <h3 className="text-lg font-bold text-gray-800">Customer Details</h3>
-              </div>
-              <button
-                onClick={() => setViewingCustomer(null)}
-                className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100"
-              >
-                <X size={20} />
-              </button>
-            </div>
+      {/* Details dialog */}
+      <Dialog open={!!viewingCustomer} onOpenChange={(open) => !open && setViewingCustomer(null)}>
+        <DialogContent className="max-w-xl max-h-[90dvh] overflow-y-auto">
+          {viewingCustomer && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Customer Details</DialogTitle>
+                <DialogDescription>Profile, contact, and account information.</DialogDescription>
+              </DialogHeader>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              {/* Header profile */}
-              <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
-                <div className="w-12 h-12 bg-[#3F51B5]/10 text-[#3F51B5] rounded-full flex items-center justify-center font-bold text-lg uppercase">
-                  {viewingCustomer.firstName[0]}
-                  {viewingCustomer.lastName[0]}
-                </div>
-                <div>
-                  <h4 className="text-lg font-bold text-gray-900">
-                    {viewingCustomer.firstName} {viewingCustomer.lastName}
-                  </h4>
-                  <span className="text-sm text-gray-500">{viewingCustomer.email}</span>
-                </div>
-                <div className="ml-auto">
-                  <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
-                      viewingCustomer.status === 'active'
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                        : viewingCustomer.status === 'inactive'
-                        ? 'bg-slate-50 text-slate-500 border-slate-200'
-                        : 'bg-amber-50 text-amber-700 border-amber-100'
-                    }`}
-                  >
-                    {viewingCustomer.status.toUpperCase()}
-                  </span>
-                </div>
-              </div>
-
-              {/* Grid details */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center gap-3 text-sm text-gray-600">
-                  <Phone className="text-gray-400" size={18} />
-                  <div>
-                    <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Phone</p>
-                    <p className="font-medium">{viewingCustomer.phone}</p>
+              <div className="space-y-6">
+                <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
+                  <div className="w-12 h-12 bg-[#3F51B5]/10 text-[#3F51B5] rounded-full flex items-center justify-center font-bold text-lg uppercase">
+                    {viewingCustomer.firstName[0]}
+                    {viewingCustomer.lastName[0]}
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="text-lg font-bold text-gray-900 truncate">
+                      {viewingCustomer.firstName} {viewingCustomer.lastName}
+                    </h4>
+                    <span className="text-sm text-gray-500">{viewingCustomer.email}</span>
+                  </div>
+                  <div className="ml-auto shrink-0">
+                    <StatusBadge status={viewingCustomer.status} />
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 text-sm text-gray-600">
-                  <Building className="text-gray-400" size={18} />
-                  <div>
-                    <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Company</p>
-                    <p className="font-medium">{viewingCustomer.company || '—'}</p>
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[
+                    { icon: Phone, label: "Phone", value: viewingCustomer.phone },
+                    { icon: Building, label: "Company", value: viewingCustomer.company || "—" },
+                    { icon: MapPin, label: "Address", value: viewingCustomer.address || "—" },
+                    {
+                      icon: Calendar,
+                      label: "Registered",
+                      value: viewingCustomer.createdAt
+                        ? new Date(viewingCustomer.createdAt).toLocaleString()
+                        : "—",
+                    },
+                    {
+                      icon: UserPlus,
+                      label: "Record Owner",
+                      value: viewingCustomer.assignedToName || "Unassigned",
+                    },
+                    {
+                      icon: UsersRound,
+                      label: "Team",
+                      value: viewingCustomer.assignedTeamName || "Unassigned",
+                    },
+                  ].map(({ icon: Icon, label, value }) => (
+                    <div key={label} className="flex items-center gap-3 text-sm text-gray-600">
+                      <Icon className="text-gray-400 shrink-0" size={18} />
+                      <div className="min-w-0">
+                        <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">{label}</p>
+                        <p className="font-medium whitespace-pre-wrap break-words">{value}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
 
-                <div className="flex items-center gap-3 text-sm text-gray-600">
-                  <MapPin className="text-gray-400" size={18} />
-                  <div>
-                    <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Address</p>
-                    <p className="font-medium whitespace-pre-wrap">{viewingCustomer.address || '—'}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 text-sm text-gray-600">
-                  <Calendar className="text-gray-400" size={18} />
-                  <div>
-                    <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Registered</p>
-                    <p className="font-medium">
-                      {viewingCustomer.createdAt ? new Date(viewingCustomer.createdAt).toLocaleString() : '—'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Notes */}
-              <div className="bg-gray-50/75 p-4 rounded-xl border border-gray-100 space-y-1">
-                <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Staff Notes</p>
-                <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                  {viewingCustomer.notes || 'No notes available for this customer.'}
-                </p>
-              </div>
-
-              {/* Keycloak details */}
-              <div className="text-[11px] text-gray-400 space-y-1 border-t border-gray-100 pt-4">
-                <p>
-                  <span className="font-bold">Keycloak ID:</span> {viewingCustomer.keycloakId}
-                </p>
-                <p>
-                  <span className="font-bold">Created By:</span> {viewingCustomer.createdBy}
-                </p>
-              </div>
-            </div>
-
-            <div className="px-6 py-4 border-t border-gray-100 flex justify-end bg-gray-50/50 shrink-0">
-              <button
-                onClick={() => setViewingCustomer(null)}
-                className="px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Close Profile
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Create / Edit Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all scale-100 border border-gray-100 flex flex-col max-h-[90vh]">
-            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 shrink-0">
-              <h3 className="text-lg font-bold text-gray-800">
-                {editingCustomer ? 'Edit Customer Profile' : 'Add New Customer'}
-              </h3>
-              <button
-                onClick={handleCloseModal}
-                disabled={isSubmitting}
-                className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-50"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
-                    First Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    disabled={isSubmitting}
-                    value={formData.firstName}
-                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5] transition-all disabled:bg-gray-50"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
-                    Last Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    disabled={isSubmitting}
-                    value={formData.lastName}
-                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5] transition-all disabled:bg-gray-50"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
-                  Email Address *
-                </label>
-                <input
-                  type="email"
-                  required
-                  disabled={isSubmitting || !!editingCustomer}
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5] transition-all disabled:bg-gray-100 disabled:text-gray-500"
-                  placeholder="name@example.com"
-                />
-                {!editingCustomer && (
-                  <p className="text-[11px] text-gray-400 mt-1">
-                    An invitation containing a password setup link will be emailed immediately.
+                <div className="bg-gray-50/75 p-4 rounded-xl border border-gray-100 space-y-1">
+                  <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Staff Notes</p>
+                  <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                    {viewingCustomer.notes || "No notes available for this customer."}
                   </p>
+                </div>
+
+                <div className="text-[11px] text-gray-400 space-y-1 border-t border-gray-100 pt-4">
+                  <p>
+                    <span className="font-bold">Keycloak ID:</span> {viewingCustomer.keycloakId}
+                  </p>
+                  <p>
+                    <span className="font-bold">Last updated:</span>{" "}
+                    {viewingCustomer.updatedAt ? new Date(viewingCustomer.updatedAt).toLocaleString() : "—"}
+                  </p>
+                </div>
+              </div>
+
+              <DialogFooter>
+                {isStaffAdmin && (
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      const target = viewingCustomer;
+                      setViewingCustomer(null);
+                      openEdit(target);
+                    }}
+                  >
+                    <Pencil size={15} /> Edit
+                  </Button>
                 )}
-              </div>
+                <Button variant="secondary" onClick={() => setViewingCustomer(null)}>
+                  Close
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
-                    Phone Number *
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    disabled={isSubmitting}
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5] transition-all disabled:bg-gray-50"
-                    placeholder="+1 234 567 890"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
-                    Company Name
-                  </label>
-                  <input
-                    type="text"
-                    disabled={isSubmitting}
-                    value={formData.company}
-                    onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5] transition-all disabled:bg-gray-50"
-                    placeholder="Acme Corp"
-                  />
-                </div>
-              </div>
+      {/* Create / Edit dialog */}
+      <Dialog open={formOpen} onOpenChange={(open) => !open && closeForm()}>
+        <DialogContent className="max-w-lg max-h-[90dvh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingCustomer ? "Edit Customer Profile" : "Add New Customer"}</DialogTitle>
+            <DialogDescription>
+              {editingCustomer
+                ? "Changes to name and email are synced to the customer's Keycloak sign-in account."
+                : "The customer is registered in Keycloak and receives a password setup email."}
+            </DialogDescription>
+          </DialogHeader>
 
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {formError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm flex items-center gap-2">
+                <AlertCircle size={16} className="shrink-0" />
+                {formError}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
-                  Mailing Address
+                  First Name *
                 </label>
-                <textarea
-                  rows={2}
-                  disabled={isSubmitting}
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5] transition-all disabled:bg-gray-50 resize-none"
-                  placeholder="Street, City, State, ZIP"
-                />
+                <Input disabled={isSaving} {...form.register("firstName")} />
+                <FieldError message={form.formState.errors.firstName?.message} />
               </div>
-
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
-                  Notes / Description
+                  Last Name *
                 </label>
-                <textarea
-                  rows={2}
-                  disabled={isSubmitting}
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5] transition-all disabled:bg-gray-50 resize-none"
-                  placeholder="Additional context or requirements..."
-                />
+                <Input disabled={isSaving} {...form.register("lastName")} />
+                <FieldError message={form.formState.errors.lastName?.message} />
               </div>
+            </div>
 
-              <div className="grid grid-cols-2 gap-4 items-center pt-2">
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                Email Address *
+              </label>
+              <Input type="email" placeholder="name@example.com" disabled={isSaving} {...form.register("email")} />
+              <FieldError message={form.formState.errors.email?.message} />
+              {!editingCustomer && (
+                <p className="text-[11px] text-gray-400 mt-1">
+                  An invitation containing a password setup link will be emailed immediately.
+                </p>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  Phone Number *
+                </label>
+                <Input type="tel" placeholder="+1 234 567 890" disabled={isSaving} {...form.register("phone")} />
+                <FieldError message={form.formState.errors.phone?.message} />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  Company Name
+                </label>
+                <Input placeholder="Acme Corp" disabled={isSaving} {...form.register("company")} />
+                <FieldError message={form.formState.errors.company?.message} />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                Mailing Address
+              </label>
+              <textarea
+                rows={2}
+                disabled={isSaving}
+                placeholder="Street, City, State, ZIP"
+                className={cn(inputClasses, "resize-none")}
+                {...form.register("address")}
+              />
+              <FieldError message={form.formState.errors.address?.message} />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                Notes / Description
+              </label>
+              <textarea
+                rows={2}
+                disabled={isSaving}
+                placeholder="Additional context or requirements..."
+                className={cn(inputClasses, "resize-none")}
+                {...form.register("notes")}
+              />
+              <FieldError message={form.formState.errors.notes?.message} />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  Lifecycle Status
+                </label>
+                <select disabled={isSaving} className={inputClasses} {...form.register("status")}>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                  <option value="prospect">Prospect</option>
+                </select>
+                <p className="text-[11px] text-gray-400 mt-1">
+                  Inactive customers cannot sign in to the portal.
+                </p>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={closeForm} disabled={isSaving}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSaving} className="bg-[#3F51B5] hover:bg-[#303F9F] text-white">
+                {isSaving && <Loader2 size={15} className="animate-spin" />}
+                {editingCustomer ? "Update Customer" : "Create Customer"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign owner / team dialog */}
+      <Dialog open={!!assigningCustomer} onOpenChange={(open) => !open && setAssigningCustomer(null)}>
+        <DialogContent className="max-w-md">
+          {assigningCustomer && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Assign Customer</DialogTitle>
+                <DialogDescription>
+                  Route{" "}
+                  <span className="font-semibold text-gray-700">
+                    {assigningCustomer.firstName} {assigningCustomer.lastName}
+                  </span>{" "}
+                  to a team and/or a record owner. Team members gain visibility of this record.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4">
+                {assignError && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm flex items-center gap-2">
+                    <AlertCircle size={16} className="shrink-0" />
+                    {assignError}
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
-                    Lifecycle Status
+                    Team
                   </label>
                   <select
-                    value={formData.status}
-                    disabled={isSubmitting}
-                    onChange={(e) =>
-                      setFormData({ ...formData, status: e.target.value as 'active' | 'inactive' | 'prospect' })
-                    }
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5] transition-all disabled:bg-gray-50"
+                    className={inputClasses}
+                    value={assignTeamId}
+                    disabled={assignCustomerMutation.isPending || assignTeamsQuery.isLoading}
+                    onChange={(e) => {
+                      const teamId = e.target.value;
+                      setAssignTeamId(teamId);
+                      // Owner must belong to the newly selected team
+                      const team = assignTeams.find((t) => t.id === teamId);
+                      if (
+                        teamId &&
+                        team &&
+                        assignOwnerId &&
+                        !team.members.some((m) => m.keycloakId === assignOwnerId)
+                      ) {
+                        setAssignOwnerId("");
+                      }
+                    }}
                   >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                    <option value="prospect">Prospect</option>
+                    <option value="">Unassigned (no team)</option>
+                    {assignTeams.map((team) => (
+                      <option key={team.id} value={team.id}>
+                        {team.name}
+                        {team.regions.length > 0 ? ` — ${team.regions.join(", ")}` : ""}
+                      </option>
+                    ))}
                   </select>
+                  {assignTeamsQuery.isLoading && (
+                    <p className="text-[11px] text-gray-400 mt-1">Loading teams...</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                    Record Owner
+                  </label>
+                  <select
+                    className={inputClasses}
+                    value={assignOwnerId}
+                    disabled={assignCustomerMutation.isPending || assignStaffQuery.isLoading}
+                    onChange={(e) => setAssignOwnerId(e.target.value)}
+                  >
+                    <option value="">Unassigned (no owner)</option>
+                    {assignOwnerOptions.map((s) => (
+                      <option key={s.keycloakId} value={s.keycloakId}>
+                        {staffDisplayName(s)} ({s.role})
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-[11px] text-gray-400 mt-1">
+                    {assignTeamId
+                      ? "Only members of the selected team can own this record."
+                      : "Pick a team first to narrow the list to its members."}
+                  </p>
                 </div>
               </div>
 
-              </div>
-
-              <div className="px-6 py-4 flex justify-end gap-3 border-t border-gray-100 bg-gray-50/50 shrink-0">
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  disabled={isSubmitting}
-                  className="px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setAssigningCustomer(null)}
+                  disabled={assignCustomerMutation.isPending}
                 >
                   Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-4 py-2 text-sm font-semibold text-white bg-[#3F51B5] rounded-lg hover:bg-[#303F9F] shadow-sm transition-colors flex items-center gap-2 disabled:opacity-50"
+                </Button>
+                <Button
+                  onClick={handleAssign}
+                  disabled={assignCustomerMutation.isPending}
+                  className="bg-[#3F51B5] hover:bg-[#303F9F] text-white"
                 >
-                  {isSubmitting && (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  )}
-                  {editingCustomer ? 'Update Customer' : 'Create Customer'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+                  {assignCustomerMutation.isPending && <Loader2 size={15} className="animate-spin" />}
+                  Save Assignment
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={!!deletingCustomer} onOpenChange={(open) => !open && setDeletingCustomer(null)}>
+        <DialogContent className="max-w-md">
+          {deletingCustomer && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Delete customer?</DialogTitle>
+                <DialogDescription>
+                  This permanently removes{" "}
+                  <span className="font-semibold text-gray-700">
+                    {deletingCustomer.firstName} {deletingCustomer.lastName}
+                  </span>{" "}
+                  ({deletingCustomer.email}), including their Keycloak sign-in account. This action cannot
+                  be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setDeletingCustomer(null)}
+                  disabled={deleteCustomerMutation.isPending}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDelete}
+                  disabled={deleteCustomerMutation.isPending}
+                >
+                  {deleteCustomerMutation.isPending && <Loader2 size={15} className="animate-spin" />}
+                  Delete Customer
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
