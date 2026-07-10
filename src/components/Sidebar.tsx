@@ -11,7 +11,6 @@ import {
   Star,
   Settings,
   CreditCard,
-  User,
   HelpCircle,
   Users2,
   UsersRound,
@@ -20,6 +19,10 @@ import {
   Target,
   Activity,
   TicketCheck,
+  Building2,
+  BookUser,
+  Zap,
+  BookOpen,
   ChevronDown,
   ChevronRight,
   Shield,
@@ -43,17 +46,20 @@ export function Sidebar() {
 
   const crmItems = [
     { icon: UserCheck, label: 'Customers', id: 'customers', href: '/customers' },
+    { icon: Building2, label: 'Accounts', id: 'accounts', href: '/accounts' },
+    { icon: BookUser, label: 'Contacts', id: 'contacts', href: '/contacts' },
     { icon: UsersRound, label: 'Teams', id: 'teams', href: '/teams' },
     { icon: TrendingUp, label: 'Leads', id: 'leads', href: '/leads' },
     { icon: Target, label: 'Opportunities', id: 'opportunities', href: '/opportunities' },
     { icon: Activity, label: 'Activities', id: 'activities', href: '/activities' },
-    { icon: TicketCheck, label: 'Tickets', id: 'tickets', href: '/tickets' }
+    { icon: Zap, label: 'Automation', id: 'automations', href: '/automations' },
+    { icon: TicketCheck, label: 'Tickets', id: 'tickets', href: '/tickets' },
+    { icon: BookOpen, label: 'Knowledge Base', id: 'kb', href: '/kb' }
   ];
 
   const otherItems = [
     { icon: Settings, label: 'Settings', id: 'settings', href: '/settings' },
     { icon: CreditCard, label: 'Payment', id: 'payment', href: '/payment' },
-    { icon: User, label: 'Accounts', id: 'accounts', href: '/accounts' },
     { icon: Shield, label: 'Users', id: 'users', href: '/users' },
     { icon: HelpCircle, label: 'Help', id: 'help', href: '/help' }
   ];

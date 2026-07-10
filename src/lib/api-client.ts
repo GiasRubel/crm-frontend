@@ -51,8 +51,34 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   return response.json();
 }
 
+/** Non-JSON responses (file downloads, e.g. .ics calendar exports). */
+async function requestBlob(endpoint: string): Promise<Blob> {
+  const url = `${API_BASE_URL}${endpoint}`;
+  const headers: Record<string, string> = {};
+
+  if (typeof window !== "undefined" && keycloak.authenticated) {
+    try {
+      await keycloak.updateToken(30);
+      if (keycloak.token) {
+        headers["Authorization"] = `Bearer ${keycloak.token}`;
+      }
+    } catch (error) {
+      console.error("Failed to refresh Keycloak token before request", error);
+    }
+  }
+
+  const response = await fetch(url, { headers, cache: "no-store" });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    const message = Array.isArray(errorData.message) ? errorData.message[0] : errorData.message;
+    throw new ApiError(response.status, message || "Something went wrong");
+  }
+  return response.blob();
+}
+
 export const apiClient = {
   get: <T>(endpoint: string, options?: RequestInit) => request<T>(endpoint, { ...options, method: "GET" }),
+  getBlob: (endpoint: string) => requestBlob(endpoint),
   post: <T>(endpoint: string, body: unknown, options?: RequestInit) => request<T>(endpoint, { ...options, method: "POST", body: JSON.stringify(body) }),
   put: <T>(endpoint: string, body: unknown, options?: RequestInit) => request<T>(endpoint, { ...options, method: "PUT", body: JSON.stringify(body) }),
   patch: <T>(endpoint: string, body: unknown, options?: RequestInit) => request<T>(endpoint, { ...options, method: "PATCH", body: JSON.stringify(body) }),

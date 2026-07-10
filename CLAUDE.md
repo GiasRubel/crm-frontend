@@ -64,10 +64,24 @@ Group a domain under `features/<name>/`:
 - `hooks/use<X>.ts` — a hook wrapping `useQuery`/`useMutation`, keyed by
   `["<name>"]`, invalidating that key on mutation success.
 
-`leads/` is the reference implementation. Copy its shape for opportunities,
-tickets, activities, customers, etc. `customers/` and `teams/` are fully wired
-to the backend (`users/` exposes the staff directory for pickers); teams and
-record assignment business rules live in `../TEAMS-AND-TERRITORIES.md`.
+`customers/` is the reference implementation. Copy its shape for tickets,
+etc. `customers/`, `teams/`, `leads/`, `opportunities/`, `accounts/`,
+`contacts/`, and `activities/` are fully wired to the backend (`users/`
+exposes the staff directory for pickers). Tasks/communication-log rules live
+in `../ACTIVITIES-AND-ENGAGEMENT-BUSINESS.md`; `apiClient.getBlob` handles
+non-JSON downloads (e.g. `.ics` calendar exports). `automations/` +
+`/automations` (admin-only UI) configure the backend rule engine — business
+rules in `../AUTOMATION-AND-WORKFLOWS-BUSINESS.md`. `tickets/` + `kb/` are
+the helpdesk (`/tickets` renders a customer-portal view for
+`AppRole.Customer`, staff helpdesk otherwise; `/kb` is the wiki editor;
+`/faq` outside `(crm)` is the public help center) — rules in
+`../SERVICE-AND-SUPPORT-BUSINESS.md`. Teams and record assignment business rules
+live in `../TEAMS-AND-TERRITORIES.md`; lead capture/scoring/conversion and the
+pipeline Kanban rules live in `../LEADS-AND-PIPELINE-BUSINESS.md`; company
+(account) profiles, person (contact) records, interactions, and preferences
+live in `../CONTACTS-AND-ACCOUNTS-BUSINESS.md` (+ `-DEVELOPER.md` each).
+`/capture` (outside the `(crm)` group) is a public lead-capture form posting
+to the unauthenticated `POST /leads/capture`.
 
 ### Data fetching & auth
 

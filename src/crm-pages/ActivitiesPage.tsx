@@ -1,498 +1,1421 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
+import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
+import { z } from "zod";
 import {
-  Search,
-  Plus,
-  Eye,
-  Pencil,
-  Trash2,
-  X,
+  AlertCircle,
+  AlertTriangle,
+  ArrowDown,
+  ArrowDownLeft,
+  ArrowUp,
+  ArrowUpDown,
+  ArrowUpRight,
+  Bell,
+  Calendar,
+  CalendarClock,
+  CalendarPlus,
   Check,
-  ChevronDown,
-  Phone,
+  CheckCircle2,
+  CheckSquare,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Info,
+  Link2,
+  Loader2,
   Mail,
+  MessageSquare,
+  MoreHorizontal,
+  Pencil,
+  Phone,
+  Plus,
+  RotateCcw,
+  Search,
+  StickyNote,
+  Trash2,
   Users,
-  CheckSquare } from
-'lucide-react';
-interface Activity {
-  id: number;
-  customerName: string;
-  userName: string;
-  type: 'call' | 'email' | 'meeting' | 'task';
-  notes: string;
-  activityDate: string;
-}
-const initialActivities: Activity[] = [
-{
-  id: 1,
-  customerName: 'John Doe',
-  userName: 'Alice Admin',
-  type: 'call',
-  notes: 'Discussed new requirements',
-  activityDate: '2023-10-15T10:00'
-},
-{
-  id: 2,
-  customerName: 'Jane Smith',
-  userName: 'Bob Sales',
-  type: 'email',
-  notes: 'Sent proposal PDF',
-  activityDate: '2023-10-16T14:30'
-},
-{
-  id: 3,
-  customerName: 'Robert Johnson',
-  userName: 'Alice Admin',
-  type: 'meeting',
-  notes: 'Quarterly review meeting',
-  activityDate: '2023-10-17T09:00'
-},
-{
-  id: 4,
-  customerName: 'Emily Davis',
-  userName: 'Charlie Support',
-  type: 'task',
-  notes: 'Follow up on support ticket',
-  activityDate: '2023-10-18T11:15'
-},
-{
-  id: 5,
-  customerName: 'Michael Wilson',
-  userName: 'Bob Sales',
-  type: 'call',
-  notes: 'Cold call introduction',
-  activityDate: '2023-10-19T15:45'
-},
-{
-  id: 6,
-  customerName: 'Sarah Brown',
-  userName: 'Alice Admin',
-  type: 'email',
-  notes: 'Thank you email',
-  activityDate: '2023-10-20T13:20'
-},
-{
-  id: 7,
-  customerName: 'David Miller',
-  userName: 'Bob Sales',
-  type: 'meeting',
-  notes: 'Product demo',
-  activityDate: '2023-10-21T10:30'
-},
-{
-  id: 8,
-  customerName: 'Jessica Taylor',
-  userName: 'Charlie Support',
-  type: 'task',
-  notes: 'Prepare invoice',
-  activityDate: '2023-10-22T16:00'
-},
-{
-  id: 9,
-  customerName: 'John Doe',
-  userName: 'Alice Admin',
-  type: 'email',
-  notes: 'Follow up email',
-  activityDate: '2023-10-23T09:45'
-},
-{
-  id: 10,
-  customerName: 'Jane Smith',
-  userName: 'Bob Sales',
-  type: 'call',
-  notes: 'Check in call',
-  activityDate: '2023-10-24T11:00'
-}];
+  UsersRound,
+  X,
+  XCircle,
+} from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/providers/keycloak-provider";
+import { keycloak } from "@/lib/keycloak";
+import { useDebouncedValue } from "@/features/customers/hooks/useCustomers";
+import { useActivities } from "@/features/activities/hooks/useActivities";
+import {
+  Activity,
+  ACTIVITY_TYPE_LABELS,
+  ActivityPriority,
+  ActivityQuery,
+  ActivitySortField,
+  ActivityStatus,
+  ActivityType,
+  COMMUNICATION_TYPES,
+  DueFilter,
+  RELATED_TYPE_LABELS,
+} from "@/features/activities/types";
+import { downloadIcs, googleCalendarUrl } from "@/features/activities/calendar";
+import { leadApi } from "@/features/leads/services/leadApi";
+import { contactApi } from "@/features/contacts/services/contactApi";
+import { customerApi } from "@/features/customers/services/customerApi";
+import { accountApi } from "@/features/accounts/services/accountApi";
+import { opportunityApi } from "@/features/opportunities/services/opportunityApi";
+import { ticketApi } from "@/features/tickets/services/ticketApi";
+import { teamApi } from "@/features/teams/services/teamApi";
+import { userApi } from "@/features/users/services/userApi";
+import { staffDisplayName } from "@/features/users/types";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
-const customers = [
-'John Doe',
-'Jane Smith',
-'Robert Johnson',
-'Emily Davis',
-'Michael Wilson',
-'Sarah Brown',
-'David Miller',
-'Jessica Taylor'];
+// ── Form schema ───────────────────────────────────────────────────────────────
 
-const users = ['Alice Admin', 'Bob Sales', 'Charlie Support'];
-export function ActivitiesPage() {
-  const [activities, setActivities] = useState<Activity[]>(initialActivities);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
-  const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [formData, setFormData] = useState<Partial<Activity>>({
-    customerName: '',
-    userName: '',
-    type: 'call',
-    notes: '',
-    activityDate: ''
-  });
-  const filteredActivities = activities.filter(
-    (a) =>
-    a.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    a.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    a.notes.toLowerCase().includes(searchTerm.toLowerCase())
+const activityFormSchema = z.object({
+  type: z.enum(["task", "call", "email", "meeting", "sms", "note"]),
+  subject: z.string().trim().min(1, "Subject is required").max(200),
+  description: z.string().max(4000).optional(),
+  priority: z.enum(["low", "normal", "high"]),
+  direction: z.enum(["inbound", "outbound"]).optional().or(z.literal("")),
+  dueAt: z.string().optional(),
+  startAt: z.string().optional(),
+  endAt: z.string().optional(),
+  remindAt: z.string().optional(),
+  relatedType: z
+    .enum(["lead", "contact", "customer", "account", "opportunity", "ticket"])
+    .optional()
+    .or(z.literal("")),
+  relatedId: z.string().optional(),
+  alreadyHappened: z.boolean(),
+});
+
+type ActivityFormValues = z.infer<typeof activityFormSchema>;
+
+const emptyFormValues: ActivityFormValues = {
+  type: "task",
+  subject: "",
+  description: "",
+  priority: "normal",
+  direction: "outbound",
+  dueAt: "",
+  startAt: "",
+  endAt: "",
+  remindAt: "",
+  relatedType: "",
+  relatedId: "",
+  alreadyHappened: true,
+};
+
+// ── Presentational helpers ────────────────────────────────────────────────────
+
+const typeIcons: Record<ActivityType, React.ElementType> = {
+  task: CheckSquare,
+  call: Phone,
+  email: Mail,
+  meeting: Users,
+  sms: MessageSquare,
+  note: StickyNote,
+};
+
+const typeAccents: Record<ActivityType, string> = {
+  task: "bg-[#3F51B5]/10 text-[#3F51B5]",
+  call: "bg-emerald-50 text-emerald-600",
+  email: "bg-sky-50 text-sky-600",
+  meeting: "bg-violet-50 text-violet-600",
+  sms: "bg-amber-50 text-amber-600",
+  note: "bg-slate-100 text-slate-500",
+};
+
+const statusStyles: Record<ActivityStatus, string> = {
+  pending: "bg-amber-50 text-amber-700 border-amber-200",
+  completed: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  cancelled: "bg-slate-100 text-slate-500 border-slate-200",
+};
+
+const priorityStyles: Record<ActivityPriority, string> = {
+  high: "bg-red-50 text-red-600 border-red-200",
+  normal: "bg-slate-50 text-slate-600 border-slate-200",
+  low: "bg-slate-50 text-slate-400 border-slate-200",
+};
+
+function StatusBadge({ activity }: { activity: Activity }) {
+  if (activity.overdue) {
+    return (
+      <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200 font-semibold gap-1">
+        <AlertTriangle size={11} /> Overdue
+      </Badge>
+    );
+  }
+  return (
+    <Badge variant="outline" className={cn("capitalize font-semibold", statusStyles[activity.status])}>
+      {activity.status}
+    </Badge>
   );
-  const handleOpenModal = (activity?: Activity) => {
-    if (activity) {
-      setEditingActivity(activity);
-      setFormData(activity);
+}
+
+function StatCard({
+  label,
+  value,
+  icon: Icon,
+  accent,
+}: {
+  label: string;
+  value: React.ReactNode;
+  icon: React.ElementType;
+  accent: string;
+}) {
+  return (
+    <Card className="py-4">
+      <CardContent className="flex items-center gap-3 px-4">
+        <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center shrink-0", accent)}>
+          <Icon size={20} />
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider truncate">{label}</p>
+          <p className="text-xl font-bold text-gray-900">{value ?? "—"}</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+const inputClasses =
+  "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5] transition-all disabled:bg-gray-50 disabled:text-gray-500";
+
+function SortableHead({
+  field,
+  sortBy,
+  sortOrder,
+  onToggle,
+  children,
+  className,
+}: {
+  field: ActivitySortField;
+  sortBy: ActivitySortField;
+  sortOrder: "asc" | "desc";
+  onToggle: (field: ActivitySortField) => void;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const indicator =
+    sortBy !== field ? (
+      <ArrowUpDown size={13} className="text-gray-300" />
+    ) : sortOrder === "asc" ? (
+      <ArrowUp size={13} className="text-[#3F51B5]" />
+    ) : (
+      <ArrowDown size={13} className="text-[#3F51B5]" />
+    );
+
+  return (
+    <TableHead className={className}>
+      <button
+        type="button"
+        onClick={() => onToggle(field)}
+        className="flex items-center gap-1.5 text-xs uppercase tracking-wider font-semibold text-gray-500 hover:text-gray-800 transition-colors"
+      >
+        {children}
+        {indicator}
+      </button>
+    </TableHead>
+  );
+}
+
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return <p className="text-xs text-red-600 mt-1">{message}</p>;
+}
+
+/** date-time-local input value → ISO string (or undefined). */
+function toIso(value?: string): string | undefined {
+  return value ? new Date(value).toISOString() : undefined;
+}
+
+/** ISO string → value usable in a datetime-local input. */
+function toLocalInput(iso: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
+
+export function ActivitiesPage() {
+  const { user } = useAuth();
+  const isStaffAdmin = user?.role === "Admin" || user?.role === "Administrator";
+  const myKeycloakId = keycloak.subject ?? "";
+
+  // Filters / paging / sorting
+  const [searchTerm, setSearchTerm] = useState("");
+  const [typeFilter, setTypeFilter] = useState<ActivityType | "">("");
+  const [statusFilter, setStatusFilter] = useState<ActivityStatus | "">("");
+  const [dueFilter, setDueFilter] = useState<DueFilter | "">("");
+  const [onlyMine, setOnlyMine] = useState(false);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [sortBy, setSortBy] = useState<ActivitySortField>("createdAt");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+
+  const debouncedSearch = useDebouncedValue(searchTerm, 300);
+
+  const query: ActivityQuery = useMemo(
+    () => ({
+      page,
+      limit,
+      search: debouncedSearch,
+      type: typeFilter,
+      status: statusFilter,
+      due: dueFilter,
+      assignedToId: onlyMine ? myKeycloakId : undefined,
+      sortBy,
+      sortOrder,
+    }),
+    [page, limit, debouncedSearch, typeFilter, statusFilter, dueFilter, onlyMine, myKeycloakId, sortBy, sortOrder],
+  );
+
+  const {
+    activitiesQuery,
+    statsQuery,
+    createActivityMutation,
+    updateActivityMutation,
+    setStatusMutation,
+    assignActivityMutation,
+    deleteActivityMutation,
+  } = useActivities(query);
+
+  const activities = activitiesQuery.data?.data ?? [];
+  const meta = activitiesQuery.data?.meta;
+  const stats = statsQuery.data;
+
+  // Dialogs & notifications
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
+  const [viewingActivity, setViewingActivity] = useState<Activity | null>(null);
+  const [deletingActivity, setDeletingActivity] = useState<Activity | null>(null);
+  const [assigningActivity, setAssigningActivity] = useState<Activity | null>(null);
+  const [assignOwnerId, setAssignOwnerId] = useState("");
+  const [assignTeamId, setAssignTeamId] = useState("");
+  const [assignError, setAssignError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const form = useForm<ActivityFormValues>({
+    resolver: standardSchemaResolver(activityFormSchema),
+    defaultValues: emptyFormValues,
+  });
+
+  const watchType = form.watch("type");
+  const watchRelatedType = form.watch("relatedType");
+  const watchAlreadyHappened = form.watch("alreadyHappened");
+  const isCommunication = COMMUNICATION_TYPES.includes(watchType);
+  const isSaving = createActivityMutation.isPending || updateActivityMutation.isPending;
+
+  // Related-record picker — fetched only for the selected type while the form is open
+  const relatedPickerQuery = useQuery({
+    queryKey: ["activities", "related-picker", watchRelatedType],
+    queryFn: async (): Promise<{ id: string; label: string }[]> => {
+      switch (watchRelatedType) {
+        case "lead":
+          return (await leadApi.getAll({ limit: 100, sortBy: "lastName", sortOrder: "asc" })).data.map(
+            (l) => ({ id: l.id, label: `${l.firstName} ${l.lastName} (${l.email})` }),
+          );
+        case "contact":
+          return (
+            await contactApi.getAll({ limit: 100, sortBy: "lastName", sortOrder: "asc" })
+          ).data.map((c) => ({ id: c.id, label: `${c.firstName} ${c.lastName} (${c.email})` }));
+        case "customer":
+          return (
+            await customerApi.getAll({ limit: 100, sortBy: "firstName", sortOrder: "asc" })
+          ).data.map((c) => ({ id: c.id, label: `${c.firstName} ${c.lastName} (${c.email})` }));
+        case "account":
+          return (await accountApi.getAll({ limit: 100, sortBy: "name", sortOrder: "asc" })).data.map(
+            (a) => ({ id: a.id, label: a.name }),
+          );
+        case "opportunity":
+          return (
+            await opportunityApi.getAll({ limit: 100, sortBy: "name", sortOrder: "asc" })
+          ).data.map((o) => ({ id: o.id, label: o.name }));
+        case "ticket":
+          return (
+            await ticketApi.getAll({ limit: 100, sortBy: "updatedAt", sortOrder: "desc" })
+          ).data.map((t) => ({ id: t.id, label: `${t.number} — ${t.subject}` }));
+        default:
+          return [];
+      }
+    },
+    enabled: formOpen && !!watchRelatedType,
+  });
+  const relatedOptions = relatedPickerQuery.data ?? [];
+
+  // Assignment pickers — only fetched while the assign dialog is open
+  const assignDialogOpen = isStaffAdmin && !!assigningActivity;
+  const assignStaffQuery = useQuery({
+    queryKey: ["users", "staff"],
+    queryFn: () => userApi.getStaff(),
+    enabled: assignDialogOpen,
+  });
+  const assignTeamsQuery = useQuery({
+    queryKey: ["teams", "list", { limit: 100, isActive: true }],
+    queryFn: () => teamApi.getAll({ limit: 100, isActive: true }),
+    enabled: assignDialogOpen,
+  });
+  const assignTeams = assignTeamsQuery.data?.data ?? [];
+
+  // ── Handlers ────────────────────────────────────────────────────────────────
+
+  const resetToFirstPage = () => setPage(1);
+
+  const toggleSort = (field: ActivitySortField) => {
+    if (sortBy === field) {
+      setSortOrder((o) => (o === "asc" ? "desc" : "asc"));
     } else {
-      setEditingActivity(null);
-      setFormData({
-        customerName: customers[0],
-        userName: users[0],
-        type: 'call',
-        notes: '',
-        activityDate: ''
-      });
+      setSortBy(field);
+      setSortOrder(field === "subject" || field === "type" ? "asc" : "desc");
     }
-    setIsModalOpen(true);
+    resetToFirstPage();
   };
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
+
+  const notifySuccess = (message: string) => {
+    setSuccessMsg(message);
+    setErrorMsg(null);
+  };
+
+  const openCreate = () => {
+    form.reset(emptyFormValues);
     setEditingActivity(null);
+    setFormError(null);
+    setFormOpen(true);
   };
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (editingActivity) {
-      setActivities(
-        activities.map((a) =>
-        a.id === editingActivity.id ?
-        {
-          ...a,
-          ...formData
-        } as Activity :
-        a
-        )
+
+  const openEdit = (activity: Activity) => {
+    form.reset({
+      type: activity.type,
+      subject: activity.subject,
+      description: activity.description ?? "",
+      priority: activity.priority,
+      direction: activity.direction ?? "outbound",
+      dueAt: toLocalInput(activity.dueAt),
+      startAt: toLocalInput(activity.startAt),
+      endAt: toLocalInput(activity.endAt),
+      remindAt: toLocalInput(activity.remindAt),
+      relatedType: activity.relatedType ?? "",
+      relatedId: activity.relatedId ?? "",
+      alreadyHappened: activity.status === "completed",
+    });
+    setEditingActivity(activity);
+    setFormError(null);
+    setFormOpen(true);
+  };
+
+  const closeForm = () => {
+    if (isSaving) return;
+    setFormOpen(false);
+    setEditingActivity(null);
+    setFormError(null);
+  };
+
+  const onSubmit = async (values: ActivityFormValues) => {
+    setFormError(null);
+
+    if (values.relatedType && !values.relatedId) {
+      setFormError("Pick the record this activity is about, or clear the record type.");
+      return;
+    }
+
+    try {
+      if (editingActivity) {
+        await updateActivityMutation.mutateAsync({
+          id: editingActivity.id,
+          data: {
+            subject: values.subject,
+            description: values.description?.trim() || undefined,
+            priority: values.priority,
+            direction:
+              COMMUNICATION_TYPES.includes(editingActivity.type) && values.direction
+                ? values.direction
+                : undefined,
+            dueAt: toIso(values.dueAt) ?? null,
+            startAt: toIso(values.startAt) ?? null,
+            endAt: toIso(values.endAt) ?? null,
+            remindAt: toIso(values.remindAt) ?? null,
+          },
+        });
+        notifySuccess(`Activity "${values.subject}" updated successfully.`);
+      } else {
+        const isComm = COMMUNICATION_TYPES.includes(values.type);
+        await createActivityMutation.mutateAsync({
+          type: values.type,
+          subject: values.subject,
+          description: values.description?.trim() || undefined,
+          priority: values.priority,
+          direction: isComm && values.direction ? values.direction : undefined,
+          status: isComm ? (values.alreadyHappened ? "completed" : "pending") : "pending",
+          dueAt: toIso(values.dueAt),
+          startAt: toIso(values.startAt),
+          endAt: toIso(values.endAt),
+          remindAt: toIso(values.remindAt),
+          relatedType: values.relatedType || undefined,
+          relatedId: values.relatedType ? values.relatedId || undefined : undefined,
+        });
+        notifySuccess(
+          isComm && values.alreadyHappened
+            ? `${ACTIVITY_TYPE_LABELS[values.type]} logged${values.relatedType ? " — the linked record's history was updated" : ""}.`
+            : `${ACTIVITY_TYPE_LABELS[values.type]} "${values.subject}" created.`,
+        );
+        resetToFirstPage();
+      }
+      setFormOpen(false);
+      setEditingActivity(null);
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : "Failed to save activity");
+    }
+  };
+
+  const changeStatus = async (activity: Activity, status: ActivityStatus) => {
+    try {
+      await setStatusMutation.mutateAsync({ id: activity.id, data: { status } });
+      notifySuccess(
+        status === "completed"
+          ? `"${activity.subject}" marked as done.`
+          : status === "pending"
+            ? `"${activity.subject}" reopened.`
+            : `"${activity.subject}" cancelled.`,
       );
-    } else {
-      const newActivity = {
-        ...formData,
-        id: Math.max(...activities.map((a) => a.id)) + 1
-      } as Activity;
-      setActivities([...activities, newActivity]);
-    }
-    handleCloseModal();
-  };
-  const handleDelete = (id: number) => {
-    setActivities(activities.filter((a) => a.id !== id));
-    setDeleteId(null);
-  };
-  const getTypeBadge = (type: string) => {
-    switch (type) {
-      case 'call':
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-            <Phone size={12} /> Call
-          </span>);
-
-      case 'email':
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-            <Mail size={12} /> Email
-          </span>);
-
-      case 'meeting':
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-            <Users size={12} /> Meeting
-          </span>);
-
-      case 'task':
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-            <CheckSquare size={12} /> Task
-          </span>);
-
-      default:
-        return null;
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : "Failed to update status");
     }
   };
+
+  const handleDelete = async () => {
+    if (!deletingActivity) return;
+    try {
+      await deleteActivityMutation.mutateAsync(deletingActivity.id);
+      notifySuccess(`Activity "${deletingActivity.subject}" was deleted.`);
+      setDeletingActivity(null);
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : "Failed to delete activity");
+      setDeletingActivity(null);
+    }
+  };
+
+  const openAssign = (activity: Activity) => {
+    setAssignOwnerId(activity.assignedToId);
+    setAssignTeamId(activity.assignedTeamId ?? "");
+    setAssignError(null);
+    setAssigningActivity(activity);
+  };
+
+  const handleAssign = async () => {
+    if (!assigningActivity) return;
+    if (!assignOwnerId) {
+      setAssignError("Activities always need an assignee — pick a staff user.");
+      return;
+    }
+    setAssignError(null);
+    try {
+      await assignActivityMutation.mutateAsync({
+        id: assigningActivity.id,
+        data: {
+          assignedToId: assignOwnerId,
+          assignedTeamId: assignTeamId || null,
+        },
+      });
+      notifySuccess(`"${assigningActivity.subject}" reassigned.`);
+      setAssigningActivity(null);
+    } catch (err) {
+      setAssignError(err instanceof Error ? err.message : "Failed to reassign");
+    }
+  };
+
+  const handleDownloadIcs = async (activity: Activity) => {
+    try {
+      await downloadIcs(activity);
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : "Failed to export calendar file");
+    }
+  };
+
+  const sortProps = { sortBy, sortOrder, onToggle: toggleSort };
+
+  // ── Render ──────────────────────────────────────────────────────────────────
+
   return (
     <div className="p-6 lg:p-8 bg-[#F4F5F7] min-h-screen">
       <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <h1 className="text-2xl font-bold text-gray-800">Activities</h1>
-          <button
-            onClick={() => handleOpenModal()}
-            className="flex items-center gap-2 bg-[#3F51B5] text-white px-4 py-2 rounded-lg hover:bg-[#303F9F] transition-colors">
-            
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">Activities</h1>
+            <p className="text-sm text-gray-500">
+              Tasks, follow-ups, and every logged interaction — in one timeline.
+            </p>
+          </div>
+          <Button onClick={openCreate} className="bg-[#3F51B5] hover:bg-[#303F9F] text-white gap-2">
             <Plus size={18} />
-            Log Activity
-          </button>
+            New Activity
+          </Button>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          <div className="p-4 border-b border-gray-100">
-            <div className="relative max-w-md">
-              <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                size={18} />
-              
-              <input
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <StatCard label="Open Tasks" value={stats?.openTasks} icon={CheckSquare} accent="bg-[#3F51B5]/10 text-[#3F51B5]" />
+          <StatCard label="Overdue" value={stats?.overdue} icon={AlertTriangle} accent="bg-red-50 text-red-600" />
+          <StatCard label="Due Today" value={stats?.dueToday} icon={CalendarClock} accent="bg-amber-50 text-amber-600" />
+          <StatCard label="Reminders" value={stats?.remindersDue} icon={Bell} accent="bg-sky-50 text-sky-600" />
+          <StatCard label="Meetings (7d)" value={stats?.upcomingMeetings} icon={Users} accent="bg-violet-50 text-violet-600" />
+          <StatCard label="Done (month)" value={stats?.completedThisMonth} icon={CheckCircle2} accent="bg-emerald-50 text-emerald-600" />
+        </div>
+
+        {/* Notifications */}
+        {successMsg && (
+          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+            <div className="flex items-center gap-3">
+              <Check className="text-emerald-600 shrink-0" size={20} />
+              <span className="text-sm font-medium">{successMsg}</span>
+            </div>
+            <button onClick={() => setSuccessMsg(null)} className="text-emerald-500 hover:text-emerald-700">
+              <X size={18} />
+            </button>
+          </div>
+        )}
+
+        {(errorMsg || activitiesQuery.isError) && (
+          <div className="bg-red-50 border border-red-200 text-red-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="text-red-600 shrink-0" size={20} />
+              <span className="text-sm font-medium">
+                {errorMsg ??
+                  (activitiesQuery.error instanceof Error
+                    ? activitiesQuery.error.message
+                    : "Failed to load activities")}
+              </span>
+            </div>
+            <button
+              onClick={() => {
+                setErrorMsg(null);
+                if (activitiesQuery.isError) activitiesQuery.refetch();
+              }}
+              className="text-red-500 hover:text-red-700"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        )}
+
+        {/* Filters & Table */}
+        <Card className="py-0 overflow-hidden">
+          <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="relative w-full md:max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <Input
                 type="text"
-                placeholder="Search activities..."
+                placeholder="Search subject or notes..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5]" />
-              
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  resetToFirstPage();
+                }}
+                className="pl-10"
+              />
+            </div>
+
+            <div className="flex w-full md:w-auto items-center gap-2 justify-end flex-wrap">
+              {activitiesQuery.isFetching && !activitiesQuery.isLoading && (
+                <Loader2 size={16} className="animate-spin text-gray-400" />
+              )}
+              <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 cursor-pointer whitespace-nowrap">
+                <input
+                  type="checkbox"
+                  className="w-4 h-4 accent-[#3F51B5]"
+                  checked={onlyMine}
+                  onChange={(e) => {
+                    setOnlyMine(e.target.checked);
+                    resetToFirstPage();
+                  }}
+                />
+                Assigned to me
+              </label>
+              <select
+                value={typeFilter}
+                onChange={(e) => {
+                  setTypeFilter(e.target.value as ActivityType | "");
+                  resetToFirstPage();
+                }}
+                className={cn(inputClasses, "w-auto py-1.5")}
+              >
+                <option value="">All Types</option>
+                {Object.entries(ACTIVITY_TYPE_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value as ActivityStatus | "");
+                  resetToFirstPage();
+                }}
+                className={cn(inputClasses, "w-auto py-1.5")}
+              >
+                <option value="">All Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+              <select
+                value={dueFilter}
+                onChange={(e) => {
+                  setDueFilter(e.target.value as DueFilter | "");
+                  resetToFirstPage();
+                }}
+                className={cn(inputClasses, "w-auto py-1.5")}
+              >
+                <option value="">Any Due Date</option>
+                <option value="overdue">Overdue</option>
+                <option value="today">Due Today</option>
+                <option value="week">Due This Week</option>
+              </select>
             </div>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-50 text-xs uppercase text-gray-500 font-semibold">
-                  <th className="px-6 py-4">Customer</th>
-                  <th className="px-6 py-4">User</th>
-                  <th className="px-6 py-4">Type</th>
-                  <th className="px-6 py-4">Notes</th>
-                  <th className="px-6 py-4">Date</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {filteredActivities.map((activity) =>
-                <tr
-                  key={activity.id}
-                  className={`hover:bg-gray-50 transition-colors ${deleteId === activity.id ? 'bg-red-50' : ''}`}>
-                  
-                    <td className="px-6 py-4 font-medium text-gray-900">
-                      {activity.customerName}
-                    </td>
-                    <td className="px-6 py-4 text-gray-600">
-                      {activity.userName}
-                    </td>
-                    <td className="px-6 py-4">{getTypeBadge(activity.type)}</td>
-                    <td className="px-6 py-4 text-gray-600 max-w-xs truncate">
-                      {activity.notes}
-                    </td>
-                    <td className="px-6 py-4 text-gray-600">
-                      {new Date(activity.activityDate).toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      {deleteId === activity.id ?
-                    <div className="flex items-center justify-end gap-2">
-                          <span className="text-xs text-red-600 font-medium mr-2">
-                            Confirm?
-                          </span>
-                          <button
-                        onClick={() => handleDelete(activity.id)}
-                        className="text-red-600 hover:bg-red-100 p-1 rounded">
-                        
-                            <Check size={16} />
-                          </button>
-                          <button
-                        onClick={() => setDeleteId(null)}
-                        className="text-gray-500 hover:bg-gray-100 p-1 rounded">
-                        
-                            <X size={16} />
-                          </button>
-                        </div> :
-
-                    <div className="flex items-center justify-end gap-2">
-                          <button className="text-gray-400 hover:text-[#3F51B5] hover:bg-[#EEF0FB] p-1.5 rounded-lg transition-colors">
-                            <Eye size={18} />
-                          </button>
-                          <button
-                        onClick={() => handleOpenModal(activity)}
-                        className="text-gray-400 hover:text-[#3F51B5] hover:bg-[#EEF0FB] p-1.5 rounded-lg transition-colors">
-                        
-                            <Pencil size={18} />
-                          </button>
-                          <button
-                        onClick={() => setDeleteId(activity.id)}
-                        className="text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition-colors">
-                        
-                            <Trash2 size={18} />
-                          </button>
-                        </div>
-                    }
-                    </td>
-                  </tr>
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gray-50/75 hover:bg-gray-50/75">
+                  <SortableHead field="subject" className="px-6" {...sortProps}>Activity</SortableHead>
+                  <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500">
+                    Related To
+                  </TableHead>
+                  <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500">
+                    Assigned To
+                  </TableHead>
+                  <SortableHead field="dueAt" className="px-6" {...sortProps}>Due / Scheduled</SortableHead>
+                  <SortableHead field="priority" className="px-6" {...sortProps}>Priority</SortableHead>
+                  <SortableHead field="status" className="px-6" {...sortProps}>Status</SortableHead>
+                  <TableHead className="px-6 text-right text-xs uppercase tracking-wider font-semibold text-gray-500">
+                    Actions
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {activitiesQuery.isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="px-6 py-12 text-center text-gray-400">
+                      <div className="flex justify-center items-center gap-2">
+                        <Loader2 size={18} className="animate-spin" />
+                        <span>Fetching activities...</span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : activities.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="px-6 py-16 text-center">
+                      <div className="flex flex-col items-center gap-2 text-gray-500">
+                        <CalendarClock size={32} className="text-gray-300" />
+                        <p className="font-medium">No activities found</p>
+                        <p className="text-sm text-gray-400">
+                          {debouncedSearch || typeFilter || statusFilter || dueFilter || onlyMine
+                            ? "Try adjusting your search or filters."
+                            : "Create a task or log your first interaction."}
+                        </p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  activities.map((activity) => {
+                    const TypeIcon = typeIcons[activity.type];
+                    const when = activity.startAt ?? activity.dueAt;
+                    return (
+                      <TableRow key={activity.id} className="hover:bg-gray-50/50">
+                        <TableCell className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={cn(
+                                "w-9 h-9 rounded-lg flex items-center justify-center shrink-0",
+                                typeAccents[activity.type],
+                              )}
+                            >
+                              <TypeIcon size={16} />
+                            </div>
+                            <div className="flex flex-col min-w-0">
+                              <button
+                                type="button"
+                                onClick={() => setViewingActivity(activity)}
+                                className={cn(
+                                  "font-semibold text-left truncate max-w-[280px] hover:text-[#3F51B5] transition-colors",
+                                  activity.status === "completed" || activity.status === "cancelled"
+                                    ? "text-gray-400 line-through"
+                                    : "text-gray-900",
+                                )}
+                              >
+                                {activity.subject}
+                              </button>
+                              <span className="text-xs text-gray-500 flex items-center gap-1">
+                                {ACTIVITY_TYPE_LABELS[activity.type]}
+                                {activity.direction &&
+                                  (activity.direction === "inbound" ? (
+                                    <ArrowDownLeft size={11} className="text-emerald-500" />
+                                  ) : (
+                                    <ArrowUpRight size={11} className="text-sky-500" />
+                                  ))}
+                              </span>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-6 py-4 text-sm">
+                          {activity.relatedType && activity.relatedName ? (
+                            <div className="flex flex-col min-w-0">
+                              <span className="text-gray-700 font-medium truncate flex items-center gap-1.5">
+                                <Link2 size={12} className="text-gray-400 shrink-0" />
+                                {activity.relatedName}
+                              </span>
+                              <span className="text-xs text-gray-400">
+                                {RELATED_TYPE_LABELS[activity.relatedType]}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-gray-300">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="px-6 py-4">
+                          {activity.assignedToName ? (
+                            <div className="flex flex-col min-w-0">
+                              <span className="text-gray-700 font-medium truncate">
+                                {activity.assignedToName}
+                              </span>
+                              {activity.assignedTeamName && (
+                                <span className="text-xs text-indigo-600 truncate flex items-center gap-1">
+                                  <UsersRound size={11} className="shrink-0" />
+                                  {activity.assignedTeamName}
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">{activity.assignedToId}</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="px-6 py-4 text-sm">
+                          {when ? (
+                            <span className={cn("flex items-center gap-1.5", activity.overdue ? "text-red-600 font-semibold" : "text-gray-600")}>
+                              <Calendar size={13} className="shrink-0" />
+                              {new Date(when).toLocaleString([], {
+                                dateStyle: "medium",
+                                timeStyle: "short",
+                              })}
+                            </span>
+                          ) : (
+                            <span className="text-gray-300">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="px-6 py-4">
+                          <Badge variant="outline" className={cn("capitalize font-semibold", priorityStyles[activity.priority])}>
+                            {activity.priority}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="px-6 py-4">
+                          <StatusBadge activity={activity} />
+                        </TableCell>
+                        <TableCell className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            {activity.status === "pending" && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                title="Mark as done"
+                                className="text-gray-400 hover:text-emerald-600"
+                                onClick={() => changeStatus(activity, "completed")}
+                                disabled={setStatusMutation.isPending}
+                              >
+                                <CheckCircle2 size={17} />
+                              </Button>
+                            )}
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-700">
+                                  <MoreHorizontal size={18} />
+                                  <span className="sr-only">Open actions</span>
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => setViewingActivity(activity)}>
+                                  <Info size={15} /> View details
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => openEdit(activity)}>
+                                  <Pencil size={15} /> Edit
+                                </DropdownMenuItem>
+                                {(activity.startAt || activity.dueAt) && (
+                                  <>
+                                    <DropdownMenuItem onClick={() => handleDownloadIcs(activity)}>
+                                      <Download size={15} /> Download .ics
+                                    </DropdownMenuItem>
+                                    {googleCalendarUrl(activity) && (
+                                      <DropdownMenuItem
+                                        onClick={() =>
+                                          window.open(googleCalendarUrl(activity)!, "_blank", "noopener")
+                                        }
+                                      >
+                                        <CalendarPlus size={15} /> Add to Google Calendar
+                                      </DropdownMenuItem>
+                                    )}
+                                  </>
+                                )}
+                                {activity.status !== "pending" ? (
+                                  <DropdownMenuItem onClick={() => changeStatus(activity, "pending")}>
+                                    <RotateCcw size={15} /> Reopen
+                                  </DropdownMenuItem>
+                                ) : (
+                                  <DropdownMenuItem onClick={() => changeStatus(activity, "cancelled")}>
+                                    <XCircle size={15} /> Cancel activity
+                                  </DropdownMenuItem>
+                                )}
+                                {isStaffAdmin && (
+                                  <>
+                                    <DropdownMenuItem onClick={() => openAssign(activity)}>
+                                      <UsersRound size={15} /> Reassign
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      variant="destructive"
+                                      onClick={() => setDeletingActivity(activity)}
+                                    >
+                                      <Trash2 size={15} /> Delete activity
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
 
-          <div className="p-4 border-t border-gray-100 flex items-center justify-between text-sm text-gray-500">
-            <span>Showing {filteredActivities.length} entries</span>
-            <div className="flex gap-2">
-              <button
-                className="px-3 py-1 border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50"
-                disabled>
-                
-                Previous
-              </button>
-              <button
-                className="px-3 py-1 border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50"
-                disabled>
-                
-                Next
-              </button>
+          {/* Pagination footer */}
+          {!activitiesQuery.isLoading && meta && meta.total > 0 && (
+            <div className="p-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <div className="flex items-center gap-3">
+                <span>
+                  {(meta.page - 1) * meta.limit + 1}–{Math.min(meta.page * meta.limit, meta.total)} of{" "}
+                  {meta.total} activities
+                </span>
+                <select
+                  value={limit}
+                  onChange={(e) => {
+                    setLimit(Number(e.target.value));
+                    resetToFirstPage();
+                  }}
+                  className={cn(inputClasses, "w-auto py-1 text-xs")}
+                >
+                  <option value={10}>10 / page</option>
+                  <option value={25}>25 / page</option>
+                  <option value={50}>50 / page</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setPage((p) => Math.max(p - 1, 1))}
+                  disabled={page <= 1}
+                >
+                  <ChevronLeft size={16} />
+                </Button>
+                <span className="px-3 text-sm font-bold text-gray-700">
+                  {meta.page} / {meta.totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setPage((p) => Math.min(p + 1, meta.totalPages))}
+                  disabled={page >= meta.totalPages}
+                >
+                  <ChevronRight size={16} />
+                </Button>
+              </div>
             </div>
-          </div>
-        </div>
+          )}
+        </Card>
       </div>
 
-      {/* Modal */}
-      {isModalOpen &&
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all scale-100">
-            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-              <h3 className="text-lg font-bold text-gray-800">
-                {editingActivity ? 'Edit Activity' : 'Log New Activity'}
-              </h3>
-              <button
-              onClick={handleCloseModal}
-              className="text-gray-400 hover:text-gray-600">
-              
-                <X size={20} />
-              </button>
+      {/* Details dialog */}
+      <Dialog open={!!viewingActivity} onOpenChange={(open) => !open && setViewingActivity(null)}>
+        <DialogContent className="max-w-xl max-h-[90dvh] overflow-y-auto">
+          {viewingActivity && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Activity Details</DialogTitle>
+                <DialogDescription>
+                  {ACTIVITY_TYPE_LABELS[viewingActivity.type]}
+                  {viewingActivity.direction ? ` · ${viewingActivity.direction}` : ""}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-6">
+                <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
+                  <div
+                    className={cn(
+                      "w-12 h-12 rounded-xl flex items-center justify-center shrink-0",
+                      typeAccents[viewingActivity.type],
+                    )}
+                  >
+                    {React.createElement(typeIcons[viewingActivity.type], { size: 22 })}
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="text-lg font-bold text-gray-900">{viewingActivity.subject}</h4>
+                    {viewingActivity.relatedName && viewingActivity.relatedType && (
+                      <span className="text-sm text-gray-500">
+                        {RELATED_TYPE_LABELS[viewingActivity.relatedType]}: {viewingActivity.relatedName}
+                      </span>
+                    )}
+                  </div>
+                  <div className="ml-auto shrink-0">
+                    <StatusBadge activity={viewingActivity} />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[
+                    {
+                      icon: Calendar,
+                      label: "Due",
+                      value: viewingActivity.dueAt
+                        ? new Date(viewingActivity.dueAt).toLocaleString()
+                        : "—",
+                    },
+                    {
+                      icon: CalendarClock,
+                      label: "Scheduled",
+                      value: viewingActivity.startAt
+                        ? `${new Date(viewingActivity.startAt).toLocaleString()}${viewingActivity.endAt ? ` → ${new Date(viewingActivity.endAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : ""}`
+                        : "—",
+                    },
+                    {
+                      icon: Bell,
+                      label: "Reminder",
+                      value: viewingActivity.remindAt
+                        ? new Date(viewingActivity.remindAt).toLocaleString()
+                        : "—",
+                    },
+                    {
+                      icon: CheckCircle2,
+                      label: "Completed",
+                      value: viewingActivity.completedAt
+                        ? new Date(viewingActivity.completedAt).toLocaleString()
+                        : "—",
+                    },
+                    {
+                      icon: Users,
+                      label: "Assigned To",
+                      value: viewingActivity.assignedToName ?? viewingActivity.assignedToId,
+                    },
+                    {
+                      icon: UsersRound,
+                      label: "Team",
+                      value: viewingActivity.assignedTeamName ?? "Unassigned",
+                    },
+                  ].map(({ icon: Icon, label, value }) => (
+                    <div key={label} className="flex items-center gap-3 text-sm text-gray-600">
+                      <Icon className="text-gray-400 shrink-0" size={18} />
+                      <div className="min-w-0">
+                        <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">{label}</p>
+                        <p className="font-medium whitespace-pre-wrap break-words">{value}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="bg-gray-50/75 p-4 rounded-xl border border-gray-100 space-y-1">
+                  <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Notes</p>
+                  <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                    {viewingActivity.description || "No notes for this activity."}
+                  </p>
+                </div>
+
+                <div className="text-[11px] text-gray-400 space-y-1 border-t border-gray-100 pt-4">
+                  <p>
+                    <span className="font-bold">Created by:</span>{" "}
+                    {viewingActivity.createdByName ?? viewingActivity.createdBy} ·{" "}
+                    {viewingActivity.createdAt ? new Date(viewingActivity.createdAt).toLocaleString() : "—"}
+                  </p>
+                </div>
+              </div>
+
+              <DialogFooter>
+                {(viewingActivity.startAt || viewingActivity.dueAt) && (
+                  <Button variant="outline" onClick={() => handleDownloadIcs(viewingActivity)}>
+                    <Download size={15} /> .ics
+                  </Button>
+                )}
+                {viewingActivity.status === "pending" && (
+                  <Button
+                    variant="outline"
+                    className="text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+                    onClick={() => {
+                      const target = viewingActivity;
+                      setViewingActivity(null);
+                      changeStatus(target, "completed");
+                    }}
+                  >
+                    <CheckCircle2 size={15} /> Mark done
+                  </Button>
+                )}
+                <Button variant="secondary" onClick={() => setViewingActivity(null)}>
+                  Close
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Create / Edit dialog */}
+      <Dialog open={formOpen} onOpenChange={(open) => !open && closeForm()}>
+        <DialogContent className="max-w-xl max-h-[90dvh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingActivity ? "Edit Activity" : "New Activity"}</DialogTitle>
+            <DialogDescription>
+              {editingActivity
+                ? "Update the details. Type and the linked record can't change — log a new activity instead."
+                : "Create a task or log a communication. Linking a record builds its timeline."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {formError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm flex items-center gap-2">
+                <AlertCircle size={16} className="shrink-0" />
+                {formError}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  Type *
+                </label>
+                <select
+                  disabled={isSaving || !!editingActivity}
+                  className={inputClasses}
+                  {...form.register("type")}
+                >
+                  {Object.entries(ACTIVITY_TYPE_LABELS).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  Priority
+                </label>
+                <select disabled={isSaving} className={inputClasses} {...form.register("priority")}>
+                  <option value="low">Low</option>
+                  <option value="normal">Normal</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Customer
-                </label>
-                <div className="relative">
-                  <select
-                  value={formData.customerName}
-                  onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    customerName: e.target.value
-                  })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5] appearance-none bg-white">
-                  
-                    {customers.map((c) =>
-                  <option key={c} value={c}>
-                        {c}
-                      </option>
-                  )}
-                  </select>
-                  <ChevronDown
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-                  size={16} />
-                
-                </div>
-              </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                Subject *
+              </label>
+              <Input
+                placeholder={watchType === "task" ? "Follow up on proposal" : "Intro call with decision maker"}
+                disabled={isSaving}
+                {...form.register("subject")}
+              />
+              <FieldError message={form.formState.errors.subject?.message} />
+            </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Assigned To
-                </label>
-                <div className="relative">
-                  <select
-                  value={formData.userName}
-                  onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    userName: e.target.value
-                  })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5] appearance-none bg-white">
-                  
-                    {users.map((u) =>
-                  <option key={u} value={u}>
-                        {u}
-                      </option>
-                  )}
+            {isCommunication && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                    Direction
+                  </label>
+                  <select disabled={isSaving || watchType === "note"} className={inputClasses} {...form.register("direction")}>
+                    <option value="outbound">Outbound (we reached out)</option>
+                    <option value="inbound">Inbound (they reached out)</option>
                   </select>
-                  <ChevronDown
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-                  size={16} />
-                
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Activity Type
-                </label>
-                <div className="flex gap-2">
-                  {['call', 'email', 'meeting', 'task'].map((type) =>
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() =>
-                  setFormData({
-                    ...formData,
-                    type: type as any
-                  })
-                  }
-                  className={`flex-1 py-2 px-3 rounded-lg border text-sm font-medium flex flex-col items-center gap-1 transition-all ${formData.type === type ? 'bg-[#EEF0FB] border-[#3F51B5] text-[#3F51B5]' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
-                  
-                      {type === 'call' && <Phone size={16} />}
-                      {type === 'email' && <Mail size={16} />}
-                      {type === 'meeting' && <Users size={16} />}
-                      {type === 'task' && <CheckSquare size={16} />}
-                      <span className="capitalize">{type}</span>
-                    </button>
+                {!editingActivity && (
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer pb-2">
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4 accent-[#3F51B5]"
+                      disabled={isSaving}
+                      {...form.register("alreadyHappened")}
+                    />
+                    Already happened (log it as done)
+                  </label>
                 )}
+              </div>
+            )}
+
+            {/* Related record */}
+            {!editingActivity && (
+              <div className="border border-gray-100 rounded-xl p-4 bg-gray-50/50 space-y-3">
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  Related Record (builds its timeline)
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <select
+                    className={inputClasses}
+                    disabled={isSaving}
+                    {...form.register("relatedType", {
+                      onChange: () => form.setValue("relatedId", ""),
+                    })}
+                  >
+                    <option value="">Not linked</option>
+                    {Object.entries(RELATED_TYPE_LABELS).map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    className={inputClasses}
+                    disabled={isSaving || !watchRelatedType || relatedPickerQuery.isLoading}
+                    {...form.register("relatedId")}
+                  >
+                    <option value="">
+                      {!watchRelatedType
+                        ? "Pick a type first"
+                        : relatedPickerQuery.isLoading
+                          ? "Loading..."
+                          : "Select a record"}
+                    </option>
+                    {relatedOptions.map((o) => (
+                      <option key={o.id} value={o.id}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <p className="text-[11px] text-gray-400">
+                  Unassigned activities are automatically routed to the linked record&apos;s owner.
+                  Completed calls/meetings on a lead also update its engagement score.
+                </p>
+              </div>
+            )}
+
+            {/* Scheduling */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {(watchType === "task" || !isCommunication) && (
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                    Due Date
+                  </label>
+                  <Input type="datetime-local" disabled={isSaving} {...form.register("dueAt")} />
+                </div>
+              )}
+              {(watchType === "meeting" || watchType === "call" || !watchAlreadyHappened || !!editingActivity) &&
+                isCommunication && (
+                  <>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                        Scheduled Start
+                      </label>
+                      <Input type="datetime-local" disabled={isSaving} {...form.register("startAt")} />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                        Scheduled End
+                      </label>
+                      <Input type="datetime-local" disabled={isSaving} {...form.register("endAt")} />
+                    </div>
+                  </>
+                )}
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  Reminder
+                </label>
+                <Input type="datetime-local" disabled={isSaving} {...form.register("remindAt")} />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                Notes
+              </label>
+              <textarea
+                rows={3}
+                disabled={isSaving}
+                placeholder="What is this about? What was discussed?"
+                className={cn(inputClasses, "resize-none")}
+                {...form.register("description")}
+              />
+              <FieldError message={form.formState.errors.description?.message} />
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={closeForm} disabled={isSaving}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSaving} className="bg-[#3F51B5] hover:bg-[#303F9F] text-white">
+                {isSaving && <Loader2 size={15} className="animate-spin" />}
+                {editingActivity ? "Update Activity" : "Create Activity"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reassign dialog */}
+      <Dialog open={!!assigningActivity} onOpenChange={(open) => !open && setAssigningActivity(null)}>
+        <DialogContent className="max-w-md">
+          {assigningActivity && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Reassign Activity</DialogTitle>
+                <DialogDescription>
+                  Hand{" "}
+                  <span className="font-semibold text-gray-700">{assigningActivity.subject}</span> to
+                  another staff user and/or route it to a team.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4">
+                {assignError && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm flex items-center gap-2">
+                    <AlertCircle size={16} className="shrink-0" />
+                    {assignError}
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                    Assignee *
+                  </label>
+                  <select
+                    className={inputClasses}
+                    value={assignOwnerId}
+                    disabled={assignActivityMutation.isPending || assignStaffQuery.isLoading}
+                    onChange={(e) => setAssignOwnerId(e.target.value)}
+                  >
+                    <option value="">Select a staff user</option>
+                    {(assignStaffQuery.data ?? []).map((s) => (
+                      <option key={s.keycloakId} value={s.keycloakId}>
+                        {staffDisplayName(s)} ({s.role})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                    Team
+                  </label>
+                  <select
+                    className={inputClasses}
+                    value={assignTeamId}
+                    disabled={assignActivityMutation.isPending || assignTeamsQuery.isLoading}
+                    onChange={(e) => setAssignTeamId(e.target.value)}
+                  >
+                    <option value="">No team</option>
+                    {assignTeams.map((team) => (
+                      <option key={team.id} value={team.id}>
+                        {team.name}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-[11px] text-gray-400 mt-1">
+                    When a team is set, the assignee must be one of its members.
+                  </p>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Date & Time
-                </label>
-                <input
-                type="datetime-local"
-                required
-                value={formData.activityDate}
-                onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  activityDate: e.target.value
-                })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5]" />
-              
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Notes
-                </label>
-                <textarea
-                rows={3}
-                required
-                value={formData.notes}
-                onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  notes: e.target.value
-                })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5]" />
-              
-              </div>
-
-              <div className="pt-4 flex justify-end gap-3">
-                <button
-                type="button"
-                onClick={handleCloseModal}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
-                
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setAssigningActivity(null)}
+                  disabled={assignActivityMutation.isPending}
+                >
                   Cancel
-                </button>
-                <button
-                type="submit"
-                className="px-4 py-2 text-sm font-medium text-white bg-[#3F51B5] rounded-lg hover:bg-[#303F9F]">
-                
-                  Save Activity
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      }
-    </div>);
+                </Button>
+                <Button
+                  onClick={handleAssign}
+                  disabled={assignActivityMutation.isPending}
+                  className="bg-[#3F51B5] hover:bg-[#303F9F] text-white"
+                >
+                  {assignActivityMutation.isPending && <Loader2 size={15} className="animate-spin" />}
+                  Save
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
+      {/* Delete confirmation dialog */}
+      <Dialog open={!!deletingActivity} onOpenChange={(open) => !open && setDeletingActivity(null)}>
+        <DialogContent className="max-w-md">
+          {deletingActivity && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Delete activity?</DialogTitle>
+                <DialogDescription>
+                  This permanently removes{" "}
+                  <span className="font-semibold text-gray-700">{deletingActivity.subject}</span>. History
+                  already synced into a linked lead or contact is kept. This action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setDeletingActivity(null)}
+                  disabled={deleteActivityMutation.isPending}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDelete}
+                  disabled={deleteActivityMutation.isPending}
+                >
+                  {deleteActivityMutation.isPending && <Loader2 size={15} className="animate-spin" />}
+                  Delete Activity
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
 }
