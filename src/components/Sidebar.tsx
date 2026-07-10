@@ -23,6 +23,7 @@ import {
   BookUser,
   Zap,
   BookOpen,
+  BarChart3,
   ChevronDown,
   ChevronRight,
   Shield,
@@ -54,7 +55,8 @@ export function Sidebar() {
     { icon: Activity, label: 'Activities', id: 'activities', href: '/activities' },
     { icon: Zap, label: 'Automation', id: 'automations', href: '/automations' },
     { icon: TicketCheck, label: 'Tickets', id: 'tickets', href: '/tickets' },
-    { icon: BookOpen, label: 'Knowledge Base', id: 'kb', href: '/kb' }
+    { icon: BookOpen, label: 'Knowledge Base', id: 'kb', href: '/kb' },
+    { icon: BarChart3, label: 'Reports', id: 'reports', href: '/reports' }
   ];
 
   const otherItems = [

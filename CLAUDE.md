@@ -35,7 +35,7 @@ src/
     layout.tsx            # root: wraps everything in <Providers>
     (crm)/                # authenticated app (route group)
       layout.tsx          # auth gate + Sidebar/Header shell
-      dashboard|customers|leads|opportunities|tickets|activities|users/page.tsx
+      dashboard|customers|leads|opportunities|tickets|activities|reports|users/page.tsx
     auth/                 # login | register | forgot-password | otp-verify
   crm-pages/              # the actual page UIs (Dashboard.tsx, LeadsPage.tsx, …)
   components/             # shared components (Header, Sidebar, *Card)
@@ -75,7 +75,9 @@ rules in `../AUTOMATION-AND-WORKFLOWS-BUSINESS.md`. `tickets/` + `kb/` are
 the helpdesk (`/tickets` renders a customer-portal view for
 `AppRole.Customer`, staff helpdesk otherwise; `/kb` is the wiki editor;
 `/faq` outside `(crm)` is the public help center) — rules in
-`../SERVICE-AND-SUPPORT-BUSINESS.md`. Teams and record assignment business rules
+`../SERVICE-AND-SUPPORT-BUSINESS.md`. `reports/` + `/reports` is the
+Reporting & Analytics module (dashboards built on **recharts** + a custom
+report builder over all domains) — see `../REPORTING-AND-ANALYTICS-DEVELOPER.md`. Teams and record assignment business rules
 live in `../TEAMS-AND-TERRITORIES.md`; lead capture/scoring/conversion and the
 pipeline Kanban rules live in `../LEADS-AND-PIPELINE-BUSINESS.md`; company
 (account) profiles, person (contact) records, interactions, and preferences
