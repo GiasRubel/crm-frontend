@@ -113,12 +113,11 @@ to the unauthenticated `POST /leads/capture`.
 ## Conventions
 
 - Use the `@/*` path alias (→ `src/`). Import UI primitives from `@/components/ui/*`.
-- Compose class names with `cn()` from `lib/utils.ts` (clsx + tailwind-merge).
-- Add new UI primitives via shadcn rather than hand-rolling; keep `components/ui/`
-  close to generated output.
+- **UI primitives: Always use shadcn/ui components.** Use `cn()` from `lib/utils.ts` (clsx + tailwind-merge) to compose Tailwind classes cleanly. Do not hand-roll custom components when a shadcn equivalent exists.
 - Client components that use hooks/browser APIs need `"use client"`. Keep it off
   route wrappers that don't need it.
 - Types: mirror backend response DTOs in the feature's `types.ts`.
+
 
 ## Gotchas
 
