@@ -56,7 +56,7 @@ export function KeycloakProvider({ children }: { children: React.ReactNode }) {
       setAuthenticated(false);
       setToken(undefined);
       setUser(null);
-      keycloak.login({ redirectUri: `${window.location.origin}/auth/login` });
+      keycloak.login({ redirectUri: `${window.location.origin}/dashboard` });
     };
 
     if (!initPromise) {

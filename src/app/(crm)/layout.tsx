@@ -2,7 +2,6 @@
 
 import { useAuth } from "@/providers/keycloak-provider";
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { Header } from "@/components/Header";
 import { Sidebar } from "@/components/Sidebar";
 
@@ -11,14 +10,15 @@ export default function CrmLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { authenticated, isLoading } = useAuth();
-  const router = useRouter();
+  const { authenticated, isLoading, login } = useAuth();
 
   useEffect(() => {
+    // Deep-linking into a protected route while logged out sends the user
+    // straight to Keycloak — no intermediate /auth/login stop ("one click").
     if (!isLoading && !authenticated) {
-      router.replace("/auth/login");
+      login();
     }
-  }, [isLoading, authenticated, router]);
+  }, [isLoading, authenticated, login]);
 
   if (isLoading) {
     return (
@@ -43,7 +43,7 @@ export default function CrmLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50/50">
+    <div className="flex min-h-screen bg-slate-50/50 dark:bg-slate-950">
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col lg:ml-64 transition-all duration-300">
         <Header />

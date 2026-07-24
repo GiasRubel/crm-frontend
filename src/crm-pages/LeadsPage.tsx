@@ -156,11 +156,11 @@ type ConvertFormValues = z.infer<typeof convertFormSchema>;
 // ── Presentational helpers ────────────────────────────────────────────────────
 
 const statusStyles: Record<LeadStatus, string> = {
-  new: "bg-sky-50 text-sky-700 border-sky-200",
-  contacted: "bg-indigo-50 text-indigo-700 border-indigo-200",
-  qualified: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  unqualified: "bg-slate-100 text-slate-500 border-slate-200",
-  converted: "bg-violet-50 text-violet-700 border-violet-200",
+  new: "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-500/15 dark:text-sky-300 dark:border-sky-500/30",
+  contacted: "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-300 dark:border-indigo-500/30",
+  qualified: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/30",
+  unqualified: "bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-800",
+  converted: "bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-500/15 dark:text-violet-300 dark:border-violet-500/30",
 };
 
 function StatusBadge({ status }: { status: LeadStatus }) {
@@ -172,9 +172,9 @@ function StatusBadge({ status }: { status: LeadStatus }) {
 }
 
 const ratingStyles: Record<LeadRating, string> = {
-  hot: "bg-red-50 text-red-600 border-red-200",
-  warm: "bg-amber-50 text-amber-600 border-amber-200",
-  cold: "bg-slate-50 text-slate-500 border-slate-200",
+  hot: "bg-red-50 text-red-600 border-red-200 dark:bg-red-500/15 dark:text-red-400 dark:border-red-500/30",
+  warm: "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30",
+  cold: "bg-slate-50 text-slate-500 border-slate-200 dark:bg-slate-800/50 dark:text-slate-400 dark:border-slate-800",
 };
 
 function ScoreCell({ score, rating }: { score: number; rating: LeadRating }) {
@@ -182,10 +182,10 @@ function ScoreCell({ score, rating }: { score: number; rating: LeadRating }) {
     rating === "hot" ? "bg-red-500" : rating === "warm" ? "bg-amber-500" : "bg-slate-400";
   return (
     <div className="flex items-center gap-2 min-w-[120px]">
-      <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+      <div className="flex-1 h-1.5 bg-gray-100 dark:bg-slate-800 rounded-full overflow-hidden">
         <div className={cn("h-full rounded-full", barColor)} style={{ width: `${score}%` }} />
       </div>
-      <span className="text-xs font-bold text-gray-600 w-7 text-right">{score}</span>
+      <span className="text-xs font-bold text-gray-600 dark:text-slate-300 w-7 text-right">{score}</span>
       <Badge variant="outline" className={cn("capitalize font-semibold text-[10px] px-1.5", ratingStyles[rating])}>
         {rating}
       </Badge>
@@ -211,8 +211,8 @@ function StatCard({
           <Icon size={20} />
         </div>
         <div className="min-w-0">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider truncate">{label}</p>
-          <p className="text-xl font-bold text-gray-900">{value ?? "—"}</p>
+          <p className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider truncate">{label}</p>
+          <p className="text-xl font-bold text-gray-900 dark:text-white">{value ?? "—"}</p>
         </div>
       </CardContent>
     </Card>
@@ -220,7 +220,7 @@ function StatCard({
 }
 
 const inputClasses =
-  "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5] transition-all disabled:bg-gray-50 disabled:text-gray-500";
+  "w-full px-3 py-2 border border-gray-200 dark:border-slate-700 rounded-lg text-sm bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5] transition-all disabled:bg-gray-50 disabled:dark:bg-slate-800/50 disabled:text-gray-500 disabled:dark:text-slate-400";
 
 function SortableHead({
   field,
@@ -239,7 +239,7 @@ function SortableHead({
 }) {
   const indicator =
     sortBy !== field ? (
-      <ArrowUpDown size={13} className="text-gray-300" />
+      <ArrowUpDown size={13} className="text-gray-300 dark:text-slate-600" />
     ) : sortOrder === "asc" ? (
       <ArrowUp size={13} className="text-[#3F51B5]" />
     ) : (
@@ -251,7 +251,7 @@ function SortableHead({
       <button
         type="button"
         onClick={() => onToggle(field)}
-        className="flex items-center gap-1.5 text-xs uppercase tracking-wider font-semibold text-gray-500 hover:text-gray-800 transition-colors"
+        className="flex items-center gap-1.5 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400 hover:text-gray-800 dark:hover:text-white transition-colors"
       >
         {children}
         {indicator}
@@ -262,7 +262,7 @@ function SortableHead({
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
-  return <p className="text-xs text-red-600 mt-1">{message}</p>;
+  return <p className="text-xs text-red-600 dark:text-red-400 mt-1">{message}</p>;
 }
 
 const currency = new Intl.NumberFormat("en-US", {
@@ -584,13 +584,13 @@ export function LeadsPage() {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="p-6 lg:p-8 bg-[#F4F5F7] min-h-screen">
+    <div className="p-6 lg:p-8 bg-[#F4F5F7] dark:bg-slate-950 min-h-screen">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Leads</h1>
-            <p className="text-sm text-gray-500">
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Leads</h1>
+            <p className="text-sm text-gray-500 dark:text-slate-400">
               Capture, score, qualify, and convert potential business.
             </p>
           </div>
@@ -602,36 +602,36 @@ export function LeadsPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <StatCard label="Total" value={stats?.total} icon={TrendingUp} accent="bg-[#3F51B5]/10 text-[#3F51B5]" />
-          <StatCard label="New" value={stats?.new} icon={UserPlus} accent="bg-sky-50 text-sky-600" />
-          <StatCard label="Hot" value={stats?.hot} icon={Flame} accent="bg-red-50 text-red-600" />
-          <StatCard label="Qualified" value={stats?.qualified} icon={ThumbsUp} accent="bg-emerald-50 text-emerald-600" />
-          <StatCard label="Converted" value={stats?.converted} icon={Target} accent="bg-violet-50 text-violet-600" />
+          <StatCard label="Total" value={stats?.total} icon={TrendingUp} accent="bg-[#3F51B5]/10 text-[#3F51B5] dark:bg-indigo-500/15 dark:text-indigo-300" />
+          <StatCard label="New" value={stats?.new} icon={UserPlus} accent="bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400" />
+          <StatCard label="Hot" value={stats?.hot} icon={Flame} accent="bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-400" />
+          <StatCard label="Qualified" value={stats?.qualified} icon={ThumbsUp} accent="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400" />
+          <StatCard label="Converted" value={stats?.converted} icon={Target} accent="bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400" />
           <StatCard
             label="Conv. Rate"
             value={stats ? `${stats.conversionRate}%` : undefined}
             icon={ArrowRightLeft}
-            accent="bg-amber-50 text-amber-600"
+            accent="bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400"
           />
         </div>
 
         {/* Notifications */}
         {successMsg && (
-          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 dark:bg-emerald-500/10 dark:border-emerald-500/30 dark:text-emerald-300 rounded-xl p-4 flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-3">
-              <Check className="text-emerald-600 shrink-0" size={20} />
+              <Check className="text-emerald-600 dark:text-emerald-400 shrink-0" size={20} />
               <span className="text-sm font-medium">{successMsg}</span>
             </div>
-            <button onClick={() => setSuccessMsg(null)} className="text-emerald-500 hover:text-emerald-700">
+            <button onClick={() => setSuccessMsg(null)} className="text-emerald-500 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300">
               <X size={18} />
             </button>
           </div>
         )}
 
         {(errorMsg || leadsQuery.isError) && (
-          <div className="bg-red-50 border border-red-200 text-red-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+          <div className="bg-red-50 border border-red-200 text-red-800 dark:bg-red-500/10 dark:border-red-500/30 dark:text-red-300 rounded-xl p-4 flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-3">
-              <AlertCircle className="text-red-600 shrink-0" size={20} />
+              <AlertCircle className="text-red-600 dark:text-red-400 shrink-0" size={20} />
               <span className="text-sm font-medium">
                 {errorMsg ??
                   (leadsQuery.error instanceof Error ? leadsQuery.error.message : "Failed to load leads")}
@@ -642,7 +642,7 @@ export function LeadsPage() {
                 setErrorMsg(null);
                 if (leadsQuery.isError) leadsQuery.refetch();
               }}
-              className="text-red-500 hover:text-red-700"
+              className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
             >
               <X size={18} />
             </button>
@@ -651,9 +651,9 @@ export function LeadsPage() {
 
         {/* Filters & Table */}
         <Card className="py-0 overflow-hidden">
-          <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="p-4 border-b border-gray-100 dark:border-slate-800 flex flex-col md:flex-row gap-4 items-center justify-between">
             <div className="relative w-full md:max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" size={18} />
               <Input
                 type="text"
                 placeholder="Search by name, email, company, or phone..."
@@ -668,7 +668,7 @@ export function LeadsPage() {
 
             <div className="flex w-full md:w-auto items-center gap-2 justify-end flex-wrap">
               {leadsQuery.isFetching && !leadsQuery.isLoading && (
-                <Loader2 size={16} className="animate-spin text-gray-400" />
+                <Loader2 size={16} className="animate-spin text-gray-400 dark:text-slate-500" />
               )}
               <select
                 value={statusFilter}
@@ -719,19 +719,19 @@ export function LeadsPage() {
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="bg-gray-50/75 hover:bg-gray-50/75">
+                <TableRow className="bg-gray-50/75 hover:bg-gray-50/75 dark:bg-slate-800/50 dark:hover:bg-slate-800/50">
                   <SortableHead field="lastName" className="px-6" {...sortProps}>Lead</SortableHead>
                   <SortableHead field="company" className="px-6" {...sortProps}>Company</SortableHead>
-                  <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500">
+                  <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
                     Source
                   </TableHead>
                   <SortableHead field="score" className="px-6" {...sortProps}>Score</SortableHead>
                   <SortableHead field="status" className="px-6" {...sortProps}>Status</SortableHead>
-                  <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500">
+                  <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
                     Assigned To
                   </TableHead>
                   <SortableHead field="createdAt" className="px-6" {...sortProps}>Created</SortableHead>
-                  <TableHead className="px-6 text-right text-xs uppercase tracking-wider font-semibold text-gray-500">
+                  <TableHead className="px-6 text-right text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
                     Actions
                   </TableHead>
                 </TableRow>
@@ -739,7 +739,7 @@ export function LeadsPage() {
               <TableBody>
                 {leadsQuery.isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="px-6 py-12 text-center text-gray-400">
+                    <TableCell colSpan={8} className="px-6 py-12 text-center text-gray-400 dark:text-slate-500">
                       <div className="flex justify-center items-center gap-2">
                         <Loader2 size={18} className="animate-spin" />
                         <span>Fetching leads...</span>
@@ -749,10 +749,10 @@ export function LeadsPage() {
                 ) : leads.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={8} className="px-6 py-16 text-center">
-                      <div className="flex flex-col items-center gap-2 text-gray-500">
-                        <TrendingUp size={32} className="text-gray-300" />
+                      <div className="flex flex-col items-center gap-2 text-gray-500 dark:text-slate-400">
+                        <TrendingUp size={32} className="text-gray-300 dark:text-slate-600" />
                         <p className="font-medium">No leads found</p>
-                        <p className="text-sm text-gray-400">
+                        <p className="text-sm text-gray-400 dark:text-slate-500">
                           {debouncedSearch || statusFilter || sourceFilter || ratingFilter
                             ? "Try adjusting your search or filters."
                             : "Add a lead manually or point your website form at the capture endpoint."}
@@ -762,32 +762,32 @@ export function LeadsPage() {
                   </TableRow>
                 ) : (
                   leads.map((lead) => (
-                    <TableRow key={lead.id} className="hover:bg-gray-50/50">
+                    <TableRow key={lead.id} className="hover:bg-gray-50/50 dark:hover:bg-slate-800">
                       <TableCell className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 bg-[#3F51B5]/10 text-[#3F51B5] rounded-full flex items-center justify-center font-bold text-xs uppercase shrink-0">
+                          <div className="w-9 h-9 bg-[#3F51B5]/10 text-[#3F51B5] dark:bg-indigo-500/15 dark:text-indigo-300 rounded-full flex items-center justify-center font-bold text-xs uppercase shrink-0">
                             {lead.firstName[0]}
                             {lead.lastName[0]}
                           </div>
                           <div className="flex flex-col min-w-0">
-                            <span className="font-semibold text-gray-900 truncate">
+                            <span className="font-semibold text-gray-900 dark:text-white truncate">
                               {lead.firstName} {lead.lastName}
                             </span>
-                            <span className="text-xs text-gray-500 truncate">{lead.email}</span>
+                            <span className="text-xs text-gray-500 dark:text-slate-400 truncate">{lead.email}</span>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="px-6 py-4 text-gray-600">
+                      <TableCell className="px-6 py-4 text-gray-600 dark:text-slate-300">
                         {lead.company ? (
                           <div className="flex items-center gap-1.5">
-                            <Building size={14} className="text-gray-400 shrink-0" />
+                            <Building size={14} className="text-gray-400 dark:text-slate-500 shrink-0" />
                             <span className="truncate">{lead.company}</span>
                           </div>
                         ) : (
-                          <span className="text-gray-300">—</span>
+                          <span className="text-gray-300 dark:text-slate-600">—</span>
                         )}
                       </TableCell>
-                      <TableCell className="px-6 py-4 text-gray-600 text-sm">
+                      <TableCell className="px-6 py-4 text-gray-600 dark:text-slate-300 text-sm">
                         {LEAD_SOURCE_LABELS[lead.source]}
                       </TableCell>
                       <TableCell className="px-6 py-4">
@@ -800,26 +800,26 @@ export function LeadsPage() {
                         {lead.assignedToName || lead.assignedTeamName ? (
                           <div className="flex flex-col min-w-0">
                             {lead.assignedToName && (
-                              <span className="text-gray-700 font-medium truncate">{lead.assignedToName}</span>
+                              <span className="text-gray-700 dark:text-slate-200 font-medium truncate">{lead.assignedToName}</span>
                             )}
                             {lead.assignedTeamName && (
-                              <span className="text-xs text-indigo-600 truncate flex items-center gap-1">
+                              <span className="text-xs text-indigo-600 dark:text-indigo-400 truncate flex items-center gap-1">
                                 <UsersRound size={11} className="shrink-0" />
                                 {lead.assignedTeamName}
                               </span>
                             )}
                           </div>
                         ) : (
-                          <span className="text-gray-300">Unassigned</span>
+                          <span className="text-gray-300 dark:text-slate-600">Unassigned</span>
                         )}
                       </TableCell>
-                      <TableCell className="px-6 py-4 text-gray-500">
+                      <TableCell className="px-6 py-4 text-gray-500 dark:text-slate-400">
                         {lead.createdAt ? new Date(lead.createdAt).toLocaleDateString() : "—"}
                       </TableCell>
                       <TableCell className="px-6 py-4 text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-700">
+                            <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-700 dark:text-slate-500 dark:hover:text-slate-200">
                               <MoreHorizontal size={18} />
                               <span className="sr-only">Open actions</span>
                             </Button>
@@ -884,7 +884,7 @@ export function LeadsPage() {
 
           {/* Pagination footer */}
           {!leadsQuery.isLoading && meta && meta.total > 0 && (
-            <div className="p-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            <div className="p-4 border-t border-gray-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
               <div className="flex items-center gap-3">
                 <span>
                   {(meta.page - 1) * meta.limit + 1}–{Math.min(meta.page * meta.limit, meta.total)} of{" "}
@@ -912,7 +912,7 @@ export function LeadsPage() {
                 >
                   <ChevronLeft size={16} />
                 </Button>
-                <span className="px-3 text-sm font-bold text-gray-700">
+                <span className="px-3 text-sm font-bold text-gray-700 dark:text-slate-200">
                   {meta.page} / {meta.totalPages}
                 </span>
                 <Button
@@ -940,16 +940,16 @@ export function LeadsPage() {
               </DialogHeader>
 
               <div className="space-y-6">
-                <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
-                  <div className="w-12 h-12 bg-[#3F51B5]/10 text-[#3F51B5] rounded-full flex items-center justify-center font-bold text-lg uppercase">
+                <div className="flex items-center gap-4 pb-4 border-b border-gray-100 dark:border-slate-800">
+                  <div className="w-12 h-12 bg-[#3F51B5]/10 text-[#3F51B5] dark:bg-indigo-500/15 dark:text-indigo-300 rounded-full flex items-center justify-center font-bold text-lg uppercase">
                     {viewingLead.firstName[0]}
                     {viewingLead.lastName[0]}
                   </div>
                   <div className="min-w-0">
-                    <h4 className="text-lg font-bold text-gray-900 truncate">
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white truncate">
                       {viewingLead.firstName} {viewingLead.lastName}
                     </h4>
-                    <span className="text-sm text-gray-500">{viewingLead.email}</span>
+                    <span className="text-sm text-gray-500 dark:text-slate-400">{viewingLead.email}</span>
                   </div>
                   <div className="ml-auto shrink-0 flex flex-col items-end gap-1.5">
                     <StatusBadge status={viewingLead.status} />
@@ -987,10 +987,10 @@ export function LeadsPage() {
                       value: viewingLead.assignedTeamName || "Unassigned",
                     },
                   ].map(({ icon: Icon, label, value }) => (
-                    <div key={label} className="flex items-center gap-3 text-sm text-gray-600">
-                      <Icon className="text-gray-400 shrink-0" size={18} />
+                    <div key={label} className="flex items-center gap-3 text-sm text-gray-600 dark:text-slate-300">
+                      <Icon className="text-gray-400 dark:text-slate-500 shrink-0" size={18} />
                       <div className="min-w-0">
-                        <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">{label}</p>
+                        <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold">{label}</p>
                         <p className="font-medium whitespace-pre-wrap break-words">{value}</p>
                       </div>
                     </div>
@@ -998,46 +998,46 @@ export function LeadsPage() {
                 </div>
 
                 {viewingLead.status === "converted" && (
-                  <div className="bg-violet-50 border border-violet-200 rounded-xl p-4 text-sm text-violet-800">
+                  <div className="bg-violet-50 border border-violet-200 text-violet-800 dark:bg-violet-500/10 dark:border-violet-500/30 dark:text-violet-300 rounded-xl p-4 text-sm">
                     Converted{viewingLead.convertedAt ? ` on ${new Date(viewingLead.convertedAt).toLocaleDateString()}` : ""} —
                     a customer profile{viewingLead.convertedOpportunityId ? " and a pipeline deal were" : " was"} created
                     from this lead.
                   </div>
                 )}
 
-                <div className="bg-gray-50/75 p-4 rounded-xl border border-gray-100 space-y-1">
-                  <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Notes</p>
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                <div className="bg-gray-50/75 dark:bg-slate-800/50 p-4 rounded-xl border border-gray-100 dark:border-slate-800 space-y-1">
+                  <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold">Notes</p>
+                  <p className="text-sm text-gray-700 dark:text-slate-200 whitespace-pre-wrap">
                     {viewingLead.notes || "No notes for this lead."}
                   </p>
                 </div>
 
                 {/* Engagement timeline */}
                 <div className="space-y-2">
-                  <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">
+                  <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold">
                     Engagement History ({viewingLead.engagements.length})
                   </p>
                   {viewingLead.engagements.length === 0 ? (
-                    <p className="text-sm text-gray-400">No engagements logged yet.</p>
+                    <p className="text-sm text-gray-400 dark:text-slate-500">No engagements logged yet.</p>
                   ) : (
                     <ul className="space-y-2 max-h-56 overflow-y-auto pr-1">
                       {viewingLead.engagements.map((e, i) => (
                         <li
                           key={i}
-                          className="flex items-start gap-3 text-sm bg-white border border-gray-100 rounded-lg p-3"
+                          className="flex items-start gap-3 text-sm bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-lg p-3"
                         >
                           <span
                             className={cn(
                               "text-xs font-bold px-1.5 py-0.5 rounded shrink-0",
-                              e.points > 0 ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500",
+                              e.points > 0 ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300" : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400",
                             )}
                           >
                             {e.points > 0 ? `+${e.points}` : e.points}
                           </span>
                           <div className="min-w-0 flex-1">
-                            <p className="font-medium text-gray-800">{ENGAGEMENT_TYPE_LABELS[e.type]}</p>
-                            {e.note && <p className="text-gray-500 whitespace-pre-wrap break-words">{e.note}</p>}
-                            <p className="text-[11px] text-gray-400 mt-0.5">
+                            <p className="font-medium text-gray-800 dark:text-white">{ENGAGEMENT_TYPE_LABELS[e.type]}</p>
+                            {e.note && <p className="text-gray-500 dark:text-slate-400 whitespace-pre-wrap break-words">{e.note}</p>}
+                            <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-0.5">
                               {new Date(e.occurredAt).toLocaleString()}
                               {e.recordedByName ? ` · by ${e.recordedByName}` : ""}
                             </p>
@@ -1085,7 +1085,7 @@ export function LeadsPage() {
 
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {formError && (
-              <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm flex items-center gap-2">
+              <div className="bg-red-50 border border-red-200 text-red-700 dark:bg-red-500/10 dark:border-red-500/30 dark:text-red-300 rounded-lg p-3 text-sm flex items-center gap-2">
                 <AlertCircle size={16} className="shrink-0" />
                 {formError}
               </div>
@@ -1093,14 +1093,14 @@ export function LeadsPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   First Name *
                 </label>
                 <Input disabled={isSaving} {...form.register("firstName")} />
                 <FieldError message={form.formState.errors.firstName?.message} />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Last Name *
                 </label>
                 <Input disabled={isSaving} {...form.register("lastName")} />
@@ -1109,7 +1109,7 @@ export function LeadsPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                 Email Address *
               </label>
               <Input type="email" placeholder="name@example.com" disabled={isSaving} {...form.register("email")} />
@@ -1118,14 +1118,14 @@ export function LeadsPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Phone Number
                 </label>
                 <Input type="tel" placeholder="+1 234 567 890" disabled={isSaving} {...form.register("phone")} />
                 <FieldError message={form.formState.errors.phone?.message} />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Company
                 </label>
                 <Input placeholder="Acme Corp" disabled={isSaving} {...form.register("company")} />
@@ -1135,14 +1135,14 @@ export function LeadsPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Job Title
                 </label>
                 <Input placeholder="Head of Procurement" disabled={isSaving} {...form.register("jobTitle")} />
                 <FieldError message={form.formState.errors.jobTitle?.message} />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Source
                 </label>
                 <select disabled={isSaving} className={inputClasses} {...form.register("source")}>
@@ -1156,7 +1156,7 @@ export function LeadsPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                 Estimated Value (USD)
               </label>
               <Input
@@ -1173,7 +1173,7 @@ export function LeadsPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                 Notes
               </label>
               <textarea
@@ -1208,7 +1208,7 @@ export function LeadsPage() {
                 <DialogTitle>Log Engagement</DialogTitle>
                 <DialogDescription>
                   Record a touchpoint with{" "}
-                  <span className="font-semibold text-gray-700">
+                  <span className="font-semibold text-gray-700 dark:text-slate-200">
                     {engagingLead.firstName} {engagingLead.lastName}
                   </span>
                   . The lead score updates automatically.
@@ -1217,14 +1217,14 @@ export function LeadsPage() {
 
               <form onSubmit={engagementForm.handleSubmit(onSubmitEngagement)} className="space-y-4">
                 {engagementError && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm flex items-center gap-2">
+                  <div className="bg-red-50 border border-red-200 text-red-700 dark:bg-red-500/10 dark:border-red-500/30 dark:text-red-300 rounded-lg p-3 text-sm flex items-center gap-2">
                     <AlertCircle size={16} className="shrink-0" />
                     {engagementError}
                   </div>
                 )}
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                     Engagement Type *
                   </label>
                   <select
@@ -1240,13 +1240,13 @@ export function LeadsPage() {
                       ),
                     )}
                   </select>
-                  <p className="text-[11px] text-gray-400 mt-1">
+                  <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">
                     Calls, meetings, and email replies move a new lead to &quot;contacted&quot; automatically.
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                     Note
                   </label>
                   <textarea
@@ -1292,7 +1292,7 @@ export function LeadsPage() {
                 <DialogTitle>Convert Lead</DialogTitle>
                 <DialogDescription>
                   Convert{" "}
-                  <span className="font-semibold text-gray-700">
+                  <span className="font-semibold text-gray-700 dark:text-slate-200">
                     {convertingLead.firstName} {convertingLead.lastName}
                   </span>{" "}
                   into a customer. A Keycloak sign-in account is provisioned and an invitation email is sent.
@@ -1301,7 +1301,7 @@ export function LeadsPage() {
 
               <form onSubmit={convertForm.handleSubmit(onSubmitConvert)} className="space-y-4">
                 {convertError && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm flex items-center gap-2">
+                  <div className="bg-red-50 border border-red-200 text-red-700 dark:bg-red-500/10 dark:border-red-500/30 dark:text-red-300 rounded-lg p-3 text-sm flex items-center gap-2">
                     <AlertCircle size={16} className="shrink-0" />
                     {convertError}
                   </div>
@@ -1309,7 +1309,7 @@ export function LeadsPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                    <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                       Phone {convertingLead.phone ? "" : "*"}
                     </label>
                     <Input
@@ -1320,13 +1320,13 @@ export function LeadsPage() {
                     />
                     <FieldError message={convertForm.formState.errors.phone?.message} />
                     {!convertingLead.phone && (
-                      <p className="text-[11px] text-gray-400 mt-1">
+                      <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">
                         Required — the customer profile needs a phone number.
                       </p>
                     )}
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                    <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                       Address
                     </label>
                     <Input
@@ -1338,7 +1338,7 @@ export function LeadsPage() {
                   </div>
                 </div>
 
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-slate-200 cursor-pointer">
                   <input
                     type="checkbox"
                     className="w-4 h-4 accent-[#3F51B5]"
@@ -1349,9 +1349,9 @@ export function LeadsPage() {
                 </label>
 
                 {watchCreateOpportunity && (
-                  <div className="space-y-4 border border-gray-100 rounded-xl p-4 bg-gray-50/50">
+                  <div className="space-y-4 border border-gray-100 dark:border-slate-800 rounded-xl p-4 bg-gray-50/50 dark:bg-slate-800/50">
                     <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                      <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                         Deal Name
                       </label>
                       <Input
@@ -1362,7 +1362,7 @@ export function LeadsPage() {
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                        <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                           Amount (USD)
                         </label>
                         <Input
@@ -1377,7 +1377,7 @@ export function LeadsPage() {
                         <FieldError message={convertForm.formState.errors.amount?.message} />
                       </div>
                       <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                        <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                           Expected Close
                         </label>
                         <Input
@@ -1387,7 +1387,7 @@ export function LeadsPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                        <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                           Stage
                         </label>
                         <select
@@ -1437,7 +1437,7 @@ export function LeadsPage() {
                 <DialogTitle>Assign Lead</DialogTitle>
                 <DialogDescription>
                   Route{" "}
-                  <span className="font-semibold text-gray-700">
+                  <span className="font-semibold text-gray-700 dark:text-slate-200">
                     {assigningLead.firstName} {assigningLead.lastName}
                   </span>{" "}
                   to a team and/or a record owner. Team members gain visibility of this record.
@@ -1446,14 +1446,14 @@ export function LeadsPage() {
 
               <div className="space-y-4">
                 {assignError && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm flex items-center gap-2">
+                  <div className="bg-red-50 border border-red-200 text-red-700 dark:bg-red-500/10 dark:border-red-500/30 dark:text-red-300 rounded-lg p-3 text-sm flex items-center gap-2">
                     <AlertCircle size={16} className="shrink-0" />
                     {assignError}
                   </div>
                 )}
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                     Team
                   </label>
                   <select
@@ -1484,12 +1484,12 @@ export function LeadsPage() {
                     ))}
                   </select>
                   {assignTeamsQuery.isLoading && (
-                    <p className="text-[11px] text-gray-400 mt-1">Loading teams...</p>
+                    <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">Loading teams...</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                     Record Owner
                   </label>
                   <select
@@ -1505,7 +1505,7 @@ export function LeadsPage() {
                       </option>
                     ))}
                   </select>
-                  <p className="text-[11px] text-gray-400 mt-1">
+                  <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">
                     {assignTeamId
                       ? "Only members of the selected team can own this record."
                       : "Pick a team first to narrow the list to its members."}
@@ -1544,7 +1544,7 @@ export function LeadsPage() {
                 <DialogTitle>Delete lead?</DialogTitle>
                 <DialogDescription>
                   This permanently removes{" "}
-                  <span className="font-semibold text-gray-700">
+                  <span className="font-semibold text-gray-700 dark:text-slate-200">
                     {deletingLead.firstName} {deletingLead.lastName}
                   </span>{" "}
                   ({deletingLead.email}) and its engagement history. This action cannot be undone.

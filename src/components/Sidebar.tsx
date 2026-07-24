@@ -1,18 +1,12 @@
 "use client";
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import React from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/providers/keycloak-provider";
 import {
   LayoutDashboard,
-  ShoppingBag,
-  UtensilsCrossed,
-  Star,
-  Settings,
-  CreditCard,
   HelpCircle,
-  Users2,
   UsersRound,
   UserCheck,
   TrendingUp,
@@ -24,155 +18,136 @@ import {
   Zap,
   BookOpen,
   BarChart3,
-  ChevronDown,
-  ChevronRight,
   Shield,
-  LogOut
-} from 'lucide-react';
+  LogOut,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
+type NavItem = { icon: React.ElementType; label: string; href: string };
+type NavSection = { title: string; items: NavItem[] };
+
 export function Sidebar() {
   const pathname = usePathname();
-  const [isCrmOpen, setIsCrmOpen] = useState(true);
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
 
-  const menuItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', id: 'dashboard', href: '/dashboard' },
-    { icon: ShoppingBag, label: 'Food Order', id: 'food-order', href: '/food-order' },
-    { icon: UtensilsCrossed, label: 'Manage Menu', id: 'manage-menu', href: '/manage-menu' },
-    { icon: Star, label: 'Customer Review', id: 'reviews', href: '/reviews' }
-  ];
+  const role = user?.role;
+  const isCustomer = role === "Customer";
+  const isAdmin = role === "Admin" || role === "Administrator";
 
-  const crmItems = [
-    { icon: UserCheck, label: 'Customers', id: 'customers', href: '/customers' },
-    { icon: Building2, label: 'Accounts', id: 'accounts', href: '/accounts' },
-    { icon: BookUser, label: 'Contacts', id: 'contacts', href: '/contacts' },
-    { icon: UsersRound, label: 'Teams', id: 'teams', href: '/teams' },
-    { icon: TrendingUp, label: 'Leads', id: 'leads', href: '/leads' },
-    { icon: Target, label: 'Opportunities', id: 'opportunities', href: '/opportunities' },
-    { icon: Activity, label: 'Activities', id: 'activities', href: '/activities' },
-    { icon: Zap, label: 'Automation', id: 'automations', href: '/automations' },
-    { icon: TicketCheck, label: 'Tickets', id: 'tickets', href: '/tickets' },
-    { icon: BookOpen, label: 'Knowledge Base', id: 'kb', href: '/kb' },
-    { icon: BarChart3, label: 'Reports', id: 'reports', href: '/reports' }
-  ];
+  // Role-aware navigation.
+  const sections: NavSection[] = isCustomer
+    ? [
+        {
+          title: "Menu",
+          items: [
+            { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
+            { icon: TicketCheck, label: "Support Tickets", href: "/tickets" },
+            { icon: HelpCircle, label: "Help Center", href: "/faq" },
+          ],
+        },
+      ]
+    : [
+        {
+          title: "Main Menu",
+          items: [
+            { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
+            { icon: BarChart3, label: "Reports", href: "/reports" },
+          ],
+        },
+        {
+          title: "CRM",
+          items: [
+            { icon: TrendingUp, label: "Leads", href: "/leads" },
+            { icon: Target, label: "Opportunities", href: "/opportunities" },
+            { icon: UserCheck, label: "Customers", href: "/customers" },
+            { icon: Building2, label: "Accounts", href: "/accounts" },
+            { icon: BookUser, label: "Contacts", href: "/contacts" },
+            { icon: UsersRound, label: "Teams", href: "/teams" },
+            { icon: Activity, label: "Activities", href: "/activities" },
+          ],
+        },
+        {
+          title: "Support",
+          items: [
+            { icon: TicketCheck, label: "Tickets", href: "/tickets" },
+            { icon: BookOpen, label: "Knowledge Base", href: "/kb" },
+          ],
+        },
+        // Administration — admins only.
+        ...(isAdmin
+          ? [
+              {
+                title: "Administration",
+                items: [
+                  { icon: Zap, label: "Automations", href: "/automations" },
+                  { icon: Shield, label: "Users", href: "/users" },
+                ],
+              } satisfies NavSection,
+            ]
+          : []),
+      ];
 
-  const otherItems = [
-    { icon: Settings, label: 'Settings', id: 'settings', href: '/settings' },
-    { icon: CreditCard, label: 'Payment', id: 'payment', href: '/payment' },
-    { icon: Shield, label: 'Users', id: 'users', href: '/users' },
-    { icon: HelpCircle, label: 'Help', id: 'help', href: '/help' }
-  ];
-
-  const isCrmActive = pathname ? crmItems.some((item) => pathname.startsWith(item.href)) : false;
-
-  const SidebarButton = ({ item, isActive, onClick, className }: any) => (
-    <Link href={item.href} className="block w-full">
-      <Button
-        variant={isActive ? "secondary" : "ghost"}
-        className={cn(
-          "w-full justify-start gap-3 h-11 px-4 rounded-xl transition-all duration-200",
-          isActive ? "bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800" : "text-slate-500 hover:bg-slate-50",
-          className
-        )}
-      >
-        <item.icon size={18} className={cn(isActive ? "text-indigo-600" : "text-slate-400")} />
-        <span className="font-medium">{item.label}</span>
-      </Button>
-    </Link>
-  );
+  const isActive = (href: string) =>
+    pathname === href || (pathname?.startsWith(href + "/") ?? false);
 
   return (
-    <nav className="w-64 bg-white h-screen fixed left-0 top-0 border-r border-slate-100 hidden lg:flex flex-col p-6 z-10 overflow-y-auto">
+    <nav className="fixed left-0 top-0 z-10 hidden h-screen w-64 flex-col overflow-y-auto border-r border-slate-100 bg-white p-6 lg:flex dark:border-slate-800 dark:bg-slate-900">
       {/* Logo */}
-      <Link href="/dashboard" className="flex items-center gap-3 mb-10 px-2 flex-shrink-0 group cursor-pointer">
-        <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-200 group-hover:scale-110 transition-transform">
-          G
+      <Link
+        href="/dashboard"
+        className="group mb-10 flex flex-shrink-0 cursor-pointer items-center gap-3 px-2"
+      >
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 text-xl font-bold text-white shadow-lg shadow-indigo-200 transition-transform group-hover:scale-110">
+          C
         </div>
-        <span className="text-slate-800 font-bold text-xl tracking-tight">
-          GOODFOOD
+        <span className="text-xl font-bold tracking-tight text-slate-800 dark:text-white">
+          CRM Pro
         </span>
       </Link>
 
-      {/* Menu Section */}
-      <div className="space-y-6 flex-1">
-        <div>
-          <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-[2px] mb-4 px-4">
-            Main Menu
-          </h3>
-          <div className="space-y-1">
-            <SidebarButton 
-              item={menuItems[0]} 
-              isActive={pathname === menuItems[0].href} 
-            />
-
-            {/* CRM Group */}
+      {/* Nav sections */}
+      <div className="flex-1 space-y-6">
+        {sections.map((section, i) => (
+          <div key={section.title}>
+            {i > 0 && <Separator className="mb-6 bg-slate-50 dark:bg-slate-800" />}
+            <h3 className="mb-4 px-4 text-[11px] font-bold uppercase tracking-[2px] text-slate-400 dark:text-slate-500">
+              {section.title}
+            </h3>
             <div className="space-y-1">
-              <Button
-                variant="ghost"
-                className={cn(
-                  "w-full justify-between gap-3 h-11 px-4 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-600",
-                  isCrmActive && "text-indigo-700"
-                )}
-                onClick={() => setIsCrmOpen(!isCrmOpen)}
-              >
-                <div className="flex items-center gap-3">
-                  <Users2 size={18} className={isCrmActive ? "text-indigo-600" : "text-slate-400"} />
-                  <span className="font-medium">CRM</span>
-                </div>
-                {isCrmOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-              </Button>
-
-              {isCrmOpen && (
-                <div className="ml-4 pl-4 border-l border-slate-100 space-y-1 mt-1">
-                  {crmItems.map((item) => (
-                    <SidebarButton
-                      key={item.id}
-                      item={item}
-                      isActive={pathname === item.href}
-                      className="h-10 text-sm"
-                    />
-                  ))}
-                </div>
-              )}
+              {section.items.map((item) => {
+                const active = isActive(item.href);
+                return (
+                  <Link key={item.href} href={item.href} className="block w-full">
+                    <Button
+                      variant={active ? "secondary" : "ghost"}
+                      className={cn(
+                        "h-11 w-full justify-start gap-3 rounded-xl px-4 transition-all duration-200",
+                        active
+                          ? "bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 dark:bg-indigo-500/10 dark:text-indigo-300 dark:hover:bg-indigo-500/20 dark:hover:text-indigo-200"
+                          : "text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200",
+                      )}
+                    >
+                      <item.icon
+                        size={18}
+                        className={cn(active ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400 dark:text-slate-500")}
+                      />
+                      <span className="font-medium">{item.label}</span>
+                    </Button>
+                  </Link>
+                );
+              })}
             </div>
-
-            {menuItems.slice(1).map((item) => (
-              <SidebarButton
-                key={item.id}
-                item={item}
-                isActive={pathname === item.href}
-              />
-            ))}
           </div>
-        </div>
-
-        <Separator className="bg-slate-50" />
-
-        {/* Others Section */}
-        <div>
-          <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-[2px] mb-4 px-4">
-            System
-          </h3>
-          <div className="space-y-1">
-            {otherItems.map((item) => (
-              <SidebarButton
-                key={item.id}
-                item={item}
-                isActive={pathname === item.href}
-              />
-            ))}
-          </div>
-        </div>
+        ))}
       </div>
 
       {/* Logout */}
       <div className="mt-auto pt-6">
-        <Button 
-          variant="ghost" 
-          className="w-full justify-start gap-3 h-11 px-4 text-rose-500 hover:bg-rose-50 hover:text-rose-600 rounded-xl"
+        <Button
+          variant="ghost"
+          className="h-11 w-full justify-start gap-3 rounded-xl px-4 text-rose-500 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10"
           onClick={logout}
         >
           <LogOut size={18} />

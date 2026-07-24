@@ -33,11 +33,11 @@ const captureFormSchema = z.object({
 type CaptureFormValues = z.infer<typeof captureFormSchema>;
 
 const inputClasses =
-  "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5] transition-all disabled:bg-gray-50 disabled:text-gray-500";
+  "w-full px-3 py-2 border border-gray-200 dark:border-slate-700 rounded-lg text-sm bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5] transition-all disabled:bg-gray-50 dark:disabled:bg-slate-800/50 disabled:text-gray-500 dark:disabled:text-slate-400";
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
-  return <p className="text-xs text-red-600 mt-1">{message}</p>;
+  return <p className="text-xs text-red-600 dark:text-red-400 mt-1">{message}</p>;
 }
 
 /**
@@ -88,14 +88,14 @@ export function LeadCapturePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F5F7] flex items-center justify-center p-6">
+    <div className="min-h-screen bg-[#F4F5F7] dark:bg-slate-950 flex items-center justify-center p-6">
       <Card className="w-full max-w-lg shadow-md">
         <CardContent className="p-8">
           {submitted ? (
             <div className="flex flex-col items-center text-center gap-3 py-8">
               <CheckCircle2 size={48} className="text-emerald-500" />
-              <h1 className="text-xl font-bold text-gray-800">Thanks for reaching out!</h1>
-              <p className="text-sm text-gray-500 max-w-sm">
+              <h1 className="text-xl font-bold text-gray-800 dark:text-white">Thanks for reaching out!</h1>
+              <p className="text-sm text-gray-500 dark:text-slate-400 max-w-sm">
                 We received your details. A member of our sales team will contact you shortly.
               </p>
               <Button
@@ -112,15 +112,15 @@ export function LeadCapturePage() {
           ) : (
             <>
               <div className="mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">Contact Sales</h1>
-                <p className="text-sm text-gray-500 mt-1">
+                <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Contact Sales</h1>
+                <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
                   Tell us a bit about yourself and we&apos;ll get back to you.
                 </p>
               </div>
 
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 {submitError && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm flex items-center gap-2">
+                  <div className="bg-red-50 dark:bg-red-500/15 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300 rounded-lg p-3 text-sm flex items-center gap-2">
                     <AlertCircle size={16} className="shrink-0" />
                     {submitError}
                   </div>
@@ -128,14 +128,14 @@ export function LeadCapturePage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                    <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                       First Name *
                     </label>
                     <Input disabled={isSubmitting} {...form.register("firstName")} />
                     <FieldError message={form.formState.errors.firstName?.message} />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                    <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                       Last Name *
                     </label>
                     <Input disabled={isSubmitting} {...form.register("lastName")} />
@@ -144,7 +144,7 @@ export function LeadCapturePage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                     Work Email *
                   </label>
                   <Input
@@ -158,7 +158,7 @@ export function LeadCapturePage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                    <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                       Phone
                     </label>
                     <Input
@@ -170,7 +170,7 @@ export function LeadCapturePage() {
                     <FieldError message={form.formState.errors.phone?.message} />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                    <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                       Company
                     </label>
                     <Input placeholder="Acme Corp" disabled={isSubmitting} {...form.register("company")} />
@@ -179,7 +179,7 @@ export function LeadCapturePage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                     Region
                   </label>
                   <Input
@@ -187,13 +187,13 @@ export function LeadCapturePage() {
                     disabled={isSubmitting}
                     {...form.register("region")}
                   />
-                  <p className="text-[11px] text-gray-400 mt-1">
+                  <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">
                     Helps us route your enquiry to the right regional team.
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                     How can we help?
                   </label>
                   <textarea

@@ -145,30 +145,30 @@ const typeIcons: Record<ActivityType, React.ElementType> = {
 };
 
 const typeAccents: Record<ActivityType, string> = {
-  task: "bg-[#3F51B5]/10 text-[#3F51B5]",
-  call: "bg-emerald-50 text-emerald-600",
-  email: "bg-sky-50 text-sky-600",
-  meeting: "bg-violet-50 text-violet-600",
-  sms: "bg-amber-50 text-amber-600",
-  note: "bg-slate-100 text-slate-500",
+  task: "bg-[#3F51B5]/10 text-[#3F51B5] dark:bg-indigo-500/15 dark:text-indigo-300",
+  call: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400",
+  email: "bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400",
+  meeting: "bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400",
+  sms: "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400",
+  note: "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400",
 };
 
 const statusStyles: Record<ActivityStatus, string> = {
-  pending: "bg-amber-50 text-amber-700 border-amber-200",
-  completed: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  cancelled: "bg-slate-100 text-slate-500 border-slate-200",
+  pending: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/30",
+  completed: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/30",
+  cancelled: "bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-800",
 };
 
 const priorityStyles: Record<ActivityPriority, string> = {
-  high: "bg-red-50 text-red-600 border-red-200",
-  normal: "bg-slate-50 text-slate-600 border-slate-200",
-  low: "bg-slate-50 text-slate-400 border-slate-200",
+  high: "bg-red-50 text-red-600 border-red-200 dark:bg-red-500/15 dark:text-red-400 dark:border-red-500/30",
+  normal: "bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800/50 dark:text-slate-300 dark:border-slate-800",
+  low: "bg-slate-50 text-slate-400 border-slate-200 dark:bg-slate-800/50 dark:text-slate-500 dark:border-slate-800",
 };
 
 function StatusBadge({ activity }: { activity: Activity }) {
   if (activity.overdue) {
     return (
-      <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200 font-semibold gap-1">
+      <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200 dark:bg-red-500/15 dark:text-red-400 dark:border-red-500/30 font-semibold gap-1">
         <AlertTriangle size={11} /> Overdue
       </Badge>
     );
@@ -198,8 +198,8 @@ function StatCard({
           <Icon size={20} />
         </div>
         <div className="min-w-0">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider truncate">{label}</p>
-          <p className="text-xl font-bold text-gray-900">{value ?? "—"}</p>
+          <p className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider truncate">{label}</p>
+          <p className="text-xl font-bold text-gray-900 dark:text-white">{value ?? "—"}</p>
         </div>
       </CardContent>
     </Card>
@@ -207,7 +207,7 @@ function StatCard({
 }
 
 const inputClasses =
-  "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5] transition-all disabled:bg-gray-50 disabled:text-gray-500";
+  "w-full px-3 py-2 border border-gray-200 dark:border-slate-700 rounded-lg text-sm bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5] transition-all disabled:bg-gray-50 dark:disabled:bg-slate-800/50 disabled:text-gray-500 dark:disabled:text-slate-400";
 
 function SortableHead({
   field,
@@ -226,7 +226,7 @@ function SortableHead({
 }) {
   const indicator =
     sortBy !== field ? (
-      <ArrowUpDown size={13} className="text-gray-300" />
+      <ArrowUpDown size={13} className="text-gray-300 dark:text-slate-600" />
     ) : sortOrder === "asc" ? (
       <ArrowUp size={13} className="text-[#3F51B5]" />
     ) : (
@@ -238,7 +238,7 @@ function SortableHead({
       <button
         type="button"
         onClick={() => onToggle(field)}
-        className="flex items-center gap-1.5 text-xs uppercase tracking-wider font-semibold text-gray-500 hover:text-gray-800 transition-colors"
+        className="flex items-center gap-1.5 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400 hover:text-gray-800 dark:hover:text-white transition-colors"
       >
         {children}
         {indicator}
@@ -249,7 +249,7 @@ function SortableHead({
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
-  return <p className="text-xs text-red-600 mt-1">{message}</p>;
+  return <p className="text-xs text-red-600 dark:text-red-400 mt-1">{message}</p>;
 }
 
 /** date-time-local input value → ISO string (or undefined). */
@@ -568,13 +568,13 @@ export function ActivitiesPage() {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="p-6 lg:p-8 bg-[#F4F5F7] min-h-screen">
+    <div className="p-6 lg:p-8 bg-[#F4F5F7] dark:bg-slate-950 min-h-screen">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Activities</h1>
-            <p className="text-sm text-gray-500">
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Activities</h1>
+            <p className="text-sm text-gray-500 dark:text-slate-400">
               Tasks, follow-ups, and every logged interaction — in one timeline.
             </p>
           </div>
@@ -586,31 +586,31 @@ export function ActivitiesPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <StatCard label="Open Tasks" value={stats?.openTasks} icon={CheckSquare} accent="bg-[#3F51B5]/10 text-[#3F51B5]" />
-          <StatCard label="Overdue" value={stats?.overdue} icon={AlertTriangle} accent="bg-red-50 text-red-600" />
-          <StatCard label="Due Today" value={stats?.dueToday} icon={CalendarClock} accent="bg-amber-50 text-amber-600" />
-          <StatCard label="Reminders" value={stats?.remindersDue} icon={Bell} accent="bg-sky-50 text-sky-600" />
-          <StatCard label="Meetings (7d)" value={stats?.upcomingMeetings} icon={Users} accent="bg-violet-50 text-violet-600" />
-          <StatCard label="Done (month)" value={stats?.completedThisMonth} icon={CheckCircle2} accent="bg-emerald-50 text-emerald-600" />
+          <StatCard label="Open Tasks" value={stats?.openTasks} icon={CheckSquare} accent="bg-[#3F51B5]/10 text-[#3F51B5] dark:bg-indigo-500/15 dark:text-indigo-300" />
+          <StatCard label="Overdue" value={stats?.overdue} icon={AlertTriangle} accent="bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-400" />
+          <StatCard label="Due Today" value={stats?.dueToday} icon={CalendarClock} accent="bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400" />
+          <StatCard label="Reminders" value={stats?.remindersDue} icon={Bell} accent="bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400" />
+          <StatCard label="Meetings (7d)" value={stats?.upcomingMeetings} icon={Users} accent="bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400" />
+          <StatCard label="Done (month)" value={stats?.completedThisMonth} icon={CheckCircle2} accent="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400" />
         </div>
 
         {/* Notifications */}
         {successMsg && (
-          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 dark:bg-emerald-500/15 dark:border-emerald-500/30 dark:text-emerald-300 rounded-xl p-4 flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-3">
-              <Check className="text-emerald-600 shrink-0" size={20} />
+              <Check className="text-emerald-600 dark:text-emerald-400 shrink-0" size={20} />
               <span className="text-sm font-medium">{successMsg}</span>
             </div>
-            <button onClick={() => setSuccessMsg(null)} className="text-emerald-500 hover:text-emerald-700">
+            <button onClick={() => setSuccessMsg(null)} className="text-emerald-500 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300">
               <X size={18} />
             </button>
           </div>
         )}
 
         {(errorMsg || activitiesQuery.isError) && (
-          <div className="bg-red-50 border border-red-200 text-red-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+          <div className="bg-red-50 border border-red-200 text-red-800 dark:bg-red-500/15 dark:border-red-500/30 dark:text-red-300 rounded-xl p-4 flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-3">
-              <AlertCircle className="text-red-600 shrink-0" size={20} />
+              <AlertCircle className="text-red-600 dark:text-red-400 shrink-0" size={20} />
               <span className="text-sm font-medium">
                 {errorMsg ??
                   (activitiesQuery.error instanceof Error
@@ -623,7 +623,7 @@ export function ActivitiesPage() {
                 setErrorMsg(null);
                 if (activitiesQuery.isError) activitiesQuery.refetch();
               }}
-              className="text-red-500 hover:text-red-700"
+              className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
             >
               <X size={18} />
             </button>
@@ -632,9 +632,9 @@ export function ActivitiesPage() {
 
         {/* Filters & Table */}
         <Card className="py-0 overflow-hidden">
-          <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="p-4 border-b border-gray-100 dark:border-slate-800 flex flex-col md:flex-row gap-4 items-center justify-between">
             <div className="relative w-full md:max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" size={18} />
               <Input
                 type="text"
                 placeholder="Search subject or notes..."
@@ -649,9 +649,9 @@ export function ActivitiesPage() {
 
             <div className="flex w-full md:w-auto items-center gap-2 justify-end flex-wrap">
               {activitiesQuery.isFetching && !activitiesQuery.isLoading && (
-                <Loader2 size={16} className="animate-spin text-gray-400" />
+                <Loader2 size={16} className="animate-spin text-gray-400 dark:text-slate-500" />
               )}
-              <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 cursor-pointer whitespace-nowrap">
+              <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 dark:text-slate-300 cursor-pointer whitespace-nowrap">
                 <input
                   type="checkbox"
                   className="w-4 h-4 accent-[#3F51B5]"
@@ -710,18 +710,18 @@ export function ActivitiesPage() {
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="bg-gray-50/75 hover:bg-gray-50/75">
+                <TableRow className="bg-gray-50/75 hover:bg-gray-50/75 dark:bg-slate-800/50 dark:hover:bg-slate-800/50">
                   <SortableHead field="subject" className="px-6" {...sortProps}>Activity</SortableHead>
-                  <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500">
+                  <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
                     Related To
                   </TableHead>
-                  <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500">
+                  <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
                     Assigned To
                   </TableHead>
                   <SortableHead field="dueAt" className="px-6" {...sortProps}>Due / Scheduled</SortableHead>
                   <SortableHead field="priority" className="px-6" {...sortProps}>Priority</SortableHead>
                   <SortableHead field="status" className="px-6" {...sortProps}>Status</SortableHead>
-                  <TableHead className="px-6 text-right text-xs uppercase tracking-wider font-semibold text-gray-500">
+                  <TableHead className="px-6 text-right text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
                     Actions
                   </TableHead>
                 </TableRow>
@@ -729,7 +729,7 @@ export function ActivitiesPage() {
               <TableBody>
                 {activitiesQuery.isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="px-6 py-12 text-center text-gray-400">
+                    <TableCell colSpan={7} className="px-6 py-12 text-center text-gray-400 dark:text-slate-500">
                       <div className="flex justify-center items-center gap-2">
                         <Loader2 size={18} className="animate-spin" />
                         <span>Fetching activities...</span>
@@ -739,10 +739,10 @@ export function ActivitiesPage() {
                 ) : activities.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="px-6 py-16 text-center">
-                      <div className="flex flex-col items-center gap-2 text-gray-500">
-                        <CalendarClock size={32} className="text-gray-300" />
+                      <div className="flex flex-col items-center gap-2 text-gray-500 dark:text-slate-400">
+                        <CalendarClock size={32} className="text-gray-300 dark:text-slate-600" />
                         <p className="font-medium">No activities found</p>
-                        <p className="text-sm text-gray-400">
+                        <p className="text-sm text-gray-400 dark:text-slate-500">
                           {debouncedSearch || typeFilter || statusFilter || dueFilter || onlyMine
                             ? "Try adjusting your search or filters."
                             : "Create a task or log your first interaction."}
@@ -755,7 +755,7 @@ export function ActivitiesPage() {
                     const TypeIcon = typeIcons[activity.type];
                     const when = activity.startAt ?? activity.dueAt;
                     return (
-                      <TableRow key={activity.id} className="hover:bg-gray-50/50">
+                      <TableRow key={activity.id} className="hover:bg-gray-50/50 dark:hover:bg-slate-800">
                         <TableCell className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <div
@@ -773,19 +773,19 @@ export function ActivitiesPage() {
                                 className={cn(
                                   "font-semibold text-left truncate max-w-[280px] hover:text-[#3F51B5] transition-colors",
                                   activity.status === "completed" || activity.status === "cancelled"
-                                    ? "text-gray-400 line-through"
-                                    : "text-gray-900",
+                                    ? "text-gray-400 dark:text-slate-500 line-through"
+                                    : "text-gray-900 dark:text-white",
                                 )}
                               >
                                 {activity.subject}
                               </button>
-                              <span className="text-xs text-gray-500 flex items-center gap-1">
+                              <span className="text-xs text-gray-500 dark:text-slate-400 flex items-center gap-1">
                                 {ACTIVITY_TYPE_LABELS[activity.type]}
                                 {activity.direction &&
                                   (activity.direction === "inbound" ? (
-                                    <ArrowDownLeft size={11} className="text-emerald-500" />
+                                    <ArrowDownLeft size={11} className="text-emerald-500 dark:text-emerald-400" />
                                   ) : (
-                                    <ArrowUpRight size={11} className="text-sky-500" />
+                                    <ArrowUpRight size={11} className="text-sky-500 dark:text-sky-400" />
                                   ))}
                               </span>
                             </div>
@@ -794,38 +794,38 @@ export function ActivitiesPage() {
                         <TableCell className="px-6 py-4 text-sm">
                           {activity.relatedType && activity.relatedName ? (
                             <div className="flex flex-col min-w-0">
-                              <span className="text-gray-700 font-medium truncate flex items-center gap-1.5">
-                                <Link2 size={12} className="text-gray-400 shrink-0" />
+                              <span className="text-gray-700 dark:text-slate-200 font-medium truncate flex items-center gap-1.5">
+                                <Link2 size={12} className="text-gray-400 dark:text-slate-500 shrink-0" />
                                 {activity.relatedName}
                               </span>
-                              <span className="text-xs text-gray-400">
+                              <span className="text-xs text-gray-400 dark:text-slate-500">
                                 {RELATED_TYPE_LABELS[activity.relatedType]}
                               </span>
                             </div>
                           ) : (
-                            <span className="text-gray-300">—</span>
+                            <span className="text-gray-300 dark:text-slate-600">—</span>
                           )}
                         </TableCell>
                         <TableCell className="px-6 py-4">
                           {activity.assignedToName ? (
                             <div className="flex flex-col min-w-0">
-                              <span className="text-gray-700 font-medium truncate">
+                              <span className="text-gray-700 dark:text-slate-200 font-medium truncate">
                                 {activity.assignedToName}
                               </span>
                               {activity.assignedTeamName && (
-                                <span className="text-xs text-indigo-600 truncate flex items-center gap-1">
+                                <span className="text-xs text-indigo-600 dark:text-indigo-400 truncate flex items-center gap-1">
                                   <UsersRound size={11} className="shrink-0" />
                                   {activity.assignedTeamName}
                                 </span>
                               )}
                             </div>
                           ) : (
-                            <span className="text-gray-400">{activity.assignedToId}</span>
+                            <span className="text-gray-400 dark:text-slate-500">{activity.assignedToId}</span>
                           )}
                         </TableCell>
                         <TableCell className="px-6 py-4 text-sm">
                           {when ? (
-                            <span className={cn("flex items-center gap-1.5", activity.overdue ? "text-red-600 font-semibold" : "text-gray-600")}>
+                            <span className={cn("flex items-center gap-1.5", activity.overdue ? "text-red-600 dark:text-red-400 font-semibold" : "text-gray-600 dark:text-slate-300")}>
                               <Calendar size={13} className="shrink-0" />
                               {new Date(when).toLocaleString([], {
                                 dateStyle: "medium",
@@ -833,7 +833,7 @@ export function ActivitiesPage() {
                               })}
                             </span>
                           ) : (
-                            <span className="text-gray-300">—</span>
+                            <span className="text-gray-300 dark:text-slate-600">—</span>
                           )}
                         </TableCell>
                         <TableCell className="px-6 py-4">
@@ -851,7 +851,7 @@ export function ActivitiesPage() {
                                 variant="ghost"
                                 size="icon"
                                 title="Mark as done"
-                                className="text-gray-400 hover:text-emerald-600"
+                                className="text-gray-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400"
                                 onClick={() => changeStatus(activity, "completed")}
                                 disabled={setStatusMutation.isPending}
                               >
@@ -860,7 +860,7 @@ export function ActivitiesPage() {
                             )}
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-700">
+                                <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-700 dark:text-slate-500 dark:hover:text-slate-200">
                                   <MoreHorizontal size={18} />
                                   <span className="sr-only">Open actions</span>
                                 </Button>
@@ -925,7 +925,7 @@ export function ActivitiesPage() {
 
           {/* Pagination footer */}
           {!activitiesQuery.isLoading && meta && meta.total > 0 && (
-            <div className="p-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            <div className="p-4 border-t border-gray-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
               <div className="flex items-center gap-3">
                 <span>
                   {(meta.page - 1) * meta.limit + 1}–{Math.min(meta.page * meta.limit, meta.total)} of{" "}
@@ -953,7 +953,7 @@ export function ActivitiesPage() {
                 >
                   <ChevronLeft size={16} />
                 </Button>
-                <span className="px-3 text-sm font-bold text-gray-700">
+                <span className="px-3 text-sm font-bold text-gray-700 dark:text-slate-200">
                   {meta.page} / {meta.totalPages}
                 </span>
                 <Button
@@ -984,7 +984,7 @@ export function ActivitiesPage() {
               </DialogHeader>
 
               <div className="space-y-6">
-                <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
+                <div className="flex items-center gap-4 pb-4 border-b border-gray-100 dark:border-slate-800">
                   <div
                     className={cn(
                       "w-12 h-12 rounded-xl flex items-center justify-center shrink-0",
@@ -994,9 +994,9 @@ export function ActivitiesPage() {
                     {React.createElement(typeIcons[viewingActivity.type], { size: 22 })}
                   </div>
                   <div className="min-w-0">
-                    <h4 className="text-lg font-bold text-gray-900">{viewingActivity.subject}</h4>
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white">{viewingActivity.subject}</h4>
                     {viewingActivity.relatedName && viewingActivity.relatedType && (
-                      <span className="text-sm text-gray-500">
+                      <span className="text-sm text-gray-500 dark:text-slate-400">
                         {RELATED_TYPE_LABELS[viewingActivity.relatedType]}: {viewingActivity.relatedName}
                       </span>
                     )}
@@ -1047,24 +1047,24 @@ export function ActivitiesPage() {
                       value: viewingActivity.assignedTeamName ?? "Unassigned",
                     },
                   ].map(({ icon: Icon, label, value }) => (
-                    <div key={label} className="flex items-center gap-3 text-sm text-gray-600">
-                      <Icon className="text-gray-400 shrink-0" size={18} />
+                    <div key={label} className="flex items-center gap-3 text-sm text-gray-600 dark:text-slate-300">
+                      <Icon className="text-gray-400 dark:text-slate-500 shrink-0" size={18} />
                       <div className="min-w-0">
-                        <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">{label}</p>
+                        <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold">{label}</p>
                         <p className="font-medium whitespace-pre-wrap break-words">{value}</p>
                       </div>
                     </div>
                   ))}
                 </div>
 
-                <div className="bg-gray-50/75 p-4 rounded-xl border border-gray-100 space-y-1">
-                  <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Notes</p>
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                <div className="bg-gray-50/75 dark:bg-slate-800/50 p-4 rounded-xl border border-gray-100 dark:border-slate-800 space-y-1">
+                  <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold">Notes</p>
+                  <p className="text-sm text-gray-700 dark:text-slate-200 whitespace-pre-wrap">
                     {viewingActivity.description || "No notes for this activity."}
                   </p>
                 </div>
 
-                <div className="text-[11px] text-gray-400 space-y-1 border-t border-gray-100 pt-4">
+                <div className="text-[11px] text-gray-400 dark:text-slate-500 space-y-1 border-t border-gray-100 dark:border-slate-800 pt-4">
                   <p>
                     <span className="font-bold">Created by:</span>{" "}
                     {viewingActivity.createdByName ?? viewingActivity.createdBy} ·{" "}
@@ -1082,7 +1082,7 @@ export function ActivitiesPage() {
                 {viewingActivity.status === "pending" && (
                   <Button
                     variant="outline"
-                    className="text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+                    className="text-emerald-700 border-emerald-200 hover:bg-emerald-50 dark:text-emerald-400 dark:border-emerald-500/30 dark:hover:bg-emerald-500/10"
                     onClick={() => {
                       const target = viewingActivity;
                       setViewingActivity(null);
@@ -1115,7 +1115,7 @@ export function ActivitiesPage() {
 
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {formError && (
-              <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm flex items-center gap-2">
+              <div className="bg-red-50 border border-red-200 text-red-700 dark:bg-red-500/15 dark:border-red-500/30 dark:text-red-300 rounded-lg p-3 text-sm flex items-center gap-2">
                 <AlertCircle size={16} className="shrink-0" />
                 {formError}
               </div>
@@ -1123,7 +1123,7 @@ export function ActivitiesPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Type *
                 </label>
                 <select
@@ -1139,7 +1139,7 @@ export function ActivitiesPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Priority
                 </label>
                 <select disabled={isSaving} className={inputClasses} {...form.register("priority")}>
@@ -1151,7 +1151,7 @@ export function ActivitiesPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                 Subject *
               </label>
               <Input
@@ -1165,7 +1165,7 @@ export function ActivitiesPage() {
             {isCommunication && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                     Direction
                   </label>
                   <select disabled={isSaving || watchType === "note"} className={inputClasses} {...form.register("direction")}>
@@ -1174,7 +1174,7 @@ export function ActivitiesPage() {
                   </select>
                 </div>
                 {!editingActivity && (
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer pb-2">
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-slate-200 cursor-pointer pb-2">
                     <input
                       type="checkbox"
                       className="w-4 h-4 accent-[#3F51B5]"
@@ -1189,8 +1189,8 @@ export function ActivitiesPage() {
 
             {/* Related record */}
             {!editingActivity && (
-              <div className="border border-gray-100 rounded-xl p-4 bg-gray-50/50 space-y-3">
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+              <div className="border border-gray-100 dark:border-slate-800 rounded-xl p-4 bg-gray-50/50 dark:bg-slate-800/50 space-y-3">
+                <p className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                   Related Record (builds its timeline)
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1227,7 +1227,7 @@ export function ActivitiesPage() {
                     ))}
                   </select>
                 </div>
-                <p className="text-[11px] text-gray-400">
+                <p className="text-[11px] text-gray-400 dark:text-slate-500">
                   Unassigned activities are automatically routed to the linked record&apos;s owner.
                   Completed calls/meetings on a lead also update its engagement score.
                 </p>
@@ -1238,7 +1238,7 @@ export function ActivitiesPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {(watchType === "task" || !isCommunication) && (
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                     Due Date
                   </label>
                   <Input type="datetime-local" disabled={isSaving} {...form.register("dueAt")} />
@@ -1248,13 +1248,13 @@ export function ActivitiesPage() {
                 isCommunication && (
                   <>
                     <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                      <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                         Scheduled Start
                       </label>
                       <Input type="datetime-local" disabled={isSaving} {...form.register("startAt")} />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                      <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                         Scheduled End
                       </label>
                       <Input type="datetime-local" disabled={isSaving} {...form.register("endAt")} />
@@ -1262,7 +1262,7 @@ export function ActivitiesPage() {
                   </>
                 )}
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Reminder
                 </label>
                 <Input type="datetime-local" disabled={isSaving} {...form.register("remindAt")} />
@@ -1270,7 +1270,7 @@ export function ActivitiesPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                 Notes
               </label>
               <textarea
@@ -1305,21 +1305,21 @@ export function ActivitiesPage() {
                 <DialogTitle>Reassign Activity</DialogTitle>
                 <DialogDescription>
                   Hand{" "}
-                  <span className="font-semibold text-gray-700">{assigningActivity.subject}</span> to
+                  <span className="font-semibold text-gray-700 dark:text-slate-200">{assigningActivity.subject}</span> to
                   another staff user and/or route it to a team.
                 </DialogDescription>
               </DialogHeader>
 
               <div className="space-y-4">
                 {assignError && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm flex items-center gap-2">
+                  <div className="bg-red-50 border border-red-200 text-red-700 dark:bg-red-500/15 dark:border-red-500/30 dark:text-red-300 rounded-lg p-3 text-sm flex items-center gap-2">
                     <AlertCircle size={16} className="shrink-0" />
                     {assignError}
                   </div>
                 )}
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                     Assignee *
                   </label>
                   <select
@@ -1338,7 +1338,7 @@ export function ActivitiesPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                     Team
                   </label>
                   <select
@@ -1354,7 +1354,7 @@ export function ActivitiesPage() {
                       </option>
                     ))}
                   </select>
-                  <p className="text-[11px] text-gray-400 mt-1">
+                  <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">
                     When a team is set, the assignee must be one of its members.
                   </p>
                 </div>
@@ -1391,7 +1391,7 @@ export function ActivitiesPage() {
                 <DialogTitle>Delete activity?</DialogTitle>
                 <DialogDescription>
                   This permanently removes{" "}
-                  <span className="font-semibold text-gray-700">{deletingActivity.subject}</span>. History
+                  <span className="font-semibold text-gray-700 dark:text-slate-200">{deletingActivity.subject}</span>. History
                   already synced into a linked lead or contact is kept. This action cannot be undone.
                 </DialogDescription>
               </DialogHeader>

@@ -108,8 +108,8 @@ function ActiveBadge({ isActive }: { isActive: boolean }) {
       className={cn(
         "capitalize font-semibold",
         isActive
-          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-          : "bg-slate-100 text-slate-500 border-slate-200",
+          ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/30"
+          : "bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700",
       )}
     >
       {isActive ? "active" : "inactive"}
@@ -135,8 +135,8 @@ function StatCard({
           <Icon size={20} />
         </div>
         <div className="min-w-0">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider truncate">{label}</p>
-          <p className="text-xl font-bold text-gray-900">{value ?? "—"}</p>
+          <p className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider truncate">{label}</p>
+          <p className="text-xl font-bold text-gray-900 dark:text-white">{value ?? "—"}</p>
         </div>
       </CardContent>
     </Card>
@@ -144,7 +144,7 @@ function StatCard({
 }
 
 const inputClasses =
-  "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5] transition-all disabled:bg-gray-50 disabled:text-gray-500";
+  "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5] transition-all disabled:bg-gray-50 disabled:text-gray-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100 dark:placeholder:text-slate-500 dark:disabled:bg-slate-800";
 
 function SortableHead({
   field,
@@ -163,7 +163,7 @@ function SortableHead({
 }) {
   const indicator =
     sortBy !== field ? (
-      <ArrowUpDown size={13} className="text-gray-300" />
+      <ArrowUpDown size={13} className="text-gray-300 dark:text-slate-600" />
     ) : sortOrder === "asc" ? (
       <ArrowUp size={13} className="text-[#3F51B5]" />
     ) : (
@@ -175,7 +175,7 @@ function SortableHead({
       <button
         type="button"
         onClick={() => onToggle(field)}
-        className="flex items-center gap-1.5 text-xs uppercase tracking-wider font-semibold text-gray-500 hover:text-gray-800 transition-colors"
+        className="flex items-center gap-1.5 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400 hover:text-gray-800 dark:hover:text-slate-200 transition-colors"
       >
         {children}
         {indicator}
@@ -186,11 +186,11 @@ function SortableHead({
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
-  return <p className="text-xs text-red-600 mt-1">{message}</p>;
+  return <p className="text-xs text-red-600 dark:text-red-400 mt-1">{message}</p>;
 }
 
 function RegionBadges({ regions }: { regions: string[] }) {
-  if (regions.length === 0) return <span className="text-gray-300">—</span>;
+  if (regions.length === 0) return <span className="text-gray-300 dark:text-slate-600">—</span>;
   const visible = regions.slice(0, 3);
   return (
     <div className="flex flex-wrap gap-1">
@@ -198,13 +198,13 @@ function RegionBadges({ regions }: { regions: string[] }) {
         <Badge
           key={region}
           variant="outline"
-          className="bg-indigo-50 text-indigo-700 border-indigo-200 font-medium"
+          className="bg-indigo-50 text-indigo-700 border-indigo-200 font-medium dark:bg-indigo-500/15 dark:text-indigo-300 dark:border-indigo-500/30"
         >
           {region}
         </Badge>
       ))}
       {regions.length > 3 && (
-        <Badge variant="outline" className="bg-gray-50 text-gray-500 border-gray-200">
+        <Badge variant="outline" className="bg-gray-50 text-gray-500 border-gray-200 dark:bg-slate-800/50 dark:text-slate-400 dark:border-slate-700">
           +{regions.length - 3}
         </Badge>
       )}
@@ -403,13 +403,13 @@ export function TeamsPage() {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="p-6 lg:p-8 bg-[#F4F5F7] min-h-screen">
+    <div className="p-6 lg:p-8 bg-[#F4F5F7] dark:bg-slate-950 min-h-screen">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Teams &amp; Territories</h1>
-            <p className="text-sm text-gray-500">
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Teams &amp; Territories</h1>
+            <p className="text-sm text-gray-500 dark:text-slate-400">
               Organize staff into teams, route customer records, and control data visibility.
             </p>
           </div>
@@ -423,30 +423,30 @@ export function TeamsPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <StatCard label="Total Teams" value={stats?.total} icon={UsersRound} accent="bg-[#3F51B5]/10 text-[#3F51B5]" />
-          <StatCard label="Active" value={stats?.active} icon={Check} accent="bg-emerald-50 text-emerald-600" />
-          <StatCard label="Inactive" value={stats?.inactive} icon={X} accent="bg-slate-100 text-slate-500" />
-          <StatCard label="Staff in Teams" value={stats?.totalMembers} icon={UserCheck} accent="bg-sky-50 text-sky-600" />
-          <StatCard label="Routed Customers" value={stats?.assignedCustomers} icon={Users} accent="bg-amber-50 text-amber-600" />
+          <StatCard label="Total Teams" value={stats?.total} icon={UsersRound} accent="bg-[#3F51B5]/10 text-[#3F51B5] dark:bg-indigo-500/15 dark:text-indigo-300" />
+          <StatCard label="Active" value={stats?.active} icon={Check} accent="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400" />
+          <StatCard label="Inactive" value={stats?.inactive} icon={X} accent="bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400" />
+          <StatCard label="Staff in Teams" value={stats?.totalMembers} icon={UserCheck} accent="bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400" />
+          <StatCard label="Routed Customers" value={stats?.assignedCustomers} icon={Users} accent="bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400" />
         </div>
 
         {/* Notifications */}
         {successMsg && (
-          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl p-4 flex items-center justify-between shadow-sm dark:bg-emerald-500/10 dark:border-emerald-500/30 dark:text-emerald-300">
             <div className="flex items-center gap-3">
-              <Check className="text-emerald-600 shrink-0" size={20} />
+              <Check className="text-emerald-600 dark:text-emerald-400 shrink-0" size={20} />
               <span className="text-sm font-medium">{successMsg}</span>
             </div>
-            <button onClick={() => setSuccessMsg(null)} className="text-emerald-500 hover:text-emerald-700">
+            <button onClick={() => setSuccessMsg(null)} className="text-emerald-500 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300">
               <X size={18} />
             </button>
           </div>
         )}
 
         {(errorMsg || teamsQuery.isError) && (
-          <div className="bg-red-50 border border-red-200 text-red-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+          <div className="bg-red-50 border border-red-200 text-red-800 rounded-xl p-4 flex items-center justify-between shadow-sm dark:bg-red-500/10 dark:border-red-500/30 dark:text-red-300">
             <div className="flex items-center gap-3">
-              <AlertCircle className="text-red-600 shrink-0" size={20} />
+              <AlertCircle className="text-red-600 dark:text-red-400 shrink-0" size={20} />
               <span className="text-sm font-medium">
                 {errorMsg ??
                   (teamsQuery.error instanceof Error ? teamsQuery.error.message : "Failed to load teams")}
@@ -457,7 +457,7 @@ export function TeamsPage() {
                 setErrorMsg(null);
                 if (teamsQuery.isError) teamsQuery.refetch();
               }}
-              className="text-red-500 hover:text-red-700"
+              className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
             >
               <X size={18} />
             </button>
@@ -466,9 +466,9 @@ export function TeamsPage() {
 
         {/* Filters & Table */}
         <Card className="py-0 overflow-hidden">
-          <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="p-4 border-b border-gray-100 dark:border-slate-800 flex flex-col md:flex-row gap-4 items-center justify-between">
             <div className="relative w-full md:max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" size={18} />
               <Input
                 type="text"
                 placeholder="Search by name, description, or region..."
@@ -483,9 +483,9 @@ export function TeamsPage() {
 
             <div className="flex w-full md:w-auto items-center gap-3 justify-end">
               {teamsQuery.isFetching && !teamsQuery.isLoading && (
-                <Loader2 size={16} className="animate-spin text-gray-400" />
+                <Loader2 size={16} className="animate-spin text-gray-400 dark:text-slate-500" />
               )}
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Status:</label>
+              <label className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Status:</label>
               <select
                 value={activeFilter}
                 onChange={(e) => {
@@ -504,25 +504,25 @@ export function TeamsPage() {
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="bg-gray-50/75 hover:bg-gray-50/75">
+                <TableRow className="bg-gray-50/75 hover:bg-gray-50/75 dark:bg-slate-800/50 dark:hover:bg-slate-800/50">
                   <SortableHead field="name" className="px-6" {...sortProps}>Team</SortableHead>
-                  <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500">
+                  <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
                     Regions
                   </TableHead>
-                  <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500">
+                  <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
                     Team Lead
                   </TableHead>
-                  <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500">
+                  <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
                     Members
                   </TableHead>
-                  <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500">
+                  <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
                     Customers
                   </TableHead>
-                  <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500">
+                  <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
                     Status
                   </TableHead>
                   <SortableHead field="createdAt" className="px-6" {...sortProps}>Created</SortableHead>
-                  <TableHead className="px-6 text-right text-xs uppercase tracking-wider font-semibold text-gray-500">
+                  <TableHead className="px-6 text-right text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
                     Actions
                   </TableHead>
                 </TableRow>
@@ -530,7 +530,7 @@ export function TeamsPage() {
               <TableBody>
                 {teamsQuery.isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="px-6 py-12 text-center text-gray-400">
+                    <TableCell colSpan={8} className="px-6 py-12 text-center text-gray-400 dark:text-slate-500">
                       <div className="flex justify-center items-center gap-2">
                         <Loader2 size={18} className="animate-spin" />
                         <span>Fetching teams...</span>
@@ -540,10 +540,10 @@ export function TeamsPage() {
                 ) : teams.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={8} className="px-6 py-16 text-center">
-                      <div className="flex flex-col items-center gap-2 text-gray-500">
-                        <UsersRound size={32} className="text-gray-300" />
+                      <div className="flex flex-col items-center gap-2 text-gray-500 dark:text-slate-400">
+                        <UsersRound size={32} className="text-gray-300 dark:text-slate-600" />
                         <p className="font-medium">No teams found</p>
-                        <p className="text-sm text-gray-400">
+                        <p className="text-sm text-gray-400 dark:text-slate-500">
                           {debouncedSearch || activeFilter
                             ? "Try adjusting your search or filters."
                             : isStaffAdmin
@@ -555,16 +555,16 @@ export function TeamsPage() {
                   </TableRow>
                 ) : (
                   teams.map((team) => (
-                    <TableRow key={team.id} className="hover:bg-gray-50/50">
+                    <TableRow key={team.id} className="hover:bg-gray-50/50 dark:hover:bg-slate-800">
                       <TableCell className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 bg-[#3F51B5]/10 text-[#3F51B5] rounded-full flex items-center justify-center font-bold text-xs uppercase shrink-0">
+                          <div className="w-9 h-9 bg-[#3F51B5]/10 text-[#3F51B5] dark:bg-indigo-500/15 dark:text-indigo-300 rounded-full flex items-center justify-center font-bold text-xs uppercase shrink-0">
                             {team.name.slice(0, 2)}
                           </div>
                           <div className="flex flex-col min-w-0">
-                            <span className="font-semibold text-gray-900 truncate">{team.name}</span>
+                            <span className="font-semibold text-gray-900 dark:text-white truncate">{team.name}</span>
                             {team.description && (
-                              <span className="text-xs text-gray-500 truncate max-w-56">{team.description}</span>
+                              <span className="text-xs text-gray-500 dark:text-slate-400 truncate max-w-56">{team.description}</span>
                             )}
                           </div>
                         </div>
@@ -572,32 +572,32 @@ export function TeamsPage() {
                       <TableCell className="px-6 py-4">
                         <RegionBadges regions={team.regions} />
                       </TableCell>
-                      <TableCell className="px-6 py-4 text-gray-600">
+                      <TableCell className="px-6 py-4 text-gray-600 dark:text-slate-300">
                         {leaderName(team) ? (
                           <div className="flex items-center gap-1.5">
                             <Crown size={14} className="text-amber-500 shrink-0" />
                             <span className="truncate">{leaderName(team)}</span>
                           </div>
                         ) : (
-                          <span className="text-gray-300">—</span>
+                          <span className="text-gray-300 dark:text-slate-600">—</span>
                         )}
                       </TableCell>
-                      <TableCell className="px-6 py-4 text-gray-600 font-medium">
+                      <TableCell className="px-6 py-4 text-gray-600 dark:text-slate-300 font-medium">
                         {team.members.length}
                       </TableCell>
-                      <TableCell className="px-6 py-4 text-gray-600 font-medium">
+                      <TableCell className="px-6 py-4 text-gray-600 dark:text-slate-300 font-medium">
                         {team.customerCount}
                       </TableCell>
                       <TableCell className="px-6 py-4">
                         <ActiveBadge isActive={team.isActive} />
                       </TableCell>
-                      <TableCell className="px-6 py-4 text-gray-500">
+                      <TableCell className="px-6 py-4 text-gray-500 dark:text-slate-400">
                         {team.createdAt ? new Date(team.createdAt).toLocaleDateString() : "—"}
                       </TableCell>
                       <TableCell className="px-6 py-4 text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-700">
+                            <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-700 dark:text-slate-500 dark:hover:text-slate-200">
                               <MoreHorizontal size={18} />
                               <span className="sr-only">Open actions</span>
                             </Button>
@@ -632,7 +632,7 @@ export function TeamsPage() {
 
           {/* Pagination footer */}
           {!teamsQuery.isLoading && meta && meta.total > 0 && (
-            <div className="p-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            <div className="p-4 border-t border-gray-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
               <div className="flex items-center gap-3">
                 <span>
                   {(meta.page - 1) * meta.limit + 1}–{Math.min(meta.page * meta.limit, meta.total)} of{" "}
@@ -660,7 +660,7 @@ export function TeamsPage() {
                 >
                   <ChevronLeft size={16} />
                 </Button>
-                <span className="px-3 text-sm font-bold text-gray-700">
+                <span className="px-3 text-sm font-bold text-gray-700 dark:text-slate-200">
                   {meta.page} / {meta.totalPages}
                 </span>
                 <Button
@@ -688,13 +688,13 @@ export function TeamsPage() {
               </DialogHeader>
 
               <div className="space-y-6">
-                <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
-                  <div className="w-12 h-12 bg-[#3F51B5]/10 text-[#3F51B5] rounded-full flex items-center justify-center font-bold text-lg uppercase">
+                <div className="flex items-center gap-4 pb-4 border-b border-gray-100 dark:border-slate-800">
+                  <div className="w-12 h-12 bg-[#3F51B5]/10 text-[#3F51B5] dark:bg-indigo-500/15 dark:text-indigo-300 rounded-full flex items-center justify-center font-bold text-lg uppercase">
                     {viewingTeam.name.slice(0, 2)}
                   </div>
                   <div className="min-w-0">
-                    <h4 className="text-lg font-bold text-gray-900 truncate">{viewingTeam.name}</h4>
-                    <span className="text-sm text-gray-500">
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white truncate">{viewingTeam.name}</h4>
+                    <span className="text-sm text-gray-500 dark:text-slate-400">
                       {viewingTeam.members.length} member(s) · {viewingTeam.customerCount} customer(s)
                     </span>
                   </div>
@@ -704,38 +704,38 @@ export function TeamsPage() {
                 </div>
 
                 {viewingTeam.description && (
-                  <p className="text-sm text-gray-600 whitespace-pre-wrap">{viewingTeam.description}</p>
+                  <p className="text-sm text-gray-600 dark:text-slate-300 whitespace-pre-wrap">{viewingTeam.description}</p>
                 )}
 
                 <div className="space-y-1">
-                  <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold flex items-center gap-1.5">
+                  <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold flex items-center gap-1.5">
                     <Globe2 size={13} /> Territory Regions
                   </p>
                   <RegionBadges regions={viewingTeam.regions} />
                 </div>
 
                 <div className="space-y-2">
-                  <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Members</p>
+                  <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold">Members</p>
                   {viewingTeam.members.length === 0 ? (
-                    <p className="text-sm text-gray-400">No members yet.</p>
+                    <p className="text-sm text-gray-400 dark:text-slate-500">No members yet.</p>
                   ) : (
                     <div className="space-y-2">
                       {viewingTeam.members.map((member) => (
                         <div
                           key={member.keycloakId}
-                          className="flex items-center gap-3 bg-gray-50/75 border border-gray-100 rounded-lg px-3 py-2"
+                          className="flex items-center gap-3 bg-gray-50/75 border border-gray-100 rounded-lg px-3 py-2 dark:bg-slate-800/50 dark:border-slate-800"
                         >
-                          <div className="w-8 h-8 bg-[#3F51B5]/10 text-[#3F51B5] rounded-full flex items-center justify-center font-bold text-[11px] uppercase shrink-0">
+                          <div className="w-8 h-8 bg-[#3F51B5]/10 text-[#3F51B5] dark:bg-indigo-500/15 dark:text-indigo-300 rounded-full flex items-center justify-center font-bold text-[11px] uppercase shrink-0">
                             {(member.firstName[0] ?? "") + (member.lastName[0] ?? "")}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-semibold text-gray-800 truncate">
+                            <p className="text-sm font-semibold text-gray-800 dark:text-slate-200 truncate">
                               {`${member.firstName} ${member.lastName}`.trim() || member.email}
                             </p>
-                            <p className="text-xs text-gray-500 truncate">{member.email}</p>
+                            <p className="text-xs text-gray-500 dark:text-slate-400 truncate">{member.email}</p>
                           </div>
                           {viewingTeam.leaderId === member.keycloakId && (
-                            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 gap-1">
+                            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 gap-1 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/30">
                               <Crown size={11} /> Lead
                             </Badge>
                           )}
@@ -745,7 +745,7 @@ export function TeamsPage() {
                   )}
                 </div>
 
-                <div className="text-[11px] text-gray-400 space-y-1 border-t border-gray-100 pt-4">
+                <div className="text-[11px] text-gray-400 dark:text-slate-500 space-y-1 border-t border-gray-100 dark:border-slate-800 pt-4">
                   <p>
                     <span className="font-bold">Created:</span>{" "}
                     {viewingTeam.createdAt ? new Date(viewingTeam.createdAt).toLocaleString() : "—"}
@@ -793,14 +793,14 @@ export function TeamsPage() {
 
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {formError && (
-              <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm flex items-center gap-2">
+              <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm flex items-center gap-2 dark:bg-red-500/10 dark:border-red-500/30 dark:text-red-300">
                 <AlertCircle size={16} className="shrink-0" />
                 {formError}
               </div>
             )}
 
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                 Team Name *
               </label>
               <Input placeholder="EMEA Sales" disabled={isSaving} {...form.register("name")} />
@@ -808,7 +808,7 @@ export function TeamsPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                 Description
               </label>
               <textarea
@@ -822,7 +822,7 @@ export function TeamsPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                 Territory Regions
               </label>
               <Input
@@ -830,14 +830,14 @@ export function TeamsPage() {
                 disabled={isSaving}
                 {...form.register("regionsText")}
               />
-              <p className="text-[11px] text-gray-400 mt-1">
+              <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">
                 Comma-separated region tags used to route new records to this team.
               </p>
               <FieldError message={form.formState.errors.regionsText?.message} />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                 Members ({selectedMemberIds.length})
               </label>
               <Input
@@ -847,18 +847,18 @@ export function TeamsPage() {
                 disabled={isSaving}
                 className="mb-2"
               />
-              <div className="border border-gray-200 rounded-lg max-h-44 overflow-y-auto divide-y divide-gray-50">
+              <div className="border border-gray-200 dark:border-slate-700 rounded-lg max-h-44 overflow-y-auto divide-y divide-gray-50 dark:divide-slate-800">
                 {staffQuery.isLoading ? (
-                  <div className="flex items-center gap-2 p-3 text-sm text-gray-400">
+                  <div className="flex items-center gap-2 p-3 text-sm text-gray-400 dark:text-slate-500">
                     <Loader2 size={14} className="animate-spin" /> Loading staff...
                   </div>
                 ) : filteredStaff.length === 0 ? (
-                  <p className="p-3 text-sm text-gray-400">No staff users found.</p>
+                  <p className="p-3 text-sm text-gray-400 dark:text-slate-500">No staff users found.</p>
                 ) : (
                   filteredStaff.map((s) => (
                     <label
                       key={s.keycloakId}
-                      className="flex items-center gap-3 px-3 py-2 text-sm cursor-pointer hover:bg-gray-50"
+                      className="flex items-center gap-3 px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800"
                     >
                       <input
                         type="checkbox"
@@ -868,12 +868,12 @@ export function TeamsPage() {
                         onChange={() => toggleMember(s.keycloakId)}
                       />
                       <span className="min-w-0 flex-1">
-                        <span className="font-medium text-gray-800 block truncate">
+                        <span className="font-medium text-gray-800 dark:text-slate-200 block truncate">
                           {staffDisplayName(s)}
                         </span>
-                        <span className="text-xs text-gray-400 block truncate">{s.email}</span>
+                        <span className="text-xs text-gray-400 dark:text-slate-500 block truncate">{s.email}</span>
                       </span>
-                      <Badge variant="outline" className="bg-gray-50 text-gray-500 border-gray-200 shrink-0">
+                      <Badge variant="outline" className="bg-gray-50 text-gray-500 border-gray-200 shrink-0 dark:bg-slate-800/50 dark:text-slate-400 dark:border-slate-700">
                         {s.role}
                       </Badge>
                     </label>
@@ -885,7 +885,7 @@ export function TeamsPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Team Lead
                 </label>
                 <select
@@ -904,14 +904,14 @@ export function TeamsPage() {
                 <FieldError message={form.formState.errors.leaderId?.message} />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Status
                 </label>
                 <select disabled={isSaving} className={inputClasses} {...form.register("isActive")}>
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
                 </select>
-                <p className="text-[11px] text-gray-400 mt-1">
+                <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">
                   Inactive teams stop granting visibility and receiving new records.
                 </p>
               </div>
@@ -939,10 +939,10 @@ export function TeamsPage() {
                 <DialogTitle>Delete team?</DialogTitle>
                 <DialogDescription>
                   This permanently removes{" "}
-                  <span className="font-semibold text-gray-700">{deletingTeam.name}</span>.{" "}
+                  <span className="font-semibold text-gray-700 dark:text-slate-200">{deletingTeam.name}</span>.{" "}
                   {deletingTeam.customerCount > 0 ? (
                     <>
-                      Its <span className="font-semibold text-gray-700">{deletingTeam.customerCount}</span>{" "}
+                      Its <span className="font-semibold text-gray-700 dark:text-slate-200">{deletingTeam.customerCount}</span>{" "}
                       routed customer(s) will return to the unassigned pool (visible to admins only).
                     </>
                   ) : (

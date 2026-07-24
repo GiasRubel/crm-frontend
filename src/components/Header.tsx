@@ -4,6 +4,7 @@ import React from 'react';
 import { usePathname } from 'next/navigation';
 import { Search, Bell, User, Settings, LogOut } from 'lucide-react';
 import { useAuth } from "@/providers/keycloak-provider";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
@@ -18,14 +19,18 @@ import { Button } from "@/components/ui/button";
 
 const pageTitles: Record<string, string> = {
   '/dashboard': 'Dashboard',
-  '/customers': 'Customers',
+  '/reports': 'Reports',
   '/leads': 'Leads',
   '/opportunities': 'Opportunities',
+  '/customers': 'Customers',
+  '/accounts': 'Accounts',
+  '/contacts': 'Contacts',
+  '/teams': 'Teams',
   '/activities': 'Activities',
   '/tickets': 'Tickets',
+  '/kb': 'Knowledge Base',
+  '/automations': 'Automations',
   '/users': 'Users',
-  '/accounts': 'My Account',
-  '/settings': 'Settings',
 };
 
 export function Header() {
@@ -44,13 +49,13 @@ export function Header() {
   const roleName = user?.role || "User";
 
   return (
-    <header className="bg-white h-20 px-8 flex items-center justify-between sticky top-0 z-20 border-b border-gray-100 lg:border-none">
+    <header className="bg-white dark:bg-slate-900 h-20 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-20 border-b border-gray-100 dark:border-slate-800">
       {/* Page Title / Search Bar */}
       <div className="flex items-center gap-8 flex-1">
-        <h2 className="text-xl font-bold text-slate-800 hidden xl:block min-w-[150px]">
+        <h2 className="text-xl font-bold text-slate-800 dark:text-white hidden xl:block min-w-[150px]">
           {currentTitle}
         </h2>
-        
+
         <div className="flex-1 max-w-xl">
           <div className="relative group">
             <Search
@@ -59,31 +64,34 @@ export function Header() {
             />
             <Input
               placeholder="Search everything..."
-              className="w-full bg-slate-50 border-none rounded-full pl-10 h-11 focus-visible:ring-primary/20"
+              className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-full pl-10 h-11 focus-visible:ring-primary/20"
             />
           </div>
         </div>
       </div>
 
       {/* Right Actions */}
-      <div className="flex items-center gap-4 ml-4">
+      <div className="flex items-center gap-2 sm:gap-3 ml-4">
+        {/* Theme toggle */}
+        <ThemeToggle />
+
         {/* Notification */}
         <Button variant="ghost" size="icon" className="relative text-gray-400 hover:text-primary transition-colors rounded-full">
           <Bell size={20} />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-destructive rounded-full border-2 border-white"></span>
+          <span className="absolute top-2 right-2 w-2 h-2 bg-destructive rounded-full border-2 border-white dark:border-slate-900"></span>
         </Button>
 
         {/* User Profile Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <div className="flex items-center gap-3 cursor-pointer p-1 rounded-full hover:bg-slate-50 transition-colors">
-              <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
+            <div className="flex items-center gap-3 cursor-pointer p-1 rounded-full hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+              <Avatar className="h-10 w-10 border-2 border-white dark:border-slate-800 shadow-sm">
                 <AvatarImage src="" />
-                <AvatarFallback className="bg-amber-100 text-amber-700 font-bold">{initials}</AvatarFallback>
+                <AvatarFallback className="bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 font-bold">{initials}</AvatarFallback>
               </Avatar>
               <div className="hidden md:block pr-2">
-                <p className="text-sm font-semibold text-gray-700 leading-tight">{fullName}</p>
-                <p className="text-xs text-gray-500">{roleName}</p>
+                <p className="text-sm font-semibold text-gray-700 dark:text-slate-200 leading-tight">{fullName}</p>
+                <p className="text-xs text-gray-500 dark:text-slate-400">{roleName}</p>
               </div>
             </div>
           </DropdownMenuTrigger>

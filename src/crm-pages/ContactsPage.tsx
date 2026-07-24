@@ -164,8 +164,8 @@ function StatCard({
           <Icon size={20} />
         </div>
         <div className="min-w-0">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider truncate">{label}</p>
-          <p className="text-xl font-bold text-gray-900">{value ?? "—"}</p>
+          <p className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider truncate">{label}</p>
+          <p className="text-xl font-bold text-gray-900 dark:text-white">{value ?? "—"}</p>
         </div>
       </CardContent>
     </Card>
@@ -173,7 +173,7 @@ function StatCard({
 }
 
 const inputClasses =
-  "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5] transition-all disabled:bg-gray-50 disabled:text-gray-500";
+  "w-full px-3 py-2 border border-gray-200 dark:border-slate-700 rounded-lg text-sm bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5] transition-all disabled:bg-gray-50 dark:disabled:bg-slate-800/50 disabled:text-gray-500 dark:disabled:text-slate-400";
 
 function SortableHead({
   field,
@@ -192,7 +192,7 @@ function SortableHead({
 }) {
   const indicator =
     sortBy !== field ? (
-      <ArrowUpDown size={13} className="text-gray-300" />
+      <ArrowUpDown size={13} className="text-gray-300 dark:text-slate-600" />
     ) : sortOrder === "asc" ? (
       <ArrowUp size={13} className="text-[#3F51B5]" />
     ) : (
@@ -204,7 +204,7 @@ function SortableHead({
       <button
         type="button"
         onClick={() => onToggle(field)}
-        className="flex items-center gap-1.5 text-xs uppercase tracking-wider font-semibold text-gray-500 hover:text-gray-800 transition-colors"
+        className="flex items-center gap-1.5 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400 hover:text-gray-800 dark:hover:text-white transition-colors"
       >
         {children}
         {indicator}
@@ -215,19 +215,19 @@ function SortableHead({
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
-  return <p className="text-xs text-red-600 mt-1">{message}</p>;
+  return <p className="text-xs text-red-600 dark:text-red-400 mt-1">{message}</p>;
 }
 
 function PreferenceBadge({ contact }: { contact: Contact }) {
   if (contact.doNotContact) {
     return (
-      <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200 font-semibold gap-1">
+      <Badge variant="outline" className="bg-red-50 dark:bg-red-500/15 text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/30 font-semibold gap-1">
         <Ban size={11} /> Do not contact
       </Badge>
     );
   }
   return (
-    <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 font-semibold">
+    <Badge variant="outline" className="bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 font-semibold">
       {PREFERRED_CHANNEL_LABELS[contact.preferredChannel]}
     </Badge>
   );
@@ -520,13 +520,13 @@ export function ContactsPage() {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="p-6 lg:p-8 bg-[#F4F5F7] min-h-screen">
+    <div className="p-6 lg:p-8 bg-[#F4F5F7] dark:bg-slate-950 min-h-screen">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Contacts</h1>
-            <p className="text-sm text-gray-500">
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Contacts</h1>
+            <p className="text-sm text-gray-500 dark:text-slate-400">
               People profiles — demographics, communication history, and preferences.
             </p>
           </div>
@@ -538,35 +538,35 @@ export function ContactsPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <StatCard label="Total" value={stats?.total} icon={BookUser} accent="bg-[#3F51B5]/10 text-[#3F51B5]" />
-          <StatCard label="With Account" value={stats?.withAccount} icon={Building2} accent="bg-sky-50 text-sky-600" />
-          <StatCard label="Do Not Contact" value={stats?.doNotContact} icon={Ban} accent="bg-red-50 text-red-600" />
-          <StatCard label="New this month" value={stats?.newThisMonth} icon={UserPlus} accent="bg-emerald-50 text-emerald-600" />
+          <StatCard label="Total" value={stats?.total} icon={BookUser} accent="bg-[#3F51B5]/10 dark:bg-indigo-500/15 text-[#3F51B5] dark:text-indigo-300" />
+          <StatCard label="With Account" value={stats?.withAccount} icon={Building2} accent="bg-sky-50 dark:bg-sky-500/15 text-sky-600 dark:text-sky-400" />
+          <StatCard label="Do Not Contact" value={stats?.doNotContact} icon={Ban} accent="bg-red-50 dark:bg-red-500/15 text-red-600 dark:text-red-400" />
+          <StatCard label="New this month" value={stats?.newThisMonth} icon={UserPlus} accent="bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" />
           <StatCard
             label="Interactions (mo.)"
             value={stats?.interactionsThisMonth}
             icon={MessageSquarePlus}
-            accent="bg-amber-50 text-amber-600"
+            accent="bg-amber-50 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400"
           />
         </div>
 
         {/* Notifications */}
         {successMsg && (
-          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+          <div className="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-300 rounded-xl p-4 flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-3">
-              <Check className="text-emerald-600 shrink-0" size={20} />
+              <Check className="text-emerald-600 dark:text-emerald-400 shrink-0" size={20} />
               <span className="text-sm font-medium">{successMsg}</span>
             </div>
-            <button onClick={() => setSuccessMsg(null)} className="text-emerald-500 hover:text-emerald-700">
+            <button onClick={() => setSuccessMsg(null)} className="text-emerald-500 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300">
               <X size={18} />
             </button>
           </div>
         )}
 
         {(errorMsg || contactsQuery.isError) && (
-          <div className="bg-red-50 border border-red-200 text-red-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+          <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-800 dark:text-red-300 rounded-xl p-4 flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-3">
-              <AlertCircle className="text-red-600 shrink-0" size={20} />
+              <AlertCircle className="text-red-600 dark:text-red-400 shrink-0" size={20} />
               <span className="text-sm font-medium">
                 {errorMsg ??
                   (contactsQuery.error instanceof Error
@@ -579,7 +579,7 @@ export function ContactsPage() {
                 setErrorMsg(null);
                 if (contactsQuery.isError) contactsQuery.refetch();
               }}
-              className="text-red-500 hover:text-red-700"
+              className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
             >
               <X size={18} />
             </button>
@@ -588,9 +588,9 @@ export function ContactsPage() {
 
         {/* Filters & Table */}
         <Card className="py-0 overflow-hidden">
-          <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="p-4 border-b border-gray-100 dark:border-slate-800 flex flex-col md:flex-row gap-4 items-center justify-between">
             <div className="relative w-full md:max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" size={18} />
               <Input
                 type="text"
                 placeholder="Search by name, email, phone, title, or location..."
@@ -605,7 +605,7 @@ export function ContactsPage() {
 
             <div className="flex w-full md:w-auto items-center gap-2 justify-end flex-wrap">
               {contactsQuery.isFetching && !contactsQuery.isLoading && (
-                <Loader2 size={16} className="animate-spin text-gray-400" />
+                <Loader2 size={16} className="animate-spin text-gray-400 dark:text-slate-500" />
               )}
               <select
                 value={channelFilter}
@@ -638,21 +638,21 @@ export function ContactsPage() {
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="bg-gray-50/75 hover:bg-gray-50/75">
+                <TableRow className="bg-gray-50/75 dark:bg-slate-800/50 hover:bg-gray-50/75 dark:hover:bg-slate-800/50">
                   <SortableHead field="lastName" className="px-6" {...sortProps}>Contact</SortableHead>
                   <SortableHead field="jobTitle" className="px-6" {...sortProps}>Title</SortableHead>
-                  <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500">
+                  <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
                     Account
                   </TableHead>
                   <SortableHead field="city" className="px-6" {...sortProps}>Location</SortableHead>
-                  <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500">
+                  <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
                     Preference
                   </TableHead>
-                  <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500">
+                  <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
                     Assigned To
                   </TableHead>
                   <SortableHead field="createdAt" className="px-6" {...sortProps}>Created</SortableHead>
-                  <TableHead className="px-6 text-right text-xs uppercase tracking-wider font-semibold text-gray-500">
+                  <TableHead className="px-6 text-right text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
                     Actions
                   </TableHead>
                 </TableRow>
@@ -660,7 +660,7 @@ export function ContactsPage() {
               <TableBody>
                 {contactsQuery.isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="px-6 py-12 text-center text-gray-400">
+                    <TableCell colSpan={8} className="px-6 py-12 text-center text-gray-400 dark:text-slate-500">
                       <div className="flex justify-center items-center gap-2">
                         <Loader2 size={18} className="animate-spin" />
                         <span>Fetching contacts...</span>
@@ -670,10 +670,10 @@ export function ContactsPage() {
                 ) : contacts.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={8} className="px-6 py-16 text-center">
-                      <div className="flex flex-col items-center gap-2 text-gray-500">
-                        <BookUser size={32} className="text-gray-300" />
+                      <div className="flex flex-col items-center gap-2 text-gray-500 dark:text-slate-400">
+                        <BookUser size={32} className="text-gray-300 dark:text-slate-600" />
                         <p className="font-medium">No contacts found</p>
-                        <p className="text-sm text-gray-400">
+                        <p className="text-sm text-gray-400 dark:text-slate-500">
                           {debouncedSearch || channelFilter || dncFilter
                             ? "Try adjusting your search or filters."
                             : "Add your first contact to build the central database."}
@@ -683,15 +683,15 @@ export function ContactsPage() {
                   </TableRow>
                 ) : (
                   contacts.map((contact) => (
-                    <TableRow key={contact.id} className="hover:bg-gray-50/50">
+                    <TableRow key={contact.id} className="hover:bg-gray-50/50 dark:hover:bg-slate-800">
                       <TableCell className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 bg-[#3F51B5]/10 text-[#3F51B5] rounded-full flex items-center justify-center font-bold text-xs uppercase shrink-0">
+                          <div className="w-9 h-9 bg-[#3F51B5]/10 dark:bg-indigo-500/15 text-[#3F51B5] dark:text-indigo-300 rounded-full flex items-center justify-center font-bold text-xs uppercase shrink-0">
                             {contact.firstName[0]}
                             {contact.lastName[0]}
                           </div>
                           <div className="flex flex-col min-w-0">
-                            <span className="font-semibold text-gray-900 truncate flex items-center gap-1.5">
+                            <span className="font-semibold text-gray-900 dark:text-white truncate flex items-center gap-1.5">
                               {contact.firstName} {contact.lastName}
                               {contact.isPrimary && (
                                 <span title="Primary contact for their account">
@@ -699,37 +699,37 @@ export function ContactsPage() {
                                 </span>
                               )}
                             </span>
-                            <span className="text-xs text-gray-500 truncate">{contact.email}</span>
+                            <span className="text-xs text-gray-500 dark:text-slate-400 truncate">{contact.email}</span>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="px-6 py-4 text-gray-600 text-sm">
+                      <TableCell className="px-6 py-4 text-gray-600 dark:text-slate-300 text-sm">
                         {contact.jobTitle ? (
                           <div className="flex flex-col">
                             <span className="truncate">{contact.jobTitle}</span>
                             {contact.department && (
-                              <span className="text-xs text-gray-400 truncate">{contact.department}</span>
+                              <span className="text-xs text-gray-400 dark:text-slate-500 truncate">{contact.department}</span>
                             )}
                           </div>
                         ) : (
-                          <span className="text-gray-300">—</span>
+                          <span className="text-gray-300 dark:text-slate-600">—</span>
                         )}
                       </TableCell>
-                      <TableCell className="px-6 py-4 text-gray-600 text-sm">
+                      <TableCell className="px-6 py-4 text-gray-600 dark:text-slate-300 text-sm">
                         {contact.accountName ? (
                           <div className="flex items-center gap-1.5">
-                            <Building2 size={14} className="text-gray-400 shrink-0" />
+                            <Building2 size={14} className="text-gray-400 dark:text-slate-500 shrink-0" />
                             <span className="truncate">{contact.accountName}</span>
                           </div>
                         ) : (
-                          <span className="text-gray-300">—</span>
+                          <span className="text-gray-300 dark:text-slate-600">—</span>
                         )}
                       </TableCell>
-                      <TableCell className="px-6 py-4 text-gray-600 text-sm">
+                      <TableCell className="px-6 py-4 text-gray-600 dark:text-slate-300 text-sm">
                         {contact.city || contact.country ? (
                           [contact.city, contact.country].filter(Boolean).join(", ")
                         ) : (
-                          <span className="text-gray-300">—</span>
+                          <span className="text-gray-300 dark:text-slate-600">—</span>
                         )}
                       </TableCell>
                       <TableCell className="px-6 py-4">
@@ -739,28 +739,28 @@ export function ContactsPage() {
                         {contact.assignedToName || contact.assignedTeamName ? (
                           <div className="flex flex-col min-w-0">
                             {contact.assignedToName && (
-                              <span className="text-gray-700 font-medium truncate">
+                              <span className="text-gray-700 dark:text-slate-200 font-medium truncate">
                                 {contact.assignedToName}
                               </span>
                             )}
                             {contact.assignedTeamName && (
-                              <span className="text-xs text-indigo-600 truncate flex items-center gap-1">
+                              <span className="text-xs text-indigo-600 dark:text-indigo-400 truncate flex items-center gap-1">
                                 <UsersRound size={11} className="shrink-0" />
                                 {contact.assignedTeamName}
                               </span>
                             )}
                           </div>
                         ) : (
-                          <span className="text-gray-300">Unassigned</span>
+                          <span className="text-gray-300 dark:text-slate-600">Unassigned</span>
                         )}
                       </TableCell>
-                      <TableCell className="px-6 py-4 text-gray-500">
+                      <TableCell className="px-6 py-4 text-gray-500 dark:text-slate-400">
                         {contact.createdAt ? new Date(contact.createdAt).toLocaleDateString() : "—"}
                       </TableCell>
                       <TableCell className="px-6 py-4 text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-700">
+                            <Button variant="ghost" size="icon" className="text-gray-400 dark:text-slate-500 hover:text-gray-700 dark:hover:text-slate-200">
                               <MoreHorizontal size={18} />
                               <span className="sr-only">Open actions</span>
                             </Button>
@@ -801,7 +801,7 @@ export function ContactsPage() {
 
           {/* Pagination footer */}
           {!contactsQuery.isLoading && meta && meta.total > 0 && (
-            <div className="p-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            <div className="p-4 border-t border-gray-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
               <div className="flex items-center gap-3">
                 <span>
                   {(meta.page - 1) * meta.limit + 1}–{Math.min(meta.page * meta.limit, meta.total)} of{" "}
@@ -829,7 +829,7 @@ export function ContactsPage() {
                 >
                   <ChevronLeft size={16} />
                 </Button>
-                <span className="px-3 text-sm font-bold text-gray-700">
+                <span className="px-3 text-sm font-bold text-gray-700 dark:text-slate-200">
                   {meta.page} / {meta.totalPages}
                 </span>
                 <Button
@@ -859,13 +859,13 @@ export function ContactsPage() {
               </DialogHeader>
 
               <div className="space-y-6">
-                <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
-                  <div className="w-12 h-12 bg-[#3F51B5]/10 text-[#3F51B5] rounded-full flex items-center justify-center font-bold text-lg uppercase">
+                <div className="flex items-center gap-4 pb-4 border-b border-gray-100 dark:border-slate-800">
+                  <div className="w-12 h-12 bg-[#3F51B5]/10 dark:bg-indigo-500/15 text-[#3F51B5] dark:text-indigo-300 rounded-full flex items-center justify-center font-bold text-lg uppercase">
                     {viewingContact.firstName[0]}
                     {viewingContact.lastName[0]}
                   </div>
                   <div className="min-w-0">
-                    <h4 className="text-lg font-bold text-gray-900 truncate flex items-center gap-2">
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white truncate flex items-center gap-2">
                       {viewingContact.firstName} {viewingContact.lastName}
                       {viewingContact.isPrimary && (
                         <span title="Primary contact for their account">
@@ -873,7 +873,7 @@ export function ContactsPage() {
                         </span>
                       )}
                     </h4>
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-gray-500 dark:text-slate-400">
                       {[viewingContact.jobTitle, viewingContact.accountName].filter(Boolean).join(" · ") ||
                         viewingContact.email}
                     </span>
@@ -922,10 +922,10 @@ export function ContactsPage() {
                           .join(" · ") || "Unassigned",
                     },
                   ].map(({ icon: Icon, label, value }) => (
-                    <div key={label} className="flex items-center gap-3 text-sm text-gray-600">
-                      <Icon className="text-gray-400 shrink-0" size={18} />
+                    <div key={label} className="flex items-center gap-3 text-sm text-gray-600 dark:text-slate-300">
+                      <Icon className="text-gray-400 dark:text-slate-500 shrink-0" size={18} />
                       <div className="min-w-0">
-                        <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">{label}</p>
+                        <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold">{label}</p>
                         <p className="font-medium whitespace-pre-wrap break-words">{value}</p>
                       </div>
                     </div>
@@ -933,12 +933,12 @@ export function ContactsPage() {
                 </div>
 
                 {/* Preferences */}
-                <div className="bg-gray-50/75 p-4 rounded-xl border border-gray-100">
-                  <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-2">
+                <div className="bg-gray-50/75 dark:bg-slate-800/50 p-4 rounded-xl border border-gray-100 dark:border-slate-800">
+                  <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold mb-2">
                     Communication Preferences
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    <Badge variant="outline" className="bg-white text-gray-700 border-gray-200">
+                    <Badge variant="outline" className="bg-white dark:bg-slate-900 text-gray-700 dark:text-slate-200 border-gray-200 dark:border-slate-800">
                       Prefers {PREFERRED_CHANNEL_LABELS[viewingContact.preferredChannel]}
                     </Badge>
                     {[
@@ -952,8 +952,8 @@ export function ContactsPage() {
                         className={cn(
                           "gap-1",
                           ok
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                            : "bg-slate-100 text-slate-500 border-slate-200",
+                            ? "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30"
+                            : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-800",
                         )}
                       >
                         {ok ? <Check size={11} /> : <X size={11} />}
@@ -961,7 +961,7 @@ export function ContactsPage() {
                       </Badge>
                     ))}
                     {viewingContact.doNotContact && (
-                      <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200 gap-1">
+                      <Badge variant="outline" className="bg-red-50 dark:bg-red-500/15 text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/30 gap-1">
                         <Ban size={11} /> Do not contact — overrides all opt-ins
                       </Badge>
                     )}
@@ -969,44 +969,44 @@ export function ContactsPage() {
                 </div>
 
                 {viewingContact.notes && (
-                  <div className="bg-gray-50/75 p-4 rounded-xl border border-gray-100 space-y-1">
-                    <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Notes</p>
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{viewingContact.notes}</p>
+                  <div className="bg-gray-50/75 dark:bg-slate-800/50 p-4 rounded-xl border border-gray-100 dark:border-slate-800 space-y-1">
+                    <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold">Notes</p>
+                    <p className="text-sm text-gray-700 dark:text-slate-200 whitespace-pre-wrap">{viewingContact.notes}</p>
                   </div>
                 )}
 
                 {/* Communication history */}
                 <div className="space-y-2">
-                  <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">
+                  <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold">
                     Communication History ({viewingContact.interactions.length})
                   </p>
                   {viewingContact.interactions.length === 0 ? (
-                    <p className="text-sm text-gray-400">No interactions logged yet.</p>
+                    <p className="text-sm text-gray-400 dark:text-slate-500">No interactions logged yet.</p>
                   ) : (
                     <ul className="space-y-2 max-h-56 overflow-y-auto pr-1">
                       {viewingContact.interactions.map((i, idx) => (
                         <li
                           key={idx}
-                          className="flex items-start gap-3 text-sm bg-white border border-gray-100 rounded-lg p-3"
+                          className="flex items-start gap-3 text-sm bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-lg p-3"
                         >
                           <span className="shrink-0 mt-0.5">
                             {i.direction === "inbound" ? (
-                              <ArrowDownLeft size={15} className="text-emerald-500" />
+                              <ArrowDownLeft size={15} className="text-emerald-500 dark:text-emerald-400" />
                             ) : i.direction === "outbound" ? (
-                              <ArrowUpRight size={15} className="text-sky-500" />
+                              <ArrowUpRight size={15} className="text-sky-500 dark:text-sky-400" />
                             ) : (
-                              <Pencil size={13} className="text-gray-400" />
+                              <Pencil size={13} className="text-gray-400 dark:text-slate-500" />
                             )}
                           </span>
                           <div className="min-w-0 flex-1">
-                            <p className="font-medium text-gray-800">
+                            <p className="font-medium text-gray-800 dark:text-white">
                               {INTERACTION_TYPE_LABELS[i.type]}
                               {i.subject ? ` — ${i.subject}` : ""}
                             </p>
                             {i.note && (
-                              <p className="text-gray-500 whitespace-pre-wrap break-words">{i.note}</p>
+                              <p className="text-gray-500 dark:text-slate-400 whitespace-pre-wrap break-words">{i.note}</p>
                             )}
-                            <p className="text-[11px] text-gray-400 mt-0.5">
+                            <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-0.5">
                               {new Date(i.occurredAt).toLocaleString()}
                               {i.recordedByName ? ` · by ${i.recordedByName}` : ""}
                             </p>
@@ -1052,7 +1052,7 @@ export function ContactsPage() {
 
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {formError && (
-              <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm flex items-center gap-2">
+              <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300 rounded-lg p-3 text-sm flex items-center gap-2">
                 <AlertCircle size={16} className="shrink-0" />
                 {formError}
               </div>
@@ -1060,14 +1060,14 @@ export function ContactsPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   First Name *
                 </label>
                 <Input disabled={isSaving} {...form.register("firstName")} />
                 <FieldError message={form.formState.errors.firstName?.message} />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Last Name *
                 </label>
                 <Input disabled={isSaving} {...form.register("lastName")} />
@@ -1077,14 +1077,14 @@ export function ContactsPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Email Address *
                 </label>
                 <Input type="email" placeholder="name@example.com" disabled={isSaving} {...form.register("email")} />
                 <FieldError message={form.formState.errors.email?.message} />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Phone
                 </label>
                 <Input type="tel" placeholder="+1 234 567 890" disabled={isSaving} {...form.register("phone")} />
@@ -1094,14 +1094,14 @@ export function ContactsPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Job Title
                 </label>
                 <Input placeholder="Head of Procurement" disabled={isSaving} {...form.register("jobTitle")} />
                 <FieldError message={form.formState.errors.jobTitle?.message} />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Department
                 </label>
                 <Input placeholder="Operations" disabled={isSaving} {...form.register("department")} />
@@ -1110,9 +1110,9 @@ export function ContactsPage() {
             </div>
 
             {/* Account link */}
-            <div className="border border-gray-100 rounded-xl p-4 bg-gray-50/50 space-y-3">
+            <div className="border border-gray-100 dark:border-slate-800 rounded-xl p-4 bg-gray-50/50 dark:bg-slate-800/50 space-y-3">
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Account (Company)
                 </label>
                 <select
@@ -1133,7 +1133,7 @@ export function ContactsPage() {
               <label
                 className={cn(
                   "flex items-center gap-2 text-sm font-medium cursor-pointer",
-                  watchAccountId ? "text-gray-700" : "text-gray-400",
+                  watchAccountId ? "text-gray-700 dark:text-slate-200" : "text-gray-400 dark:text-slate-500",
                 )}
               >
                 <input
@@ -1149,20 +1149,20 @@ export function ContactsPage() {
             {/* Demographics */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Birthday
                 </label>
                 <Input type="date" disabled={isSaving} {...form.register("birthday")} />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   City
                 </label>
                 <Input placeholder="Berlin" disabled={isSaving} {...form.register("city")} />
                 <FieldError message={form.formState.errors.city?.message} />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Country
                 </label>
                 <Input placeholder="Germany" disabled={isSaving} {...form.register("country")} />
@@ -1172,14 +1172,14 @@ export function ContactsPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Address
                 </label>
                 <Input placeholder="Street, ZIP" disabled={isSaving} {...form.register("address")} />
                 <FieldError message={form.formState.errors.address?.message} />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Language
                 </label>
                 <Input placeholder="en / German / ..." disabled={isSaving} {...form.register("language")} />
@@ -1188,13 +1188,13 @@ export function ContactsPage() {
             </div>
 
             {/* Preferences */}
-            <div className="border border-gray-100 rounded-xl p-4 bg-gray-50/50 space-y-3">
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+            <div className="border border-gray-100 dark:border-slate-800 rounded-xl p-4 bg-gray-50/50 dark:bg-slate-800/50 space-y-3">
+              <p className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                 Communication Preferences
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                     Preferred Channel
                   </label>
                   <select disabled={isSaving} className={inputClasses} {...form.register("preferredChannel")}>
@@ -1213,7 +1213,7 @@ export function ContactsPage() {
                   ).map(({ name, label }) => (
                     <label
                       key={name}
-                      className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer"
+                      className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-slate-200 cursor-pointer"
                     >
                       <input
                         type="checkbox"
@@ -1226,7 +1226,7 @@ export function ContactsPage() {
                   ))}
                 </div>
               </div>
-              <label className="flex items-center gap-2 text-sm font-semibold text-red-600 cursor-pointer border-t border-gray-100 pt-3">
+              <label className="flex items-center gap-2 text-sm font-semibold text-red-600 dark:text-red-400 cursor-pointer border-t border-gray-100 dark:border-slate-800 pt-3">
                 <input
                   type="checkbox"
                   className="w-4 h-4 accent-red-600"
@@ -1238,7 +1238,7 @@ export function ContactsPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                 Notes
               </label>
               <textarea
@@ -1273,11 +1273,11 @@ export function ContactsPage() {
                 <DialogTitle>Log Interaction</DialogTitle>
                 <DialogDescription>
                   Record a touchpoint with{" "}
-                  <span className="font-semibold text-gray-700">
+                  <span className="font-semibold text-gray-700 dark:text-slate-200">
                     {interactingContact.firstName} {interactingContact.lastName}
                   </span>
                   {interactingContact.doNotContact && (
-                    <span className="block mt-1 text-red-600 font-medium">
+                    <span className="block mt-1 text-red-600 dark:text-red-400 font-medium">
                       ⚠ This contact is flagged do-not-contact.
                     </span>
                   )}
@@ -1286,7 +1286,7 @@ export function ContactsPage() {
 
               <form onSubmit={interactionForm.handleSubmit(onSubmitInteraction)} className="space-y-4">
                 {interactionError && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm flex items-center gap-2">
+                  <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300 rounded-lg p-3 text-sm flex items-center gap-2">
                     <AlertCircle size={16} className="shrink-0" />
                     {interactionError}
                   </div>
@@ -1294,7 +1294,7 @@ export function ContactsPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                    <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                       Type *
                     </label>
                     <select
@@ -1312,7 +1312,7 @@ export function ContactsPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                    <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                       Direction
                     </label>
                     <select
@@ -1329,7 +1329,7 @@ export function ContactsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                     Subject
                   </label>
                   <Input
@@ -1341,7 +1341,7 @@ export function ContactsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                     Notes
                   </label>
                   <textarea
@@ -1387,7 +1387,7 @@ export function ContactsPage() {
                 <DialogTitle>Assign Contact</DialogTitle>
                 <DialogDescription>
                   Route{" "}
-                  <span className="font-semibold text-gray-700">
+                  <span className="font-semibold text-gray-700 dark:text-slate-200">
                     {assigningContact.firstName} {assigningContact.lastName}
                   </span>{" "}
                   to a team and/or a record owner. Team members gain visibility of this record.
@@ -1396,14 +1396,14 @@ export function ContactsPage() {
 
               <div className="space-y-4">
                 {assignError && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm flex items-center gap-2">
+                  <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300 rounded-lg p-3 text-sm flex items-center gap-2">
                     <AlertCircle size={16} className="shrink-0" />
                     {assignError}
                   </div>
                 )}
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                     Team
                   </label>
                   <select
@@ -1434,12 +1434,12 @@ export function ContactsPage() {
                     ))}
                   </select>
                   {assignTeamsQuery.isLoading && (
-                    <p className="text-[11px] text-gray-400 mt-1">Loading teams...</p>
+                    <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">Loading teams...</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                     Record Owner
                   </label>
                   <select
@@ -1455,7 +1455,7 @@ export function ContactsPage() {
                       </option>
                     ))}
                   </select>
-                  <p className="text-[11px] text-gray-400 mt-1">
+                  <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">
                     {assignTeamId
                       ? "Only members of the selected team can own this record."
                       : "Pick a team first to narrow the list to its members."}
@@ -1494,7 +1494,7 @@ export function ContactsPage() {
                 <DialogTitle>Delete contact?</DialogTitle>
                 <DialogDescription>
                   This permanently removes{" "}
-                  <span className="font-semibold text-gray-700">
+                  <span className="font-semibold text-gray-700 dark:text-slate-200">
                     {deletingContact.firstName} {deletingContact.lastName}
                   </span>{" "}
                   ({deletingContact.email}) and their communication history. This action cannot be undone.

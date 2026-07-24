@@ -38,6 +38,7 @@ import {
   SavedReport,
 } from "../types";
 import { useAuth } from "@/providers/keycloak-provider";
+import { useTheme } from "@/providers/theme-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -51,7 +52,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const inputClasses =
-  "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5] transition-all disabled:bg-gray-50";
+  "w-full px-3 py-2 border border-gray-200 dark:border-slate-700 rounded-lg text-sm bg-white dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5] transition-all disabled:bg-gray-50 dark:disabled:bg-slate-800";
 
 const numberFmt = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 });
 const BAR_COLORS = ["#3F51B5", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#0ea5e9"];
@@ -418,7 +419,7 @@ export function ReportBuilder() {
             value={row.value}
             onChange={(e) => updateFilter(row.id, { value: e.target.value })}
           />
-          <span className="text-gray-400 text-xs">–</span>
+          <span className="text-gray-400 dark:text-slate-500 text-xs">–</span>
           <Input
             type={inputType}
             value={row.value2}
@@ -443,7 +444,7 @@ export function ReportBuilder() {
 
   if (datasetsQuery.isLoading) {
     return (
-      <div className="flex items-center justify-center gap-2 text-gray-400 py-24">
+      <div className="flex items-center justify-center gap-2 text-gray-400 dark:text-slate-500 py-24">
         <Loader2 size={20} className="animate-spin" /> Loading builder…
       </div>
     );
@@ -453,13 +454,13 @@ export function ReportBuilder() {
     <div className="grid grid-cols-1 xl:grid-cols-[300px_1fr] gap-6">
       {/* Saved reports rail */}
       <aside className="space-y-3">
-        <div className="bg-white rounded-2xl shadow-sm p-4">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-4">
           <div className="flex items-center gap-2 mb-3">
             <Bookmark size={16} className="text-[#3F51B5]" />
-            <h3 className="font-bold text-sm text-gray-800">Saved Reports</h3>
+            <h3 className="font-bold text-sm text-gray-800 dark:text-white">Saved Reports</h3>
           </div>
           {savedReports.length === 0 ? (
-            <p className="text-xs text-gray-400 py-2">
+            <p className="text-xs text-gray-400 dark:text-slate-500 py-2">
               No saved reports yet. Build one and hit Save.
             </p>
           ) : (
@@ -468,14 +469,14 @@ export function ReportBuilder() {
                 <li key={r.id}>
                   <div
                     className={cn(
-                      "group flex items-center gap-2 rounded-lg px-2.5 py-2 hover:bg-gray-50 cursor-pointer",
-                      editingSavedId === r.id && "bg-[#3F51B5]/5",
+                      "group flex items-center gap-2 rounded-lg px-2.5 py-2 hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer",
+                      editingSavedId === r.id && "bg-[#3F51B5]/5 dark:bg-indigo-500/15",
                     )}
                     onClick={() => loadSaved(r)}
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-gray-800 truncate">{r.name}</p>
-                      <p className="text-[11px] text-gray-400 truncate">
+                      <p className="text-sm font-medium text-gray-800 dark:text-white truncate">{r.name}</p>
+                      <p className="text-[11px] text-gray-400 dark:text-slate-500 truncate">
                         {r.dataset}
                         {r.shared ? " · shared" : ""}
                       </p>
@@ -486,7 +487,7 @@ export function ReportBuilder() {
                           e.stopPropagation();
                           void removeSaved(r);
                         }}
-                        className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition"
+                        className="opacity-0 group-hover:opacity-100 text-gray-300 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 transition"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -502,7 +503,7 @@ export function ReportBuilder() {
       {/* Builder + results */}
       <div className="space-y-6">
         {toast && (
-          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl p-3 flex items-center justify-between text-sm">
+          <div className="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-300 rounded-xl p-3 flex items-center justify-between text-sm">
             <span className="flex items-center gap-2">
               <Check size={16} /> {toast}
             </span>
@@ -512,11 +513,11 @@ export function ReportBuilder() {
           </div>
         )}
 
-        <div className="bg-white rounded-2xl shadow-sm p-6 space-y-5">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-6 space-y-5">
           {/* Dataset + mode */}
           <div className="flex flex-col sm:flex-row gap-4 sm:items-end">
             <div className="flex-1">
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                 Dataset
               </label>
               <select
@@ -530,14 +531,14 @@ export function ReportBuilder() {
                   </option>
                 ))}
               </select>
-              {dataset && <p className="text-[11px] text-gray-400 mt-1">{dataset.description}</p>}
+              {dataset && <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">{dataset.description}</p>}
             </div>
-            <div className="flex rounded-lg border border-gray-200 overflow-hidden shrink-0">
+            <div className="flex rounded-lg border border-gray-200 dark:border-slate-700 overflow-hidden shrink-0">
               <button
                 onClick={() => setMode("rows")}
                 className={cn(
                   "flex items-center gap-1.5 px-3 py-2 text-sm font-medium",
-                  mode === "rows" ? "bg-[#3F51B5] text-white" : "bg-white text-gray-600",
+                  mode === "rows" ? "bg-[#3F51B5] text-white" : "bg-white dark:bg-slate-900 text-gray-600 dark:text-slate-300",
                 )}
               >
                 <Table2 size={15} /> Table
@@ -546,7 +547,7 @@ export function ReportBuilder() {
                 onClick={() => setMode("aggregate")}
                 className={cn(
                   "flex items-center gap-1.5 px-3 py-2 text-sm font-medium",
-                  mode === "aggregate" ? "bg-[#3F51B5] text-white" : "bg-white text-gray-600",
+                  mode === "aggregate" ? "bg-[#3F51B5] text-white" : "bg-white dark:bg-slate-900 text-gray-600 dark:text-slate-300",
                 )}
               >
                 <BarChart3 size={15} /> Summary
@@ -557,7 +558,7 @@ export function ReportBuilder() {
           {/* Filters */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+              <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                 Filters
               </label>
               <Button variant="outline" size="sm" onClick={addFilter} className="gap-1 h-8">
@@ -565,7 +566,7 @@ export function ReportBuilder() {
               </Button>
             </div>
             {filters.length === 0 ? (
-              <p className="text-xs text-gray-400">No filters — the report covers all records you can see.</p>
+              <p className="text-xs text-gray-400 dark:text-slate-500">No filters — the report covers all records you can see.</p>
             ) : (
               <div className="space-y-2">
                 {filters.map((row) => {
@@ -597,7 +598,7 @@ export function ReportBuilder() {
                       {renderValueInput(row)}
                       <button
                         onClick={() => setFilters((prev) => prev.filter((f) => f.id !== row.id))}
-                        className="text-gray-300 hover:text-red-500 justify-self-center"
+                        className="text-gray-300 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 justify-self-center"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -611,7 +612,7 @@ export function ReportBuilder() {
           {/* Date range */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                 Date field
               </label>
               <select className={inputClasses} value={dateField} onChange={(e) => setDateField(e.target.value)}>
@@ -624,21 +625,21 @@ export function ReportBuilder() {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">From</label>
+              <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">From</label>
               <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">To</label>
+              <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">To</label>
               <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
             </div>
           </div>
 
           {/* Mode-specific config */}
           {mode === "aggregate" ? (
-            <div className="space-y-4 border-t border-gray-100 pt-4">
+            <div className="space-y-4 border-t border-gray-100 dark:border-slate-800 pt-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                     Group by
                   </label>
                   <select className={inputClasses} value={groupBy} onChange={(e) => setGroupBy(e.target.value)}>
@@ -652,7 +653,7 @@ export function ReportBuilder() {
                 </div>
                 {fieldByKey(dataset, groupBy)?.type === "date" && (
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                    <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                       Bucket
                     </label>
                     <select className={inputClasses} value={granularity} onChange={(e) => setGranularity(e.target.value)}>
@@ -668,7 +669,7 @@ export function ReportBuilder() {
 
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Measures</label>
+                  <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Measures</label>
                   <Button
                     variant="outline"
                     size="sm"
@@ -715,7 +716,7 @@ export function ReportBuilder() {
                       </select>
                       <button
                         onClick={() => setMetrics((prev) => prev.filter((x) => x.id !== m.id))}
-                        className="text-gray-300 hover:text-red-500 justify-self-center"
+                        className="text-gray-300 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 justify-self-center"
                         disabled={metrics.length === 1}
                       >
                         <Trash2 size={16} />
@@ -726,11 +727,11 @@ export function ReportBuilder() {
               </div>
             </div>
           ) : (
-            <div className="space-y-4 border-t border-gray-100 pt-4">
+            <div className="space-y-4 border-t border-gray-100 dark:border-slate-800 pt-4">
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2">
                   Columns{" "}
-                  <span className="text-gray-300 font-medium normal-case">
+                  <span className="text-gray-300 dark:text-slate-600 font-medium normal-case">
                     (none selected → default columns)
                   </span>
                 </label>
@@ -743,7 +744,7 @@ export function ReportBuilder() {
                         "text-xs px-2.5 py-1 rounded-full border transition",
                         columns.includes(f.key)
                           ? "bg-[#3F51B5] text-white border-[#3F51B5]"
-                          : "bg-white text-gray-600 border-gray-200 hover:border-[#3F51B5]/40",
+                          : "bg-white dark:bg-slate-900 text-gray-600 dark:text-slate-300 border-gray-200 dark:border-slate-700 hover:border-[#3F51B5]/40",
                       )}
                     >
                       {f.label}
@@ -753,7 +754,7 @@ export function ReportBuilder() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                     Sort by
                   </label>
                   <select className={inputClasses} value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
@@ -766,7 +767,7 @@ export function ReportBuilder() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                     Direction
                   </label>
                   <select
@@ -797,14 +798,14 @@ export function ReportBuilder() {
               {editingSavedId ? "Update saved" : "Save"}
             </Button>
             {loadedName && (
-              <span className="text-xs text-gray-400 ml-1">
-                Editing: <span className="font-medium text-gray-600">{loadedName}</span>
+              <span className="text-xs text-gray-400 dark:text-slate-500 ml-1">
+                Editing: <span className="font-medium text-gray-600 dark:text-slate-300">{loadedName}</span>
               </span>
             )}
           </div>
 
           {runError && (
-            <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm flex items-center gap-2">
+            <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300 rounded-lg p-3 text-sm flex items-center gap-2">
               <AlertCircle size={16} className="shrink-0" />
               {runError}
             </div>
@@ -826,17 +827,17 @@ export function ReportBuilder() {
           </DialogHeader>
           <div className="space-y-3">
             {saveError && (
-              <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm flex items-center gap-2">
+              <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300 rounded-lg p-3 text-sm flex items-center gap-2">
                 <AlertCircle size={16} className="shrink-0" />
                 {saveError}
               </div>
             )}
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Name *</label>
+              <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">Name *</label>
               <Input value={saveName} onChange={(e) => setSaveName(e.target.value)} placeholder="Q3 lost deals over $10k" />
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Description</label>
+              <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">Description</label>
               <textarea
                 rows={2}
                 className={cn(inputClasses, "resize-none")}
@@ -846,7 +847,7 @@ export function ReportBuilder() {
               />
             </div>
             {canShare && (
-              <label className="flex items-center gap-2 text-sm text-gray-600">
+              <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-slate-300">
                 <input type="checkbox" checked={saveShared} onChange={(e) => setSaveShared(e.target.checked)} />
                 Share with all staff
               </label>
@@ -891,6 +892,18 @@ function ResultView({
   result: ReportResult;
   onPage: (page: number) => void;
 }) {
+  const { theme } = useTheme();
+  const dark = theme === "dark";
+  const gridStroke = dark ? "#1e293b" : "#eef2f7";
+  const tickFill = dark ? "#64748b" : "#94a3b8";
+  const tooltipStyle = {
+    borderRadius: 8,
+    border: `1px solid ${dark ? "#1e293b" : "#e2e8f0"}`,
+    background: dark ? "#0f172a" : "#ffffff",
+    color: dark ? "#e2e8f0" : "#0f172a",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+  };
+
   if (result.mode === "aggregate") {
     const rows = result.aggregate ?? [];
     const aliases = result.metricAliases ?? [];
@@ -900,25 +913,25 @@ function ResultView({
       .map((r) => ({ label: r.groupLabel, value: primary ? r.metrics[primary] : 0 }));
 
     return (
-      <div className="bg-white rounded-2xl shadow-sm p-6 space-y-5">
-        <h3 className="font-bold text-gray-800">
-          Summary <span className="text-gray-400 font-normal">· {rows.length} groups</span>
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-6 space-y-5">
+        <h3 className="font-bold text-gray-800 dark:text-white">
+          Summary <span className="text-gray-400 dark:text-slate-500 font-normal">· {rows.length} groups</span>
         </h3>
         {rows.length === 0 ? (
-          <p className="text-sm text-gray-400 py-8 text-center">No data matched this report.</p>
+          <p className="text-sm text-gray-400 dark:text-slate-500 py-8 text-center">No data matched this report.</p>
         ) : (
           <>
             {primary && (
               <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F0F0F0" />
-                    <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: "#9CA3AF", fontSize: 11 }} interval={0} angle={-15} textAnchor="end" height={50} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fill: "#9CA3AF", fontSize: 12 }} />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridStroke} />
+                    <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: tickFill, fontSize: 11 }} interval={0} angle={-15} textAnchor="end" height={50} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: tickFill, fontSize: 12 }} />
                     <ReTooltip
                       formatter={(v: number) => numberFmt.format(v)}
-                      cursor={{ fill: "#F4F5F7" }}
-                      contentStyle={{ borderRadius: 8, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
+                      cursor={{ fill: dark ? "#1e293b" : "#F4F5F7" }}
+                      contentStyle={tooltipStyle}
                     />
                     <Bar dataKey="value" name={primary} radius={[6, 6, 0, 0]} barSize={36}>
                       {chartData.map((_, i) => (
@@ -932,7 +945,7 @@ function ResultView({
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100">
+                  <tr className="text-left text-gray-400 dark:text-slate-500 text-xs uppercase tracking-wider border-b border-gray-100 dark:border-slate-800">
                     <th className="py-2 pr-4 font-semibold">
                       {result.groupBy ? result.groupBy : "Group"}
                     </th>
@@ -945,10 +958,10 @@ function ResultView({
                 </thead>
                 <tbody>
                   {rows.map((r, i) => (
-                    <tr key={i} className="border-b border-gray-50 last:border-0">
-                      <td className="py-2.5 pr-4 font-medium text-gray-800">{r.groupLabel}</td>
+                    <tr key={i} className="border-b border-gray-50 dark:border-slate-800 last:border-0">
+                      <td className="py-2.5 pr-4 font-medium text-gray-800 dark:text-white">{r.groupLabel}</td>
                       {aliases.map((a) => (
-                        <td key={a} className="py-2.5 px-4 text-right text-gray-600">
+                        <td key={a} className="py-2.5 px-4 text-right text-gray-600 dark:text-slate-300">
                           {numberFmt.format(r.metrics[a] ?? 0)}
                         </td>
                       ))}
@@ -969,18 +982,18 @@ function ResultView({
   const meta = result.meta;
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm p-6 space-y-4">
-      <h3 className="font-bold text-gray-800">
+    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-6 space-y-4">
+      <h3 className="font-bold text-gray-800 dark:text-white">
         Results{" "}
-        <span className="text-gray-400 font-normal">· {meta?.total ?? rows.length} records</span>
+        <span className="text-gray-400 dark:text-slate-500 font-normal">· {meta?.total ?? rows.length} records</span>
       </h3>
       {rows.length === 0 ? (
-        <p className="text-sm text-gray-400 py-8 text-center">No records matched this report.</p>
+        <p className="text-sm text-gray-400 dark:text-slate-500 py-8 text-center">No records matched this report.</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100">
+              <tr className="text-left text-gray-400 dark:text-slate-500 text-xs uppercase tracking-wider border-b border-gray-100 dark:border-slate-800">
                 {columns.map((c) => (
                   <th key={c} className="py-2 px-3 font-semibold whitespace-nowrap">
                     {c}
@@ -990,9 +1003,9 @@ function ResultView({
             </thead>
             <tbody>
               {rows.map((row, i) => (
-                <tr key={(row.id as string) ?? i} className="border-b border-gray-50 last:border-0">
+                <tr key={(row.id as string) ?? i} className="border-b border-gray-50 dark:border-slate-800 last:border-0">
                   {columns.map((c) => (
-                    <td key={c} className="py-2.5 px-3 text-gray-700 whitespace-nowrap">
+                    <td key={c} className="py-2.5 px-3 text-gray-700 dark:text-slate-200 whitespace-nowrap">
                       {formatCell(row[c])}
                     </td>
                   ))}
@@ -1005,7 +1018,7 @@ function ResultView({
 
       {meta && meta.totalPages > 1 && (
         <div className="flex items-center justify-between pt-2">
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-gray-400 dark:text-slate-500">
             Page {meta.page} of {meta.totalPages}
           </span>
           <div className="flex gap-2">

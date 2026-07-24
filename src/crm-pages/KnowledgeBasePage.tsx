@@ -88,9 +88,9 @@ const emptyFormValues: ArticleFormValues = {
 // ── Presentational helpers ────────────────────────────────────────────────────
 
 const statusStyles: Record<KbStatus, string> = {
-  draft: "bg-amber-50 text-amber-700 border-amber-200",
-  published: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  archived: "bg-slate-100 text-slate-500 border-slate-200",
+  draft: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/15 dark:text-amber-300",
+  published: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-300",
+  archived: "bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-800",
 };
 
 function StatCard({
@@ -111,8 +111,8 @@ function StatCard({
           <Icon size={20} />
         </div>
         <div className="min-w-0">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider truncate">{label}</p>
-          <p className="text-xl font-bold text-gray-900">{value ?? "—"}</p>
+          <p className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider truncate">{label}</p>
+          <p className="text-xl font-bold text-gray-900 dark:text-white">{value ?? "—"}</p>
         </div>
       </CardContent>
     </Card>
@@ -120,11 +120,11 @@ function StatCard({
 }
 
 const inputClasses =
-  "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5] transition-all disabled:bg-gray-50 disabled:text-gray-500";
+  "w-full px-3 py-2 border border-gray-200 dark:border-slate-700 rounded-lg text-sm bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5] transition-all disabled:bg-gray-50 disabled:dark:bg-slate-800/50 disabled:text-gray-500 disabled:dark:text-slate-400";
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
-  return <p className="text-xs text-red-600 mt-1">{message}</p>;
+  return <p className="text-xs text-red-600 dark:text-red-400 mt-1">{message}</p>;
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
@@ -254,13 +254,13 @@ export function KnowledgeBasePage() {
   };
 
   return (
-    <div className="p-6 lg:p-8 bg-[#F4F5F7] min-h-screen">
+    <div className="p-6 lg:p-8 bg-[#F4F5F7] dark:bg-slate-950 min-h-screen">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Knowledge Base</h1>
-            <p className="text-sm text-gray-500">
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Knowledge Base</h1>
+            <p className="text-sm text-gray-500 dark:text-slate-400">
               Internal wiki and public FAQ — write once, resolve tickets faster.
             </p>
           </div>
@@ -276,29 +276,29 @@ export function KnowledgeBasePage() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <StatCard label="Articles" value={stats?.total} icon={BookOpen} accent="bg-[#3F51B5]/10 text-[#3F51B5]" />
-          <StatCard label="Published" value={stats?.published} icon={Send} accent="bg-emerald-50 text-emerald-600" />
-          <StatCard label="Drafts" value={stats?.drafts} icon={FileText} accent="bg-amber-50 text-amber-600" />
-          <StatCard label="Archived" value={stats?.archived} icon={Archive} accent="bg-slate-100 text-slate-500" />
-          <StatCard label="Public FAQ" value={stats?.publicArticles} icon={Globe} accent="bg-sky-50 text-sky-600" />
-          <StatCard label="Total Views" value={stats?.totalViews} icon={Eye} accent="bg-violet-50 text-violet-600" />
+          <StatCard label="Articles" value={stats?.total} icon={BookOpen} accent="bg-[#3F51B5]/10 text-[#3F51B5] dark:bg-indigo-500/15 dark:text-indigo-300" />
+          <StatCard label="Published" value={stats?.published} icon={Send} accent="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400" />
+          <StatCard label="Drafts" value={stats?.drafts} icon={FileText} accent="bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400" />
+          <StatCard label="Archived" value={stats?.archived} icon={Archive} accent="bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400" />
+          <StatCard label="Public FAQ" value={stats?.publicArticles} icon={Globe} accent="bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400" />
+          <StatCard label="Total Views" value={stats?.totalViews} icon={Eye} accent="bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400" />
         </div>
 
         {/* Notifications */}
         {successMsg && (
-          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 dark:bg-emerald-500/15 dark:border-emerald-500/30 dark:text-emerald-300 rounded-xl p-4 flex items-center justify-between shadow-sm">
             <span className="text-sm font-medium flex items-center gap-2">
-              <Check size={18} className="text-emerald-600" /> {successMsg}
+              <Check size={18} className="text-emerald-600 dark:text-emerald-400" /> {successMsg}
             </span>
-            <button onClick={() => setSuccessMsg(null)} className="text-emerald-500 hover:text-emerald-700">
+            <button onClick={() => setSuccessMsg(null)} className="text-emerald-500 hover:text-emerald-700 dark:text-emerald-400">
               <X size={18} />
             </button>
           </div>
         )}
         {(errorMsg || articlesQuery.isError) && (
-          <div className="bg-red-50 border border-red-200 text-red-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+          <div className="bg-red-50 border border-red-200 text-red-800 dark:bg-red-500/15 dark:border-red-500/30 dark:text-red-300 rounded-xl p-4 flex items-center justify-between shadow-sm">
             <span className="text-sm font-medium flex items-center gap-2">
-              <AlertCircle size={18} className="text-red-600" />
+              <AlertCircle size={18} className="text-red-600 dark:text-red-400" />
               {errorMsg ??
                 (articlesQuery.error instanceof Error ? articlesQuery.error.message : "Failed to load articles")}
             </span>
@@ -307,7 +307,7 @@ export function KnowledgeBasePage() {
                 setErrorMsg(null);
                 if (articlesQuery.isError) articlesQuery.refetch();
               }}
-              className="text-red-500 hover:text-red-700"
+              className="text-red-500 hover:text-red-700 dark:text-red-400"
             >
               <X size={18} />
             </button>
@@ -316,9 +316,9 @@ export function KnowledgeBasePage() {
 
         {/* Filters & table */}
         <Card className="py-0 overflow-hidden">
-          <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="p-4 border-b border-gray-100 dark:border-slate-800 flex flex-col md:flex-row gap-4 items-center justify-between">
             <div className="relative w-full md:max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" size={18} />
               <Input
                 type="text"
                 placeholder="Search title, body, tags..."
@@ -332,7 +332,7 @@ export function KnowledgeBasePage() {
             </div>
             <div className="flex items-center gap-2">
               {articlesQuery.isFetching && !articlesQuery.isLoading && (
-                <Loader2 size={16} className="animate-spin text-gray-400" />
+                <Loader2 size={16} className="animate-spin text-gray-400 dark:text-slate-500" />
               )}
               <select
                 value={statusFilter}
@@ -365,12 +365,12 @@ export function KnowledgeBasePage() {
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="bg-gray-50/75 hover:bg-gray-50/75">
+                <TableRow className="bg-gray-50/75 hover:bg-gray-50/75 dark:bg-slate-800/50 dark:hover:bg-slate-800/50">
                   {["Article", "Category", "Visibility", "Status", "Views", "Feedback", "Updated", ""].map((h) => (
                     <TableHead
                       key={h}
                       className={cn(
-                        "px-6 text-xs uppercase tracking-wider font-semibold text-gray-500",
+                        "px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400",
                         h === "" && "text-right",
                       )}
                     >
@@ -382,7 +382,7 @@ export function KnowledgeBasePage() {
               <TableBody>
                 {articlesQuery.isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="px-6 py-12 text-center text-gray-400">
+                    <TableCell colSpan={8} className="px-6 py-12 text-center text-gray-400 dark:text-slate-500">
                       <div className="flex justify-center items-center gap-2">
                         <Loader2 size={18} className="animate-spin" /> Fetching articles...
                       </div>
@@ -391,10 +391,10 @@ export function KnowledgeBasePage() {
                 ) : articles.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={8} className="px-6 py-16 text-center">
-                      <div className="flex flex-col items-center gap-2 text-gray-500">
-                        <BookOpen size={32} className="text-gray-300" />
+                      <div className="flex flex-col items-center gap-2 text-gray-500 dark:text-slate-400">
+                        <BookOpen size={32} className="text-gray-300 dark:text-slate-600" />
                         <p className="font-medium">No articles yet</p>
-                        <p className="text-sm text-gray-400">
+                        <p className="text-sm text-gray-400 dark:text-slate-500">
                           Document a fix once and link it from every ticket it resolves.
                         </p>
                       </div>
@@ -402,29 +402,29 @@ export function KnowledgeBasePage() {
                   </TableRow>
                 ) : (
                   articles.map((article) => (
-                    <TableRow key={article.id} className="hover:bg-gray-50/50">
+                    <TableRow key={article.id} className="hover:bg-gray-50/50 dark:hover:bg-slate-800/50">
                       <TableCell className="px-6 py-4">
                         <div className="flex flex-col min-w-0 max-w-[300px]">
                           <button
                             type="button"
                             onClick={() => setViewingArticle(article)}
-                            className="font-semibold text-gray-900 truncate text-left hover:text-[#3F51B5] transition-colors"
+                            className="font-semibold text-gray-900 dark:text-white truncate text-left hover:text-[#3F51B5] transition-colors"
                           >
                             {article.title}
                           </button>
-                          <span className="text-xs text-gray-400 font-mono truncate">/{article.slug}</span>
+                          <span className="text-xs text-gray-400 dark:text-slate-500 font-mono truncate">/{article.slug}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="px-6 py-4 text-sm text-gray-600 capitalize">
-                        {article.category ?? <span className="text-gray-300">—</span>}
+                      <TableCell className="px-6 py-4 text-sm text-gray-600 dark:text-slate-300 capitalize">
+                        {article.category ?? <span className="text-gray-300 dark:text-slate-600">—</span>}
                       </TableCell>
                       <TableCell className="px-6 py-4">
                         {article.visibility === "public" ? (
-                          <Badge variant="outline" className="bg-sky-50 text-sky-700 border-sky-200 font-semibold gap-1">
+                          <Badge variant="outline" className="bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-500/15 dark:text-sky-300 font-semibold gap-1">
                             <Globe size={11} /> Public
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 font-semibold gap-1">
+                          <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800/50 dark:text-slate-300 dark:border-slate-800 font-semibold gap-1">
                             <Lock size={11} /> Internal
                           </Badge>
                         )}
@@ -434,24 +434,24 @@ export function KnowledgeBasePage() {
                           {article.status}
                         </Badge>
                       </TableCell>
-                      <TableCell className="px-6 py-4 text-sm font-semibold text-gray-700">{article.views}</TableCell>
+                      <TableCell className="px-6 py-4 text-sm font-semibold text-gray-700 dark:text-slate-200">{article.views}</TableCell>
                       <TableCell className="px-6 py-4 text-sm">
-                        <span className="flex items-center gap-2 text-gray-500">
-                          <span className="flex items-center gap-0.5 text-emerald-600">
+                        <span className="flex items-center gap-2 text-gray-500 dark:text-slate-400">
+                          <span className="flex items-center gap-0.5 text-emerald-600 dark:text-emerald-400">
                             <ThumbsUp size={12} /> {article.helpfulCount}
                           </span>
-                          <span className="flex items-center gap-0.5 text-red-500">
+                          <span className="flex items-center gap-0.5 text-red-500 dark:text-red-400">
                             <ThumbsDown size={12} /> {article.notHelpfulCount}
                           </span>
                         </span>
                       </TableCell>
-                      <TableCell className="px-6 py-4 text-gray-500 text-sm">
+                      <TableCell className="px-6 py-4 text-gray-500 dark:text-slate-400 text-sm">
                         {new Date(article.updatedAt).toLocaleDateString()}
                       </TableCell>
                       <TableCell className="px-6 py-4 text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-700">
+                            <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-700 dark:text-slate-500 dark:hover:text-slate-200">
                               <MoreHorizontal size={18} />
                               <span className="sr-only">Open actions</span>
                             </Button>
@@ -492,7 +492,7 @@ export function KnowledgeBasePage() {
           </div>
 
           {!articlesQuery.isLoading && meta && meta.total > 0 && (
-            <div className="p-4 border-t border-gray-100 flex items-center justify-between text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            <div className="p-4 border-t border-gray-100 dark:border-slate-800 flex items-center justify-between text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
               <span>
                 {(meta.page - 1) * meta.limit + 1}–{Math.min(meta.page * meta.limit, meta.total)} of {meta.total}{" "}
                 articles
@@ -501,7 +501,7 @@ export function KnowledgeBasePage() {
                 <Button variant="outline" size="icon" onClick={() => setPage((p) => Math.max(p - 1, 1))} disabled={page <= 1}>
                   <ChevronLeft size={16} />
                 </Button>
-                <span className="px-3 text-sm font-bold text-gray-700">
+                <span className="px-3 text-sm font-bold text-gray-700 dark:text-slate-200">
                   {meta.page} / {meta.totalPages}
                 </span>
                 <Button
@@ -530,11 +530,11 @@ export function KnowledgeBasePage() {
                     {viewingArticle.status}
                   </Badge>
                   {viewingArticle.visibility === "public" ? (
-                    <Badge variant="outline" className="bg-sky-50 text-sky-700 border-sky-200 gap-1">
+                    <Badge variant="outline" className="bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-500/15 dark:text-sky-300 gap-1">
                       <Globe size={11} /> Public FAQ
                     </Badge>
                   ) : (
-                    <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 gap-1">
+                    <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800/50 dark:text-slate-300 dark:border-slate-800 gap-1">
                       <Lock size={11} /> Internal
                     </Badge>
                   )}
@@ -542,19 +542,19 @@ export function KnowledgeBasePage() {
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
-                <div className="bg-gray-50/75 p-4 rounded-xl border border-gray-100">
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap">{viewingArticle.body}</p>
+                <div className="bg-gray-50/75 dark:bg-slate-800/50 p-4 rounded-xl border border-gray-100 dark:border-slate-800">
+                  <p className="text-sm text-gray-700 dark:text-slate-200 whitespace-pre-wrap">{viewingArticle.body}</p>
                 </div>
                 {viewingArticle.tags.length > 0 && (
                   <div className="flex gap-1.5 flex-wrap">
                     {viewingArticle.tags.map((t) => (
-                      <Badge key={t} variant="outline" className="bg-white text-gray-500 border-gray-200">
+                      <Badge key={t} variant="outline" className="bg-white text-gray-500 border-gray-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800">
                         #{t}
                       </Badge>
                     ))}
                   </div>
                 )}
-                <p className="text-[11px] text-gray-400">
+                <p className="text-[11px] text-gray-400 dark:text-slate-500">
                   By {viewingArticle.authorName ?? "unknown"} · {viewingArticle.views} views ·{" "}
                   {viewingArticle.helpfulCount} found it helpful
                   {viewingArticle.updatedByName ? ` · last edited by ${viewingArticle.updatedByName}` : ""}
@@ -593,12 +593,12 @@ export function KnowledgeBasePage() {
           </DialogHeader>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {formError && (
-              <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm flex items-center gap-2">
+              <div className="bg-red-50 border border-red-200 text-red-700 dark:bg-red-500/15 dark:border-red-500/30 dark:text-red-300 rounded-lg p-3 text-sm flex items-center gap-2">
                 <AlertCircle size={16} className="shrink-0" /> {formError}
               </div>
             )}
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                 Title *
               </label>
               <Input placeholder="How do I reset my password?" disabled={isSaving} {...form.register("title")} />
@@ -606,20 +606,20 @@ export function KnowledgeBasePage() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Category
                 </label>
                 <Input placeholder="billing / how-to / troubleshooting" disabled={isSaving} {...form.register("category")} />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Tags (comma-separated)
                 </label>
                 <Input placeholder="password, login, account" disabled={isSaving} {...form.register("tags")} />
               </div>
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                 Body *
               </label>
               <textarea
@@ -633,7 +633,7 @@ export function KnowledgeBasePage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Visibility
                 </label>
                 <select className={inputClasses} disabled={isSaving} {...form.register("visibility")}>
@@ -642,7 +642,7 @@ export function KnowledgeBasePage() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Status
                 </label>
                 <select className={inputClasses} disabled={isSaving} {...form.register("status")}>
@@ -674,7 +674,7 @@ export function KnowledgeBasePage() {
                 <DialogTitle>Delete article?</DialogTitle>
                 <DialogDescription>
                   This permanently removes{" "}
-                  <span className="font-semibold text-gray-700">{deletingArticle.title}</span>. Tickets that
+                  <span className="font-semibold text-gray-700 dark:text-slate-200">{deletingArticle.title}</span>. Tickets that
                   linked it lose the reference. Consider archiving instead.
                 </DialogDescription>
               </DialogHeader>

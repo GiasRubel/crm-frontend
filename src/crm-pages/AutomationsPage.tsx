@@ -115,9 +115,9 @@ function defaultAction(type: ActionType): RuleAction {
 // ── Presentational helpers ────────────────────────────────────────────────────
 
 const runStatusStyles: Record<RunStatus, string> = {
-  success: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  partial: "bg-amber-50 text-amber-700 border-amber-200",
-  failed: "bg-red-50 text-red-600 border-red-200",
+  success: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/30",
+  partial: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/30",
+  failed: "bg-red-50 text-red-600 border-red-200 dark:bg-red-500/15 dark:text-red-400 dark:border-red-500/30",
 };
 
 function StatCard({
@@ -138,8 +138,8 @@ function StatCard({
           <Icon size={20} />
         </div>
         <div className="min-w-0">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider truncate">{label}</p>
-          <p className="text-xl font-bold text-gray-900">{value ?? "—"}</p>
+          <p className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider truncate">{label}</p>
+          <p className="text-xl font-bold text-gray-900 dark:text-white">{value ?? "—"}</p>
         </div>
       </CardContent>
     </Card>
@@ -147,7 +147,7 @@ function StatCard({
 }
 
 const inputClasses =
-  "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5] transition-all disabled:bg-gray-50 disabled:text-gray-500";
+  "w-full px-3 py-2 border border-gray-200 dark:border-slate-700 rounded-lg text-sm bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5] transition-all disabled:bg-gray-50 dark:disabled:bg-slate-800/50 disabled:text-gray-500 dark:disabled:text-slate-400";
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
@@ -339,12 +339,12 @@ export function AutomationsPage() {
 
   if (!isStaffAdmin) {
     return (
-      <div className="p-6 lg:p-8 bg-[#F4F5F7] min-h-screen flex items-center justify-center">
+      <div className="p-6 lg:p-8 bg-[#F4F5F7] dark:bg-slate-950 min-h-screen flex items-center justify-center">
         <Card className="max-w-md">
           <CardContent className="p-8 flex flex-col items-center text-center gap-3">
-            <ShieldAlert size={40} className="text-gray-300" />
-            <h2 className="text-lg font-bold text-gray-800">Admins only</h2>
-            <p className="text-sm text-gray-500">
+            <ShieldAlert size={40} className="text-gray-300 dark:text-slate-600" />
+            <h2 className="text-lg font-bold text-gray-800 dark:text-white">Admins only</h2>
+            <p className="text-sm text-gray-500 dark:text-slate-400">
               Automation rules change data and send emails automatically, so configuring them is
               restricted to administrators.
             </p>
@@ -355,13 +355,13 @@ export function AutomationsPage() {
   }
 
   return (
-    <div className="p-6 lg:p-8 bg-[#F4F5F7] min-h-screen">
+    <div className="p-6 lg:p-8 bg-[#F4F5F7] dark:bg-slate-950 min-h-screen">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Automation & Workflows</h1>
-            <p className="text-sm text-gray-500">
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Automation & Workflows</h1>
+            <p className="text-sm text-gray-500 dark:text-slate-400">
               Trigger-based actions and SLA escalations — less manual busywork.
             </p>
           </div>
@@ -373,31 +373,31 @@ export function AutomationsPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <StatCard label="Rules" value={stats?.totalRules} icon={Zap} accent="bg-[#3F51B5]/10 text-[#3F51B5]" />
-          <StatCard label="Active" value={stats?.activeRules} icon={Play} accent="bg-emerald-50 text-emerald-600" />
-          <StatCard label="Triggers" value={stats?.triggerRules} icon={Zap} accent="bg-sky-50 text-sky-600" />
-          <StatCard label="SLA Rules" value={stats?.slaRules} icon={Timer} accent="bg-violet-50 text-violet-600" />
-          <StatCard label="Runs (24h)" value={stats?.runsLast24h} icon={Clock} accent="bg-amber-50 text-amber-600" />
-          <StatCard label="Failed (24h)" value={stats?.failedRunsLast24h} icon={AlertCircle} accent="bg-red-50 text-red-600" />
+          <StatCard label="Rules" value={stats?.totalRules} icon={Zap} accent="bg-[#3F51B5]/10 text-[#3F51B5] dark:bg-indigo-500/15 dark:text-indigo-300" />
+          <StatCard label="Active" value={stats?.activeRules} icon={Play} accent="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400" />
+          <StatCard label="Triggers" value={stats?.triggerRules} icon={Zap} accent="bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400" />
+          <StatCard label="SLA Rules" value={stats?.slaRules} icon={Timer} accent="bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400" />
+          <StatCard label="Runs (24h)" value={stats?.runsLast24h} icon={Clock} accent="bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400" />
+          <StatCard label="Failed (24h)" value={stats?.failedRunsLast24h} icon={AlertCircle} accent="bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-400" />
         </div>
 
         {/* Notifications */}
         {successMsg && (
-          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/30 rounded-xl p-4 flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-3">
-              <Check className="text-emerald-600 shrink-0" size={20} />
+              <Check className="text-emerald-600 dark:text-emerald-400 shrink-0" size={20} />
               <span className="text-sm font-medium">{successMsg}</span>
             </div>
-            <button onClick={() => setSuccessMsg(null)} className="text-emerald-500 hover:text-emerald-700">
+            <button onClick={() => setSuccessMsg(null)} className="text-emerald-500 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300">
               <X size={18} />
             </button>
           </div>
         )}
 
         {(errorMsg || rulesQuery.isError) && (
-          <div className="bg-red-50 border border-red-200 text-red-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+          <div className="bg-red-50 border border-red-200 text-red-800 dark:bg-red-500/15 dark:text-red-300 dark:border-red-500/30 rounded-xl p-4 flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-3">
-              <AlertCircle className="text-red-600 shrink-0" size={20} />
+              <AlertCircle className="text-red-600 dark:text-red-400 shrink-0" size={20} />
               <span className="text-sm font-medium">
                 {errorMsg ??
                   (rulesQuery.error instanceof Error ? rulesQuery.error.message : "Failed to load rules")}
@@ -408,7 +408,7 @@ export function AutomationsPage() {
                 setErrorMsg(null);
                 if (rulesQuery.isError) rulesQuery.refetch();
               }}
-              className="text-red-500 hover:text-red-700"
+              className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
             >
               <X size={18} />
             </button>
@@ -420,12 +420,12 @@ export function AutomationsPage() {
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="bg-gray-50/75 hover:bg-gray-50/75">
+                <TableRow className="bg-gray-50/75 hover:bg-gray-50/75 dark:bg-slate-800/50 dark:hover:bg-slate-800">
                   {["Rule", "When", "Then", "Runs", "Last Run", "Status", ""].map((h) => (
                     <TableHead
                       key={h}
                       className={cn(
-                        "px-6 text-xs uppercase tracking-wider font-semibold text-gray-500",
+                        "px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400",
                         h === "" && "text-right",
                       )}
                     >
@@ -437,7 +437,7 @@ export function AutomationsPage() {
               <TableBody>
                 {rulesQuery.isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="px-6 py-12 text-center text-gray-400">
+                    <TableCell colSpan={7} className="px-6 py-12 text-center text-gray-400 dark:text-slate-500">
                       <div className="flex justify-center items-center gap-2">
                         <Loader2 size={18} className="animate-spin" />
                         <span>Fetching rules...</span>
@@ -447,10 +447,10 @@ export function AutomationsPage() {
                 ) : rules.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="px-6 py-16 text-center">
-                      <div className="flex flex-col items-center gap-2 text-gray-500">
-                        <Zap size={32} className="text-gray-300" />
+                      <div className="flex flex-col items-center gap-2 text-gray-500 dark:text-slate-400">
+                        <Zap size={32} className="text-gray-300 dark:text-slate-600" />
                         <p className="font-medium">No automation rules yet</p>
-                        <p className="text-sm text-gray-400 max-w-md">
+                        <p className="text-sm text-gray-400 dark:text-slate-500 max-w-md">
                           Try: &quot;When a lead status changes to qualified → create a follow-up task and
                           send a welcome email&quot;, or an SLA rule escalating leads idle for 48 hours.
                         </p>
@@ -459,29 +459,29 @@ export function AutomationsPage() {
                   </TableRow>
                 ) : (
                   rules.map((rule) => (
-                    <TableRow key={rule.id} className="hover:bg-gray-50/50">
+                    <TableRow key={rule.id} className="hover:bg-gray-50/50 dark:hover:bg-slate-800">
                       <TableCell className="px-6 py-4">
                         <div className="flex flex-col min-w-0 max-w-[260px]">
-                          <span className="font-semibold text-gray-900 truncate">{rule.name}</span>
+                          <span className="font-semibold text-gray-900 dark:text-white truncate">{rule.name}</span>
                           {rule.description && (
-                            <span className="text-xs text-gray-500 truncate">{rule.description}</span>
+                            <span className="text-xs text-gray-500 dark:text-slate-400 truncate">{rule.description}</span>
                           )}
                         </div>
                       </TableCell>
                       <TableCell className="px-6 py-4">
                         {rule.kind === "trigger" ? (
-                          <Badge variant="outline" className="bg-sky-50 text-sky-700 border-sky-200 font-semibold gap-1">
+                          <Badge variant="outline" className="bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-500/15 dark:text-sky-300 dark:border-sky-500/30 font-semibold gap-1">
                             <Zap size={11} />
                             {rule.triggerEvent ? EVENT_LABELS[rule.triggerEvent] : "—"}
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="bg-violet-50 text-violet-700 border-violet-200 font-semibold gap-1">
+                          <Badge variant="outline" className="bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-500/15 dark:text-violet-300 dark:border-violet-500/30 font-semibold gap-1">
                             <Timer size={11} />
                             {rule.slaEntity} idle {rule.slaIdleHours}h
                           </Badge>
                         )}
                         {rule.conditions.length > 0 && (
-                          <p className="text-[11px] text-gray-400 mt-1">
+                          <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">
                             +{rule.conditions.length} condition{rule.conditions.length > 1 ? "s" : ""}
                           </p>
                         )}
@@ -489,16 +489,16 @@ export function AutomationsPage() {
                       <TableCell className="px-6 py-4">
                         <div className="flex flex-col gap-0.5">
                           {rule.actions.map((a, i) => (
-                            <span key={i} className="text-xs text-gray-600 truncate max-w-[220px]">
+                            <span key={i} className="text-xs text-gray-600 dark:text-slate-300 truncate max-w-[220px]">
                               {actionSummary(a)}
                             </span>
                           ))}
                         </div>
                       </TableCell>
-                      <TableCell className="px-6 py-4 text-sm font-semibold text-gray-700">
+                      <TableCell className="px-6 py-4 text-sm font-semibold text-gray-700 dark:text-slate-200">
                         {rule.runCount}
                       </TableCell>
-                      <TableCell className="px-6 py-4 text-sm text-gray-500">
+                      <TableCell className="px-6 py-4 text-sm text-gray-500 dark:text-slate-400">
                         {rule.lastRunAt ? new Date(rule.lastRunAt).toLocaleString() : "Never"}
                       </TableCell>
                       <TableCell className="px-6 py-4">
@@ -508,7 +508,7 @@ export function AutomationsPage() {
                           disabled={updateRuleMutation.isPending}
                           className={cn(
                             "relative inline-flex h-5 w-9 items-center rounded-full transition-colors",
-                            rule.isActive ? "bg-emerald-500" : "bg-gray-300",
+                            rule.isActive ? "bg-emerald-500" : "bg-gray-300 dark:bg-slate-700",
                           )}
                           title={rule.isActive ? "Active — click to pause" : "Paused — click to activate"}
                         >
@@ -523,7 +523,7 @@ export function AutomationsPage() {
                       <TableCell className="px-6 py-4 text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-700">
+                            <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-700 dark:text-slate-500 dark:hover:text-slate-200">
                               <MoreHorizontal size={18} />
                               <span className="sr-only">Open actions</span>
                             </Button>
@@ -557,10 +557,10 @@ export function AutomationsPage() {
 
         {/* Execution log */}
         <Card className="py-0 overflow-hidden">
-          <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+          <div className="p-4 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <h2 className="font-bold text-gray-800">Execution Log</h2>
-              {runsQuery.isFetching && <Loader2 size={14} className="animate-spin text-gray-400" />}
+              <h2 className="font-bold text-gray-800 dark:text-white">Execution Log</h2>
+              {runsQuery.isFetching && <Loader2 size={14} className="animate-spin text-gray-400 dark:text-slate-500" />}
             </div>
             {runsRuleId && (
               <Button
@@ -577,11 +577,11 @@ export function AutomationsPage() {
           </div>
 
           {runs.length === 0 ? (
-            <p className="p-8 text-center text-sm text-gray-400">
+            <p className="p-8 text-center text-sm text-gray-400 dark:text-slate-500">
               No runs yet — the log fills up as rules fire.
             </p>
           ) : (
-            <ul className="divide-y divide-gray-100">
+            <ul className="divide-y divide-gray-100 dark:divide-slate-800">
               {runs.map((run: AutomationRun) => (
                 <li key={run.id} className="px-6 py-3">
                   <button
@@ -593,26 +593,26 @@ export function AutomationsPage() {
                       {run.status}
                     </Badge>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-gray-800 truncate">
+                      <p className="text-sm font-medium text-gray-800 dark:text-white truncate">
                         {run.ruleName}
-                        <span className="text-gray-400 font-normal"> · {run.event}</span>
+                        <span className="text-gray-400 dark:text-slate-500 font-normal"> · {run.event}</span>
                       </p>
-                      <p className="text-xs text-gray-500 truncate">
+                      <p className="text-xs text-gray-500 dark:text-slate-400 truncate">
                         {run.recordType}
                         {run.recordName ? `: ${run.recordName}` : ""} ·{" "}
                         {new Date(run.createdAt).toLocaleString()}
                       </p>
                     </div>
                     {expandedRun === run.id ? (
-                      <ChevronUp size={16} className="text-gray-400 shrink-0" />
+                      <ChevronUp size={16} className="text-gray-400 dark:text-slate-500 shrink-0" />
                     ) : (
-                      <ChevronDown size={16} className="text-gray-400 shrink-0" />
+                      <ChevronDown size={16} className="text-gray-400 dark:text-slate-500 shrink-0" />
                     )}
                   </button>
                   {expandedRun === run.id && (
-                    <div className="mt-2 ml-1 bg-gray-50/75 border border-gray-100 rounded-lg p-3 space-y-1">
+                    <div className="mt-2 ml-1 bg-gray-50/75 border border-gray-100 dark:bg-slate-800/50 dark:border-slate-800 rounded-lg p-3 space-y-1">
                       {run.logs.map((log, i) => (
-                        <p key={i} className="text-xs font-mono text-gray-600 break-all">
+                        <p key={i} className="text-xs font-mono text-gray-600 dark:text-slate-300 break-all">
                           {log}
                         </p>
                       ))}
@@ -624,7 +624,7 @@ export function AutomationsPage() {
           )}
 
           {runsMeta && runsMeta.total > 0 && (
-            <div className="p-4 border-t border-gray-100 flex items-center justify-between text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            <div className="p-4 border-t border-gray-100 dark:border-slate-800 flex items-center justify-between text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
               <span>
                 {(runsMeta.page - 1) * runsMeta.limit + 1}–
                 {Math.min(runsMeta.page * runsMeta.limit, runsMeta.total)} of {runsMeta.total} runs
@@ -638,7 +638,7 @@ export function AutomationsPage() {
                 >
                   <ChevronLeft size={16} />
                 </Button>
-                <span className="px-3 text-sm font-bold text-gray-700">
+                <span className="px-3 text-sm font-bold text-gray-700 dark:text-slate-200">
                   {runsMeta.page} / {runsMeta.totalPages}
                 </span>
                 <Button
@@ -669,7 +669,7 @@ export function AutomationsPage() {
 
           <div className="space-y-5">
             {formError && (
-              <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm flex items-center gap-2">
+              <div className="bg-red-50 border border-red-200 text-red-700 dark:bg-red-500/15 dark:text-red-300 dark:border-red-500/30 rounded-lg p-3 text-sm flex items-center gap-2">
                 <AlertCircle size={16} className="shrink-0" />
                 {formError}
               </div>
@@ -677,7 +677,7 @@ export function AutomationsPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Rule Name *
                 </label>
                 <Input
@@ -688,7 +688,7 @@ export function AutomationsPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Kind
                 </label>
                 <select
@@ -704,7 +704,7 @@ export function AutomationsPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                 Description
               </label>
               <Input
@@ -716,8 +716,8 @@ export function AutomationsPage() {
             </div>
 
             {/* When */}
-            <div className="border border-gray-100 rounded-xl p-4 bg-gray-50/50 space-y-3">
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">When</p>
+            <div className="border border-gray-100 dark:border-slate-800 rounded-xl p-4 bg-gray-50/50 dark:bg-slate-800/50 space-y-3">
+              <p className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">When</p>
               {form.kind === "trigger" ? (
                 <select
                   className={inputClasses}
@@ -751,7 +751,7 @@ export function AutomationsPage() {
                       value={form.slaIdleHours}
                       onChange={(e) => setForm((f) => ({ ...f, slaIdleHours: e.target.value }))}
                     />
-                    <span className="text-sm text-gray-500 whitespace-nowrap">hours idle</span>
+                    <span className="text-sm text-gray-500 dark:text-slate-400 whitespace-nowrap">hours idle</span>
                   </div>
                 </div>
               )}
@@ -791,7 +791,7 @@ export function AutomationsPage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="text-gray-400 hover:text-red-600 shrink-0"
+                      className="text-gray-400 hover:text-red-600 dark:text-slate-500 dark:hover:text-red-400 shrink-0"
                       onClick={() =>
                         setForm((f) => ({
                           ...f,
@@ -818,7 +818,7 @@ export function AutomationsPage() {
                   >
                     <Plus size={14} /> Add condition
                   </Button>
-                  <p className="text-[11px] text-gray-400">
+                  <p className="text-[11px] text-gray-400 dark:text-slate-500">
                     Fields: {fieldHints.join(", ")}
                   </p>
                 </div>
@@ -826,10 +826,10 @@ export function AutomationsPage() {
             </div>
 
             {/* Then */}
-            <div className="border border-gray-100 rounded-xl p-4 bg-gray-50/50 space-y-3">
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Then</p>
+            <div className="border border-gray-100 dark:border-slate-800 rounded-xl p-4 bg-gray-50/50 dark:bg-slate-800/50 space-y-3">
+              <p className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Then</p>
               {form.actions.map((action, i) => (
-                <div key={i} className="bg-white border border-gray-100 rounded-lg p-3 space-y-3">
+                <div key={i} className="bg-white border border-gray-100 dark:bg-slate-900 dark:border-slate-800 rounded-lg p-3 space-y-3">
                   <div className="flex items-center gap-2">
                     <select
                       className={cn(inputClasses, "flex-1")}
@@ -853,7 +853,7 @@ export function AutomationsPage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="text-gray-400 hover:text-red-600 shrink-0"
+                      className="text-gray-400 hover:text-red-600 dark:text-slate-500 dark:hover:text-red-400 shrink-0"
                       disabled={form.actions.length <= 1}
                       onClick={() =>
                         setForm((f) => ({ ...f, actions: f.actions.filter((_, idx) => idx !== i) }))
@@ -883,7 +883,7 @@ export function AutomationsPage() {
                             patchAction(i, { taskDueInDays: Number(e.target.value) })
                           }
                         />
-                        <span className="text-xs text-gray-500 whitespace-nowrap">days due</span>
+                        <span className="text-xs text-gray-500 dark:text-slate-400 whitespace-nowrap">days due</span>
                       </div>
                       <select
                         className={inputClasses}
@@ -899,7 +899,7 @@ export function AutomationsPage() {
                         <option value="normal">Normal priority</option>
                         <option value="high">High priority</option>
                       </select>
-                      <p className="text-[11px] text-gray-400 self-center">
+                      <p className="text-[11px] text-gray-400 dark:text-slate-500 self-center">
                         Assigned to the record&apos;s owner automatically.
                       </p>
                     </div>
@@ -1001,7 +1001,7 @@ export function AutomationsPage() {
               </Button>
             </div>
 
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-slate-200 cursor-pointer">
               <input
                 type="checkbox"
                 className="w-4 h-4 accent-[#3F51B5]"
@@ -1034,7 +1034,7 @@ export function AutomationsPage() {
                 <DialogTitle>Delete rule?</DialogTitle>
                 <DialogDescription>
                   This permanently removes{" "}
-                  <span className="font-semibold text-gray-700">{deletingRule.name}</span>. Its past
+                  <span className="font-semibold text-gray-700 dark:text-slate-200">{deletingRule.name}</span>. Its past
                   runs stay in the execution log. Consider pausing instead if you might need it again.
                 </DialogDescription>
               </DialogHeader>

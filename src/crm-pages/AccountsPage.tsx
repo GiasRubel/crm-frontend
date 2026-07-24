@@ -146,9 +146,9 @@ const emptyFormValues: AccountFormValues = {
 // ── Presentational helpers ────────────────────────────────────────────────────
 
 const statusStyles: Record<AccountStatus, string> = {
-  active: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  inactive: "bg-slate-100 text-slate-500 border-slate-200",
-  prospect: "bg-amber-50 text-amber-700 border-amber-200",
+  active: "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30",
+  inactive: "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-800",
+  prospect: "bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30",
 };
 
 function StatusBadge({ status }: { status: AccountStatus }) {
@@ -160,11 +160,11 @@ function StatusBadge({ status }: { status: AccountStatus }) {
 }
 
 const dealStageStyles: Record<string, string> = {
-  discovery: "bg-sky-50 text-sky-700 border-sky-200",
-  proposal: "bg-indigo-50 text-indigo-700 border-indigo-200",
-  negotiation: "bg-amber-50 text-amber-700 border-amber-200",
-  closed_won: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  closed_lost: "bg-red-50 text-red-700 border-red-200",
+  discovery: "bg-sky-50 dark:bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-500/30",
+  proposal: "bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-500/30",
+  negotiation: "bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30",
+  closed_won: "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30",
+  closed_lost: "bg-red-50 dark:bg-red-500/15 text-red-700 dark:text-red-300 border-red-200 dark:border-red-500/30",
 };
 
 function StatCard({
@@ -185,8 +185,8 @@ function StatCard({
           <Icon size={20} />
         </div>
         <div className="min-w-0">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider truncate">{label}</p>
-          <p className="text-xl font-bold text-gray-900 truncate">{value ?? "—"}</p>
+          <p className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider truncate">{label}</p>
+          <p className="text-xl font-bold text-gray-900 dark:text-white truncate">{value ?? "—"}</p>
         </div>
       </CardContent>
     </Card>
@@ -194,7 +194,7 @@ function StatCard({
 }
 
 const inputClasses =
-  "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5] transition-all disabled:bg-gray-50 disabled:text-gray-500";
+  "w-full px-3 py-2 border border-gray-200 dark:border-slate-700 rounded-lg text-sm bg-white dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/20 focus:border-[#3F51B5] transition-all disabled:bg-gray-50 dark:disabled:bg-slate-800/50 disabled:text-gray-500 dark:disabled:text-slate-400";
 
 function SortableHead({
   field,
@@ -213,7 +213,7 @@ function SortableHead({
 }) {
   const indicator =
     sortBy !== field ? (
-      <ArrowUpDown size={13} className="text-gray-300" />
+      <ArrowUpDown size={13} className="text-gray-300 dark:text-slate-600" />
     ) : sortOrder === "asc" ? (
       <ArrowUp size={13} className="text-[#3F51B5]" />
     ) : (
@@ -225,7 +225,7 @@ function SortableHead({
       <button
         type="button"
         onClick={() => onToggle(field)}
-        className="flex items-center gap-1.5 text-xs uppercase tracking-wider font-semibold text-gray-500 hover:text-gray-800 transition-colors"
+        className="flex items-center gap-1.5 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400 hover:text-gray-800 dark:hover:text-white transition-colors"
       >
         {children}
         {indicator}
@@ -236,7 +236,7 @@ function SortableHead({
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
-  return <p className="text-xs text-red-600 mt-1">{message}</p>;
+  return <p className="text-xs text-red-600 dark:text-red-400 mt-1">{message}</p>;
 }
 
 const currency = new Intl.NumberFormat("en-US", {
@@ -463,13 +463,13 @@ export function AccountsPage() {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="p-6 lg:p-8 bg-[#F4F5F7] min-h-screen">
+    <div className="p-6 lg:p-8 bg-[#F4F5F7] dark:bg-slate-950 min-h-screen">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Accounts</h1>
-            <p className="text-sm text-gray-500">
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Accounts</h1>
+            <p className="text-sm text-gray-500 dark:text-slate-400">
               B2B company profiles — firmographics, linked contacts, and deals.
             </p>
           </div>
@@ -481,30 +481,30 @@ export function AccountsPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <StatCard label="Total" value={stats?.total} icon={Building2} accent="bg-[#3F51B5]/10 text-[#3F51B5]" />
-          <StatCard label="Prospects" value={stats?.prospect} icon={Search} accent="bg-amber-50 text-amber-600" />
-          <StatCard label="Active" value={stats?.active} icon={Check} accent="bg-emerald-50 text-emerald-600" />
-          <StatCard label="Inactive" value={stats?.inactive} icon={X} accent="bg-slate-100 text-slate-500" />
-          <StatCard label="New this month" value={stats?.newThisMonth} icon={TrendingUp} accent="bg-sky-50 text-sky-600" />
+          <StatCard label="Total" value={stats?.total} icon={Building2} accent="bg-[#3F51B5]/10 dark:bg-indigo-500/15 text-[#3F51B5] dark:text-indigo-300" />
+          <StatCard label="Prospects" value={stats?.prospect} icon={Search} accent="bg-amber-50 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400" />
+          <StatCard label="Active" value={stats?.active} icon={Check} accent="bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" />
+          <StatCard label="Inactive" value={stats?.inactive} icon={X} accent="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400" />
+          <StatCard label="New this month" value={stats?.newThisMonth} icon={TrendingUp} accent="bg-sky-50 dark:bg-sky-500/15 text-sky-600 dark:text-sky-400" />
         </div>
 
         {/* Notifications */}
         {successMsg && (
-          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+          <div className="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-300 rounded-xl p-4 flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-3">
-              <Check className="text-emerald-600 shrink-0" size={20} />
+              <Check className="text-emerald-600 dark:text-emerald-400 shrink-0" size={20} />
               <span className="text-sm font-medium">{successMsg}</span>
             </div>
-            <button onClick={() => setSuccessMsg(null)} className="text-emerald-500 hover:text-emerald-700">
+            <button onClick={() => setSuccessMsg(null)} className="text-emerald-500 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300">
               <X size={18} />
             </button>
           </div>
         )}
 
         {(errorMsg || accountsQuery.isError) && (
-          <div className="bg-red-50 border border-red-200 text-red-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+          <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-800 dark:text-red-300 rounded-xl p-4 flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-3">
-              <AlertCircle className="text-red-600 shrink-0" size={20} />
+              <AlertCircle className="text-red-600 dark:text-red-400 shrink-0" size={20} />
               <span className="text-sm font-medium">
                 {errorMsg ??
                   (accountsQuery.error instanceof Error
@@ -517,7 +517,7 @@ export function AccountsPage() {
                 setErrorMsg(null);
                 if (accountsQuery.isError) accountsQuery.refetch();
               }}
-              className="text-red-500 hover:text-red-700"
+              className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
             >
               <X size={18} />
             </button>
@@ -526,9 +526,9 @@ export function AccountsPage() {
 
         {/* Filters & Table */}
         <Card className="py-0 overflow-hidden">
-          <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="p-4 border-b border-gray-100 dark:border-slate-800 flex flex-col md:flex-row gap-4 items-center justify-between">
             <div className="relative w-full md:max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" size={18} />
               <Input
                 type="text"
                 placeholder="Search by name, website, email, or address..."
@@ -543,7 +543,7 @@ export function AccountsPage() {
 
             <div className="flex w-full md:w-auto items-center gap-2 justify-end flex-wrap">
               {accountsQuery.isFetching && !accountsQuery.isLoading && (
-                <Loader2 size={16} className="animate-spin text-gray-400" />
+                <Loader2 size={16} className="animate-spin text-gray-400 dark:text-slate-500" />
               )}
               <select
                 value={industryFilter}
@@ -579,21 +579,21 @@ export function AccountsPage() {
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="bg-gray-50/75 hover:bg-gray-50/75">
+                <TableRow className="bg-gray-50/75 dark:bg-slate-800/50 hover:bg-gray-50/75 dark:hover:bg-slate-800/50">
                   <SortableHead field="name" className="px-6" {...sortProps}>Account</SortableHead>
                   <SortableHead field="industry" className="px-6" {...sortProps}>Industry</SortableHead>
-                  <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500">
+                  <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
                     Size
                   </TableHead>
                   <SortableHead field="annualRevenue" className="px-6" {...sortProps}>Revenue</SortableHead>
-                  <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500">
+                  <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
                     Links
                   </TableHead>
-                  <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500">
+                  <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
                     Assigned To
                   </TableHead>
                   <SortableHead field="status" className="px-6" {...sortProps}>Status</SortableHead>
-                  <TableHead className="px-6 text-right text-xs uppercase tracking-wider font-semibold text-gray-500">
+                  <TableHead className="px-6 text-right text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
                     Actions
                   </TableHead>
                 </TableRow>
@@ -601,7 +601,7 @@ export function AccountsPage() {
               <TableBody>
                 {accountsQuery.isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="px-6 py-12 text-center text-gray-400">
+                    <TableCell colSpan={8} className="px-6 py-12 text-center text-gray-400 dark:text-slate-500">
                       <div className="flex justify-center items-center gap-2">
                         <Loader2 size={18} className="animate-spin" />
                         <span>Fetching accounts...</span>
@@ -611,10 +611,10 @@ export function AccountsPage() {
                 ) : accounts.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={8} className="px-6 py-16 text-center">
-                      <div className="flex flex-col items-center gap-2 text-gray-500">
-                        <Building2 size={32} className="text-gray-300" />
+                      <div className="flex flex-col items-center gap-2 text-gray-500 dark:text-slate-400">
+                        <Building2 size={32} className="text-gray-300 dark:text-slate-600" />
                         <p className="font-medium">No accounts found</p>
-                        <p className="text-sm text-gray-400">
+                        <p className="text-sm text-gray-400 dark:text-slate-500">
                           {debouncedSearch || statusFilter || industryFilter
                             ? "Try adjusting your search or filters."
                             : "Add your first company profile to get started."}
@@ -624,45 +624,45 @@ export function AccountsPage() {
                   </TableRow>
                 ) : (
                   accounts.map((account) => (
-                    <TableRow key={account.id} className="hover:bg-gray-50/50">
+                    <TableRow key={account.id} className="hover:bg-gray-50/50 dark:hover:bg-slate-800/50">
                       <TableCell className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 bg-[#3F51B5]/10 text-[#3F51B5] rounded-lg flex items-center justify-center shrink-0">
+                          <div className="w-9 h-9 bg-[#3F51B5]/10 dark:bg-indigo-500/15 text-[#3F51B5] dark:text-indigo-300 rounded-lg flex items-center justify-center shrink-0">
                             <Building2 size={16} />
                           </div>
                           <div className="flex flex-col min-w-0">
                             <button
                               type="button"
                               onClick={() => setSummaryAccountId(account.id)}
-                              className="font-semibold text-gray-900 truncate text-left hover:text-[#3F51B5] transition-colors"
+                              className="font-semibold text-gray-900 dark:text-white truncate text-left hover:text-[#3F51B5] transition-colors"
                             >
                               {account.name}
                             </button>
                             {account.website && (
-                              <span className="text-xs text-gray-500 truncate">{account.website}</span>
+                              <span className="text-xs text-gray-500 dark:text-slate-400 truncate">{account.website}</span>
                             )}
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="px-6 py-4 text-gray-600 text-sm">
-                        {account.industry ? ACCOUNT_INDUSTRY_LABELS[account.industry] : <span className="text-gray-300">—</span>}
+                      <TableCell className="px-6 py-4 text-gray-600 dark:text-slate-300 text-sm">
+                        {account.industry ? ACCOUNT_INDUSTRY_LABELS[account.industry] : <span className="text-gray-300 dark:text-slate-600">—</span>}
                       </TableCell>
-                      <TableCell className="px-6 py-4 text-gray-600 text-sm">
-                        {account.size ?? <span className="text-gray-300">—</span>}
+                      <TableCell className="px-6 py-4 text-gray-600 dark:text-slate-300 text-sm">
+                        {account.size ?? <span className="text-gray-300 dark:text-slate-600">—</span>}
                       </TableCell>
-                      <TableCell className="px-6 py-4 text-gray-700 font-medium text-sm">
+                      <TableCell className="px-6 py-4 text-gray-700 dark:text-slate-200 font-medium text-sm">
                         {account.annualRevenue !== null ? currency.format(account.annualRevenue) : (
-                          <span className="text-gray-300 font-normal">—</span>
+                          <span className="text-gray-300 dark:text-slate-600 font-normal">—</span>
                         )}
                       </TableCell>
                       <TableCell className="px-6 py-4">
-                        <div className="flex items-center gap-3 text-xs font-semibold text-gray-500">
+                        <div className="flex items-center gap-3 text-xs font-semibold text-gray-500 dark:text-slate-400">
                           <span className="flex items-center gap-1" title="Linked contacts">
-                            <ContactIcon size={13} className="text-gray-400" />
+                            <ContactIcon size={13} className="text-gray-400 dark:text-slate-500" />
                             {account.contactCount}
                           </span>
                           <span className="flex items-center gap-1" title="Open deals">
-                            <Target size={13} className="text-gray-400" />
+                            <Target size={13} className="text-gray-400 dark:text-slate-500" />
                             {account.openDealCount}
                           </span>
                         </div>
@@ -671,17 +671,17 @@ export function AccountsPage() {
                         {account.assignedToName || account.assignedTeamName ? (
                           <div className="flex flex-col min-w-0">
                             {account.assignedToName && (
-                              <span className="text-gray-700 font-medium truncate">{account.assignedToName}</span>
+                              <span className="text-gray-700 dark:text-slate-200 font-medium truncate">{account.assignedToName}</span>
                             )}
                             {account.assignedTeamName && (
-                              <span className="text-xs text-indigo-600 truncate flex items-center gap-1">
+                              <span className="text-xs text-indigo-600 dark:text-indigo-400 truncate flex items-center gap-1">
                                 <UsersRound size={11} className="shrink-0" />
                                 {account.assignedTeamName}
                               </span>
                             )}
                           </div>
                         ) : (
-                          <span className="text-gray-300">Unassigned</span>
+                          <span className="text-gray-300 dark:text-slate-600">Unassigned</span>
                         )}
                       </TableCell>
                       <TableCell className="px-6 py-4">
@@ -690,7 +690,7 @@ export function AccountsPage() {
                       <TableCell className="px-6 py-4 text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-700">
+                            <Button variant="ghost" size="icon" className="text-gray-400 dark:text-slate-500 hover:text-gray-700 dark:hover:text-slate-200">
                               <MoreHorizontal size={18} />
                               <span className="sr-only">Open actions</span>
                             </Button>
@@ -728,7 +728,7 @@ export function AccountsPage() {
 
           {/* Pagination footer */}
           {!accountsQuery.isLoading && meta && meta.total > 0 && (
-            <div className="p-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            <div className="p-4 border-t border-gray-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
               <div className="flex items-center gap-3">
                 <span>
                   {(meta.page - 1) * meta.limit + 1}–{Math.min(meta.page * meta.limit, meta.total)} of{" "}
@@ -756,7 +756,7 @@ export function AccountsPage() {
                 >
                   <ChevronLeft size={16} />
                 </Button>
-                <span className="px-3 text-sm font-bold text-gray-700">
+                <span className="px-3 text-sm font-bold text-gray-700 dark:text-slate-200">
                   {meta.page} / {meta.totalPages}
                 </span>
                 <Button
@@ -784,12 +784,12 @@ export function AccountsPage() {
           </DialogHeader>
 
           {summaryQuery.isLoading ? (
-            <div className="flex items-center justify-center gap-2 text-gray-400 py-16">
+            <div className="flex items-center justify-center gap-2 text-gray-400 dark:text-slate-500 py-16">
               <Loader2 size={18} className="animate-spin" />
               <span>Loading account summary...</span>
             </div>
           ) : summaryQuery.isError ? (
-            <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm flex items-center gap-2">
+            <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300 rounded-lg p-3 text-sm flex items-center gap-2">
               <AlertCircle size={16} className="shrink-0" />
               {summaryQuery.error instanceof Error
                 ? summaryQuery.error.message
@@ -798,13 +798,13 @@ export function AccountsPage() {
           ) : summary ? (
             <div className="space-y-6">
               {/* Profile header */}
-              <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
-                <div className="w-12 h-12 bg-[#3F51B5]/10 text-[#3F51B5] rounded-xl flex items-center justify-center">
+              <div className="flex items-center gap-4 pb-4 border-b border-gray-100 dark:border-slate-800">
+                <div className="w-12 h-12 bg-[#3F51B5]/10 dark:bg-indigo-500/15 text-[#3F51B5] dark:text-indigo-300 rounded-xl flex items-center justify-center">
                   <Building2 size={22} />
                 </div>
                 <div className="min-w-0">
-                  <h4 className="text-lg font-bold text-gray-900 truncate">{summary.account.name}</h4>
-                  <span className="text-sm text-gray-500">
+                  <h4 className="text-lg font-bold text-gray-900 dark:text-white truncate">{summary.account.name}</h4>
+                  <span className="text-sm text-gray-500 dark:text-slate-400">
                     {summary.account.industry
                       ? ACCOUNT_INDUSTRY_LABELS[summary.account.industry]
                       : "Industry unknown"}
@@ -840,10 +840,10 @@ export function AccountsPage() {
                         .join(" · ") || "Unassigned",
                   },
                 ].map(({ icon: Icon, label, value }) => (
-                  <div key={label} className="flex items-center gap-3 text-sm text-gray-600">
-                    <Icon className="text-gray-400 shrink-0" size={18} />
+                  <div key={label} className="flex items-center gap-3 text-sm text-gray-600 dark:text-slate-300">
+                    <Icon className="text-gray-400 dark:text-slate-500 shrink-0" size={18} />
                     <div className="min-w-0">
-                      <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">{label}</p>
+                      <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold">{label}</p>
                       <p className="font-medium whitespace-pre-wrap break-words">{value}</p>
                     </div>
                   </div>
@@ -858,27 +858,27 @@ export function AccountsPage() {
                   { label: "Open Value", value: currency.format(summary.metrics.openValue) },
                   { label: "Won Value", value: currency.format(summary.metrics.wonValue) },
                 ].map(({ label, value }) => (
-                  <div key={label} className="bg-gray-50/75 border border-gray-100 rounded-xl p-3 text-center">
-                    <p className="text-lg font-bold text-gray-900">{value}</p>
-                    <p className="text-[11px] text-gray-400 uppercase tracking-wider font-semibold">{label}</p>
+                  <div key={label} className="bg-gray-50/75 dark:bg-slate-800/50 border border-gray-100 dark:border-slate-800 rounded-xl p-3 text-center">
+                    <p className="text-lg font-bold text-gray-900 dark:text-white">{value}</p>
+                    <p className="text-[11px] text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold">{label}</p>
                   </div>
                 ))}
               </div>
 
               {summary.account.description && (
-                <div className="bg-gray-50/75 p-4 rounded-xl border border-gray-100 space-y-1">
-                  <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">About</p>
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap">{summary.account.description}</p>
+                <div className="bg-gray-50/75 dark:bg-slate-800/50 p-4 rounded-xl border border-gray-100 dark:border-slate-800 space-y-1">
+                  <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold">About</p>
+                  <p className="text-sm text-gray-700 dark:text-slate-200 whitespace-pre-wrap">{summary.account.description}</p>
                 </div>
               )}
 
               {/* Linked contacts */}
               <div className="space-y-2">
-                <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">
+                <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold">
                   Contacts ({summary.metrics.contactCount})
                 </p>
                 {summary.contacts.length === 0 ? (
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-gray-400 dark:text-slate-500">
                     No contacts linked yet — link people from the Contacts page.
                   </p>
                 ) : (
@@ -886,14 +886,14 @@ export function AccountsPage() {
                     {summary.contacts.map((c) => (
                       <li
                         key={c.id}
-                        className="flex items-center gap-3 text-sm bg-white border border-gray-100 rounded-lg p-3"
+                        className="flex items-center gap-3 text-sm bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-lg p-3"
                       >
-                        <div className="w-8 h-8 bg-[#3F51B5]/10 text-[#3F51B5] rounded-full flex items-center justify-center font-bold text-[11px] uppercase shrink-0">
+                        <div className="w-8 h-8 bg-[#3F51B5]/10 dark:bg-indigo-500/15 text-[#3F51B5] dark:text-indigo-300 rounded-full flex items-center justify-center font-bold text-[11px] uppercase shrink-0">
                           {c.firstName[0]}
                           {c.lastName[0]}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="font-medium text-gray-800 truncate flex items-center gap-1.5">
+                          <p className="font-medium text-gray-800 dark:text-white truncate flex items-center gap-1.5">
                             {c.firstName} {c.lastName}
                             {c.isPrimary && (
                               <span title="Primary contact">
@@ -901,12 +901,12 @@ export function AccountsPage() {
                               </span>
                             )}
                           </p>
-                          <p className="text-xs text-gray-500 truncate">
+                          <p className="text-xs text-gray-500 dark:text-slate-400 truncate">
                             {[c.jobTitle, c.email].filter(Boolean).join(" · ")}
                           </p>
                         </div>
                         {c.doNotContact && (
-                          <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200 text-[10px] shrink-0">
+                          <Badge variant="outline" className="bg-red-50 dark:bg-red-500/15 text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/30 text-[10px] shrink-0">
                             Do not contact
                           </Badge>
                         )}
@@ -918,11 +918,11 @@ export function AccountsPage() {
 
               {/* Linked deals */}
               <div className="space-y-2">
-                <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">
+                <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold">
                   Deals ({summary.opportunities.length})
                 </p>
                 {summary.opportunities.length === 0 ? (
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-gray-400 dark:text-slate-500">
                     No deals linked yet — link deals from the Opportunities page.
                   </p>
                 ) : (
@@ -930,19 +930,19 @@ export function AccountsPage() {
                     {summary.opportunities.map((o) => (
                       <li
                         key={o.id}
-                        className="flex items-center gap-3 text-sm bg-white border border-gray-100 rounded-lg p-3"
+                        className="flex items-center gap-3 text-sm bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-lg p-3"
                       >
-                        <BadgeDollarSign size={16} className="text-gray-400 shrink-0" />
+                        <BadgeDollarSign size={16} className="text-gray-400 dark:text-slate-500 shrink-0" />
                         <div className="min-w-0 flex-1">
-                          <p className="font-medium text-gray-800 truncate">{o.name}</p>
-                          <p className="text-xs text-gray-500 flex items-center gap-1">
+                          <p className="font-medium text-gray-800 dark:text-white truncate">{o.name}</p>
+                          <p className="text-xs text-gray-500 dark:text-slate-400 flex items-center gap-1">
                             <Calendar size={11} />
                             {o.expectedCloseDate
                               ? new Date(o.expectedCloseDate).toLocaleDateString()
                               : "No close date"}
                           </p>
                         </div>
-                        <span className="font-bold text-gray-900 shrink-0">{currency.format(o.amount)}</span>
+                        <span className="font-bold text-gray-900 dark:text-white shrink-0">{currency.format(o.amount)}</span>
                         <Badge
                           variant="outline"
                           className={cn("font-semibold shrink-0 capitalize", dealStageStyles[o.stage])}
@@ -991,14 +991,14 @@ export function AccountsPage() {
 
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {formError && (
-              <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm flex items-center gap-2">
+              <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300 rounded-lg p-3 text-sm flex items-center gap-2">
                 <AlertCircle size={16} className="shrink-0" />
                 {formError}
               </div>
             )}
 
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                 Company Name *
               </label>
               <Input placeholder="Acme Corporation" disabled={isSaving} {...form.register("name")} />
@@ -1007,7 +1007,7 @@ export function AccountsPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Industry
                 </label>
                 <select disabled={isSaving} className={inputClasses} {...form.register("industry")}>
@@ -1020,7 +1020,7 @@ export function AccountsPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Company Size
                 </label>
                 <select disabled={isSaving} className={inputClasses} {...form.register("size")}>
@@ -1036,14 +1036,14 @@ export function AccountsPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Website
                 </label>
                 <Input placeholder="acme.com" disabled={isSaving} {...form.register("website")} />
                 <FieldError message={form.formState.errors.website?.message} />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Annual Revenue (USD)
                 </label>
                 <Input
@@ -1062,14 +1062,14 @@ export function AccountsPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Company Email
                 </label>
                 <Input type="email" placeholder="info@acme.com" disabled={isSaving} {...form.register("email")} />
                 <FieldError message={form.formState.errors.email?.message} />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Phone
                 </label>
                 <Input type="tel" placeholder="+1 234 567 890" disabled={isSaving} {...form.register("phone")} />
@@ -1078,7 +1078,7 @@ export function AccountsPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                 Address
               </label>
               <textarea
@@ -1092,7 +1092,7 @@ export function AccountsPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                 Description
               </label>
               <textarea
@@ -1107,7 +1107,7 @@ export function AccountsPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Status
                 </label>
                 <select disabled={isSaving} className={inputClasses} {...form.register("status")}>
@@ -1139,21 +1139,21 @@ export function AccountsPage() {
               <DialogHeader>
                 <DialogTitle>Assign Account</DialogTitle>
                 <DialogDescription>
-                  Route <span className="font-semibold text-gray-700">{assigningAccount.name}</span> to a
+                  Route <span className="font-semibold text-gray-700 dark:text-slate-200">{assigningAccount.name}</span> to a
                   team and/or a record owner. Team members gain visibility of this record.
                 </DialogDescription>
               </DialogHeader>
 
               <div className="space-y-4">
                 {assignError && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm flex items-center gap-2">
+                  <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300 rounded-lg p-3 text-sm flex items-center gap-2">
                     <AlertCircle size={16} className="shrink-0" />
                     {assignError}
                   </div>
                 )}
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                     Team
                   </label>
                   <select
@@ -1184,12 +1184,12 @@ export function AccountsPage() {
                     ))}
                   </select>
                   {assignTeamsQuery.isLoading && (
-                    <p className="text-[11px] text-gray-400 mt-1">Loading teams...</p>
+                    <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">Loading teams...</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                     Record Owner
                   </label>
                   <select
@@ -1205,7 +1205,7 @@ export function AccountsPage() {
                       </option>
                     ))}
                   </select>
-                  <p className="text-[11px] text-gray-400 mt-1">
+                  <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">
                     {assignTeamId
                       ? "Only members of the selected team can own this record."
                       : "Pick a team first to narrow the list to its members."}
@@ -1244,7 +1244,7 @@ export function AccountsPage() {
                 <DialogTitle>Delete account?</DialogTitle>
                 <DialogDescription>
                   This permanently removes{" "}
-                  <span className="font-semibold text-gray-700">{deletingAccount.name}</span>. Its{" "}
+                  <span className="font-semibold text-gray-700 dark:text-slate-200">{deletingAccount.name}</span>. Its{" "}
                   {deletingAccount.contactCount} linked contact(s) and deals are <strong>kept</strong> but
                   unlinked from the company. This action cannot be undone.
                 </DialogDescription>
