@@ -1,4 +1,4 @@
-# CRM Frontend — CLAUDE.md
+# CRM Frontend — AGENT.md
 
 Next.js 16 (App Router) dashboard for the CRM. Talks to the NestJS API in
 `../crm-backend` and authenticates users against Keycloak on the client.
@@ -22,10 +22,11 @@ pnpm start      # next start -p 3001
 pnpm lint       # eslint
 ```
 
-Runs on **port 3001** (the backend expects this origin for CORS). Env in `.env`
-(all browser-exposed vars are `NEXT_PUBLIC_*`): `NEXT_PUBLIC_API_BASE_URL`
-(→ `http://localhost:5000`), `NEXT_PUBLIC_KEYCLOAK_URL`, `NEXT_PUBLIC_KEYCLOAK_REALM`,
-`NEXT_PUBLIC_KEYCLOAK_CLIENT_ID`.
+Runs on **port 3001** (the backend expects this origin for CORS). Copy
+`.env.example` → `.env` (or `.env.local`) before first run; restart the dev
+server after changing env. All browser-exposed vars are `NEXT_PUBLIC_*`:
+`NEXT_PUBLIC_API_BASE_URL` (→ `http://localhost:5000`), `NEXT_PUBLIC_KEYCLOAK_URL`,
+`NEXT_PUBLIC_KEYCLOAK_REALM`, `NEXT_PUBLIC_KEYCLOAK_CLIENT_ID`.
 
 ## Architecture
 
@@ -123,11 +124,17 @@ to the unauthenticated `POST /leads/capture`.
 
 - Frontend **must** run on port 3001 — backend CORS + Keycloak redirect URIs
   assume that origin.
-- `next.config.ts` rewrites `/api/*`, `/files/*`, `/swagger/*` to the backend, but
-  `apiClient` calls the backend **directly** via `NEXT_PUBLIC_API_BASE_URL` (paths
-  like `/users/me`, `/customers` — no `/api` prefix). Match backend controller
-  paths exactly.
+- **Direct API calls (intentional).** `next.config.ts` rewrites `/api/*`,
+  `/files/*`, and `/swagger/*` to the backend for same-origin requests, but
+  `apiClient` bypasses those rewrites: it calls `NEXT_PUBLIC_API_BASE_URL`
+  directly (e.g. `http://localhost:5000/users/me`). CRM endpoints use backend
+  root paths (`/users`, `/customers`, …) — no `/api` prefix. Don't call `fetch`
+  directly; keep all HTTP in `apiClient`.
+- **Environment variables.** Keycloak settings (`NEXT_PUBLIC_KEYCLOAK_URL`,
+  `NEXT_PUBLIC_KEYCLOAK_REALM`, `NEXT_PUBLIC_KEYCLOAK_CLIENT_ID`) are required —
+  `lib/keycloak.ts` passes them with `!`, so missing values break auth at runtime.
+  `NEXT_PUBLIC_API_BASE_URL` is optional locally: `api-client.ts` falls back to
+  `http://localhost:5000`. Use `.env.example` as the checklist for new clones, CI,
+  and production.
 - `keycloak.init` is guarded by a module-level `initPromise` so it runs once even
   under React strict-mode double-mounts — don't add a second init.
-- `NEXT_PUBLIC_KEYCLOAK_URL` etc. are read with `!` (non-null assertion); a missing
-  env var fails at runtime, so keep `.env` complete.
