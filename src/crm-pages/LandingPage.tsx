@@ -53,7 +53,7 @@ const NAV_LINKS = [
 /* ------------------------------------------------------------------ */
 
 function Navbar() {
-  const { authenticated, login, register } = useAuth();
+  const { authenticated, isLoading, login, register } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -91,7 +91,9 @@ function Navbar() {
 
         <div className="hidden items-center gap-2 md:flex">
           <ThemeToggle />
-          {authenticated ? (
+          {isLoading ? (
+            <div className="h-9 w-24 animate-pulse rounded-xl bg-slate-200 dark:bg-slate-800" />
+          ) : authenticated ? (
             <Link
               href="/dashboard"
               className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
@@ -182,7 +184,7 @@ function Navbar() {
 /* ------------------------------------------------------------------ */
 
 function Hero() {
-  const { authenticated, register } = useAuth();
+  const { authenticated, isLoading, register } = useAuth();
 
   return (
     <section className="relative overflow-hidden pt-28 pb-20 sm:pt-36 sm:pb-28">
@@ -223,7 +225,9 @@ function Hero() {
             className="animate-rise mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row"
             style={{ animationDelay: "180ms" }}
           >
-            {authenticated ? (
+            {isLoading ? (
+              <div className="h-12 w-56 animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-800" />
+            ) : authenticated ? (
               <Link
                 href="/dashboard"
                 className="group inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-700 px-7 py-3.5 text-base font-semibold text-white shadow-xl shadow-indigo-500/30 transition-all hover:shadow-indigo-500/50 active:scale-[0.98] sm:w-auto"

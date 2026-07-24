@@ -1,7 +1,13 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { keycloak } from "@/lib/keycloak";
+import {
+  clearOAuthHashFromUrl,
+  clearStaleOAuthCallbackHash,
+  hasOAuthCallbackHash,
+  keycloak,
+  rememberProcessedOAuthCallback,
+} from "@/lib/keycloak";
 import { apiClient } from "@/lib/api-client";
 
 export interface UserProfile {
@@ -28,6 +34,25 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 let initPromise: Promise<boolean> | null = null;
+
+async function loadUserProfile(): Promise<UserProfile | null> {
+  try {
+    return await apiClient.get<UserProfile>("/users/me");
+  } catch (error) {
+    console.error("Failed to load user profile from backend", error);
+    return null;
+  }
+}
+
+function syncAuthFromKeycloak(
+  setAuthenticated: (value: boolean) => void,
+  setToken: (value: string | undefined) => void,
+): boolean {
+  const auth = Boolean(keycloak.authenticated);
+  setAuthenticated(auth);
+  setToken(keycloak.token);
+  return auth;
+}
 
 export function KeycloakProvider({ children }: { children: React.ReactNode }) {
   const [authenticated, setAuthenticated] = useState(false);
@@ -59,6 +84,10 @@ export function KeycloakProvider({ children }: { children: React.ReactNode }) {
       keycloak.login({ redirectUri: `${window.location.origin}/dashboard` });
     };
 
+    // Browser back can land on /dashboard#code=… with an already-used code.
+    // Strip it before init so keycloak-js does not hang retrying token exchange.
+    const staleCallback = clearStaleOAuthCallbackHash();
+
     if (!initPromise) {
       initPromise = keycloak.init({
         onLoad: "check-sso",
@@ -73,28 +102,64 @@ export function KeycloakProvider({ children }: { children: React.ReactNode }) {
 
     initPromise
       .then(async (auth) => {
+        if (auth) {
+          rememberProcessedOAuthCallback();
+        } else {
+          clearOAuthHashFromUrl();
+        }
+
         setAuthenticated(auth);
         setToken(keycloak.token);
         if (auth) {
-          try {
-            const profile = await apiClient.get<UserProfile>("/users/me");
-            setUser(profile);
-          } catch (error) {
-            console.error("Failed to load user profile from backend", error);
-          }
+          const profile = await loadUserProfile();
+          if (profile) setUser(profile);
         }
         setIsLoading(false);
       })
-      .catch((error) => {
+      .catch(async (error) => {
         console.error("Keycloak init failed", error);
+
+        if (hasOAuthCallbackHash()) {
+          clearOAuthHashFromUrl();
+          if (syncAuthFromKeycloak(setAuthenticated, setToken)) {
+            const profile = await loadUserProfile();
+            if (profile) setUser(profile);
+          } else {
+            // Full reload without the stale hash lets check-sso restore the session.
+            window.location.replace(
+              window.location.pathname + window.location.search,
+            );
+            return;
+          }
+        } else if (staleCallback) {
+          syncAuthFromKeycloak(setAuthenticated, setToken);
+        }
+
         setIsLoading(false);
       });
+
+    const handlePopState = () => {
+      if (!hasOAuthCallbackHash()) return;
+
+      const wasStale = clearStaleOAuthCallbackHash();
+      if (wasStale || keycloak.authenticated) {
+        if (!wasStale) clearOAuthHashFromUrl();
+        if (syncAuthFromKeycloak(setAuthenticated, setToken)) {
+          void loadUserProfile().then((profile) => {
+            if (profile) setUser(profile);
+          });
+        }
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
 
     return () => {
       keycloak.onAuthSuccess = undefined;
       keycloak.onAuthLogout = undefined;
       keycloak.onAuthRefreshSuccess = undefined;
       keycloak.onAuthRefreshError = undefined;
+      window.removeEventListener("popstate", handlePopState);
     };
   }, []);
 
