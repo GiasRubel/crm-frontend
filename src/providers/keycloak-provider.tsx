@@ -62,6 +62,10 @@ export function KeycloakProvider({ children }: { children: React.ReactNode }) {
     if (!initPromise) {
       initPromise = keycloak.init({
         onLoad: "check-sso",
+        // Check the SSO session inside a hidden iframe instead of a full-page
+        // redirect to Keycloak — otherwise public pages (e.g. the landing page)
+        // visibly load twice while bouncing to Keycloak and back.
+        silentCheckSsoRedirectUri: `${window.location.origin}/silent-check-sso.html`,
         pkceMethod: "S256",
         checkLoginIframe: false,
       });
@@ -110,7 +114,7 @@ export function KeycloakProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
-    keycloak.logout({ redirectUri: `${window.location.origin}/auth/login` });
+    keycloak.logout({ redirectUri: `${window.location.origin}/` });
   };
 
   const getToken = async () => {
