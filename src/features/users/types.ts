@@ -7,6 +7,15 @@ export interface StaffUser {
   role: string;
 }
 
+export type StaffRole = "User" | "Admin" | "Administrator";
+
+export interface CreateStaffDto {
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: StaffRole;
+}
+
 export function staffDisplayName(user: StaffUser): string {
   return `${user.firstName} ${user.lastName}`.trim() || user.email;
 }

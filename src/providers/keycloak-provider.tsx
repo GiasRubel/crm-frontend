@@ -19,11 +19,15 @@ export interface UserProfile {
   role: string;
 }
 
+type DeploymentMode = "standalone" | "saas";
+
 type AuthContextType = {
   authenticated: boolean;
   isLoading: boolean;
   token?: string;
   user: UserProfile | null;
+  subscriptionStatus: 'active' | 'trialing' | 'past_due' | 'canceled' | 'incomplete' | null;
+  deploymentMode: DeploymentMode | null;
   login: () => void;
   loginWithProvider: (provider: "google" | "facebook") => void;
   register: () => void;
@@ -44,6 +48,16 @@ async function loadUserProfile(): Promise<UserProfile | null> {
   }
 }
 
+async function loadDeploymentMode(): Promise<DeploymentMode> {
+  try {
+    const { deploymentMode } = await apiClient.get<{ deploymentMode: DeploymentMode }>("/config");
+    return deploymentMode;
+  } catch (error) {
+    console.error("Failed to load deployment mode, defaulting to standalone", error);
+    return "standalone";
+  }
+}
+
 function syncAuthFromKeycloak(
   setAuthenticated: (value: boolean) => void,
   setToken: (value: string | undefined) => void,
@@ -59,6 +73,34 @@ export function KeycloakProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [token, setToken] = useState<string | undefined>();
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<'active' | 'trialing' | 'past_due' | 'canceled' | 'incomplete' | null>(null);
+  const [deploymentMode, setDeploymentMode] = useState<DeploymentMode | null>(null);
+
+  const loadUserAndSubscription = async () => {
+    const [profile, mode] = await Promise.all([loadUserProfile(), loadDeploymentMode()]);
+    setDeploymentMode(mode);
+    if (profile) {
+      setUser(profile);
+      // Standalone (Regular License) installs have no billing to enforce — skip the call entirely.
+      if (mode === "standalone" || profile.role === "PlatformAdmin") {
+        setSubscriptionStatus("active");
+      } else {
+        try {
+          const sub = await apiClient.get<{ status: string }>("/subscriptions/me");
+          setSubscriptionStatus(sub.status as any);
+        } catch (error) {
+          console.error("Failed to load subscription status", error);
+          setSubscriptionStatus(null);
+        }
+      }
+    }
+  };
+
+  useEffect(() => {
+    // Fetched independently of auth state — the landing page needs it
+    // unauthenticated, to decide what the "Start free" CTA should do.
+    loadDeploymentMode().then(setDeploymentMode);
+  }, []);
 
   useEffect(() => {
     keycloak.onAuthSuccess = () => {
@@ -111,8 +153,7 @@ export function KeycloakProvider({ children }: { children: React.ReactNode }) {
         setAuthenticated(auth);
         setToken(keycloak.token);
         if (auth) {
-          const profile = await loadUserProfile();
-          if (profile) setUser(profile);
+          await loadUserAndSubscription();
         }
         setIsLoading(false);
       })
@@ -122,8 +163,7 @@ export function KeycloakProvider({ children }: { children: React.ReactNode }) {
         if (hasOAuthCallbackHash()) {
           clearOAuthHashFromUrl();
           if (syncAuthFromKeycloak(setAuthenticated, setToken)) {
-            const profile = await loadUserProfile();
-            if (profile) setUser(profile);
+            await loadUserAndSubscription();
           } else {
             // Full reload without the stale hash lets check-sso restore the session.
             window.location.replace(
@@ -145,9 +185,7 @@ export function KeycloakProvider({ children }: { children: React.ReactNode }) {
       if (wasStale || keycloak.authenticated) {
         if (!wasStale) clearOAuthHashFromUrl();
         if (syncAuthFromKeycloak(setAuthenticated, setToken)) {
-          void loadUserProfile().then((profile) => {
-            if (profile) setUser(profile);
-          });
+          void loadUserAndSubscription();
         }
       }
     };
@@ -168,6 +206,15 @@ export function KeycloakProvider({ children }: { children: React.ReactNode }) {
   };
 
   const register = () => {
+    // Standalone (Regular License) installs are single-tenant with no self-serve
+    // signup: there is no backend flow to provision a Keycloak self-registration
+    // into a Mongo user, so it would only create an orphaned, unusable account.
+    // Default to the safe behavior (no orphan accounts) while /config is still
+    // loading — only skip it once we positively know this is a "saas" install.
+    if (deploymentMode !== "saas") {
+      login();
+      return;
+    }
     keycloak.register({ redirectUri: `${window.location.origin}/dashboard` });
   };
 
@@ -201,6 +248,8 @@ export function KeycloakProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         token,
         user,
+        subscriptionStatus,
+        deploymentMode,
         login,
         loginWithProvider,
         register,

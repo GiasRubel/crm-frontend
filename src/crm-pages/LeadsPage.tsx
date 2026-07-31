@@ -79,6 +79,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { currencyFormatter as currency } from "@/lib/currency";
 
 // ── Form schemas ──────────────────────────────────────────────────────────────
 
@@ -265,11 +266,6 @@ function FieldError({ message }: { message?: string }) {
   return <p className="text-xs text-red-600 dark:text-red-400 mt-1">{message}</p>;
 }
 
-const currency = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  maximumFractionDigits: 0,
-});
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 

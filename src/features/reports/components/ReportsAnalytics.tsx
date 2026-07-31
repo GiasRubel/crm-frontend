@@ -38,19 +38,7 @@ import {
 import { useDashboard, useTeamPerformance } from "../hooks/useReports";
 import { useTheme } from "@/providers/theme-provider";
 import { cn } from "@/lib/utils";
-
-const currency = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  maximumFractionDigits: 0,
-});
-
-const compactCurrency = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  notation: "compact",
-  maximumFractionDigits: 1,
-});
+import { currencyFormatter as currency, compactCurrencyFormatter as compactCurrency } from "@/lib/currency";
 
 const STAGE_COLORS: Record<string, string> = {
   discovery: "#38bdf8",

@@ -2,11 +2,15 @@ import { keycloak } from "./keycloak";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
 
-class ApiError extends Error {
+export class ApiError extends Error {
   constructor(public status: number, message: string) {
     super(message);
     this.name = "ApiError";
   }
+}
+
+export function isSubscriptionLockedError(err: unknown): boolean {
+  return err instanceof ApiError && err.status === 402;
 }
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {

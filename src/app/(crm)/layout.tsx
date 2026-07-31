@@ -1,16 +1,20 @@
 "use client";
 
 import { useAuth } from "@/providers/keycloak-provider";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { Sidebar } from "@/components/Sidebar";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { apiClient } from "@/lib/api-client";
 
 export default function CrmLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { authenticated, isLoading, login } = useAuth();
+  const { authenticated, isLoading, login, subscriptionStatus, deploymentMode, user } = useAuth();
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
     // Deep-linking into a protected route while logged out sends the user
@@ -19,6 +23,20 @@ export default function CrmLayout({
       login();
     }
   }, [isLoading, authenticated, login]);
+
+  const handleManageBilling = async () => {
+    try {
+      setIsRedirecting(true);
+      const res = await apiClient.post<{ url: string }>("/subscriptions/portal-session", {});
+      if (res?.url) {
+        window.location.href = res.url;
+      }
+    } catch (error) {
+      console.error("Failed to redirect to Stripe Billing Portal", error);
+    } finally {
+      setIsRedirecting(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -42,10 +60,38 @@ export default function CrmLayout({
     return null;
   }
 
+  // Standalone (Regular License) installs have no billing to enforce.
+  const isLocked =
+    deploymentMode !== "standalone" &&
+    subscriptionStatus &&
+    subscriptionStatus !== "active" &&
+    subscriptionStatus !== "trialing";
+
   return (
     <div className="flex min-h-screen bg-slate-50/50 dark:bg-slate-950">
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col lg:ml-64 transition-all duration-300">
+        {isLocked && (
+          <Alert variant="destructive" className="rounded-none border-b border-rose-500/20 bg-rose-500/10 text-rose-200 py-3 px-6 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2.5">
+              <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
+              <AlertDescription className="text-sm font-medium">
+                Your organization's subscription is inactive or past due. Access is restricted to read-only mode until payment resolves.
+              </AlertDescription>
+            </div>
+            {user?.role === "Admin" && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-rose-500/30 hover:bg-rose-500/20 text-rose-200 hover:text-white"
+                onClick={handleManageBilling}
+                disabled={isRedirecting}
+              >
+                {isRedirecting ? "Redirecting..." : "Manage Billing"}
+              </Button>
+            )}
+          </Alert>
+        )}
         <Header />
         <main className="flex-1 overflow-y-auto">
           {children}
