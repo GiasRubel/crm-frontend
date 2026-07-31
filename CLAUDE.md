@@ -44,7 +44,7 @@ src/
   features/               # feature slices (see pattern below)
     leads/{types.ts, services/leadApi.ts, hooks/useLeads.ts}
   providers/              # KeycloakProvider, QueryClientProvider, index.tsx
-  lib/                    # api-client.ts, keycloak.ts, utils.ts (cn helper)
+  lib/                    # api-client.ts, keycloak.ts, utils.ts (cn helper), currency.ts
   store/                  # Zustand stores (useUiStore)
 ```
 
@@ -68,7 +68,8 @@ Group a domain under `features/<name>/`:
 `customers/` is the reference implementation. Copy its shape for tickets,
 etc. `customers/`, `teams/`, `leads/`, `opportunities/`, `accounts/`,
 `contacts/`, and `activities/` are fully wired to the backend (`users/`
-exposes the staff directory for pickers). Tasks/communication-log rules live
+exposes the staff directory for pickers plus the "Add Staff" invite flow —
+the only way to add teammates once the first Admin exists). Tasks/communication-log rules live
 in `../ACTIVITIES-AND-ENGAGEMENT-BUSINESS.md`; `apiClient.getBlob` handles
 non-JSON downloads (e.g. `.ics` calendar exports). `automations/` +
 `/automations` (admin-only UI) configure the backend rule engine — business
@@ -84,7 +85,11 @@ pipeline Kanban rules live in `../LEADS-AND-PIPELINE-BUSINESS.md`; company
 (account) profiles, person (contact) records, interactions, and preferences
 live in `../CONTACTS-AND-ACCOUNTS-BUSINESS.md` (+ `-DEVELOPER.md` each).
 `/capture` (outside the `(crm)` group) is a public lead-capture form posting
-to the unauthenticated `POST /leads/capture`.
+to the unauthenticated `POST /leads/capture`. `LandingPage.tsx` and
+`providers/keycloak-provider.tsx` adapt to the backend's standalone/SaaS
+`DEPLOYMENT_MODE` (billing UI, self-registration, pricing) — business rules
+and the full flag chain live in `../DEPLOYMENT-AND-LICENSING-BUSINESS.md`
+(+ `-DEVELOPER.md`).
 
 ### Data fetching & auth
 
@@ -94,10 +99,15 @@ to the unauthenticated `POST /leads/capture`.
   request. It throws `ApiError(status, message)` on non-2xx. Don't call `fetch`
   directly.
 - **Auth lives in `providers/keycloak-provider.tsx`.** Consume it with
-  `useAuth()` → `{ authenticated, isLoading, user, token, login, register,
-  loginWithProvider, logout, getToken }`. Keycloak is initialized once
+  `useAuth()` → `{ authenticated, isLoading, user, token, deploymentMode, login,
+  register, loginWithProvider, logout, getToken }`. Keycloak is initialized once
   (`check-sso`, PKCE `S256`); on success the provider loads the app profile from
-  `GET /users/me`. `user.role` drives role-based UI.
+  `GET /users/me`. `user.role` drives role-based UI. `deploymentMode` ("standalone"
+  | "saas" | `null` while loading) comes from the public `GET /config` call —
+  treat `null` the same as `"standalone"` in any new conditional (loading-safe
+  default), don't gate on `=== "standalone"` alone. In standalone mode,
+  `register()` aliases to `login()` — there's no self-serve signup, only
+  admin-invited staff (see `../DEPLOYMENT-AND-LICENSING-BUSINESS.md`).
 - **Route protection** is done in `app/(crm)/layout.tsx`: it waits for
   `isLoading`, redirects to `/auth/login` when unauthenticated, and renders the
   Sidebar/Header shell otherwise. New authenticated pages just go under `(crm)/`
