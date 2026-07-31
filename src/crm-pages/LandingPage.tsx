@@ -53,7 +53,9 @@ const NAV_LINKS = [
 /* ------------------------------------------------------------------ */
 
 function Navbar() {
-  const { authenticated, isLoading, login, register } = useAuth();
+  const { authenticated, isLoading, login, register, deploymentMode } = useAuth();
+  const isStandalone = deploymentMode !== "saas";
+  const navLinks = isStandalone ? NAV_LINKS.filter((l) => l.label !== "Pricing") : NAV_LINKS;
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -78,7 +80,7 @@ function Navbar() {
         </Link>
 
         <div className="hidden items-center gap-1 md:flex">
-          {NAV_LINKS.map((l) => (
+          {navLinks.map((l) => (
             <a
               key={l.href}
               href={l.href}
@@ -102,19 +104,21 @@ function Navbar() {
             </Link>
           ) : (
             <>
-              <button
-                type="button"
-                onClick={login}
-                className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:text-slate-900 dark:text-slate-200 dark:hover:text-white"
-              >
-                Sign in
-              </button>
+              {!isStandalone && (
+                <button
+                  type="button"
+                  onClick={login}
+                  className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:text-slate-900 dark:text-slate-200 dark:hover:text-white"
+                >
+                  Sign in
+                </button>
+              )}
               <button
                 type="button"
                 onClick={register}
                 className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition-all hover:shadow-indigo-500/40 active:scale-[0.98]"
               >
-                Get started
+                {isStandalone ? "Sign in" : "Get started"}
               </button>
             </>
           )}
@@ -137,7 +141,7 @@ function Navbar() {
       {open && (
         <div className="border-t border-slate-200/70 bg-white/95 backdrop-blur-xl md:hidden dark:border-slate-800/70 dark:bg-slate-950/95">
           <div className="space-y-1 px-4 py-4">
-            {NAV_LINKS.map((l) => (
+            {navLinks.map((l) => (
               <a
                 key={l.href}
                 href={l.href}
@@ -147,14 +151,16 @@ function Navbar() {
                 {l.label}
               </a>
             ))}
-            <div className="grid grid-cols-2 gap-2 pt-2">
-              <button
-                type="button"
-                onClick={login}
-                className="rounded-xl border border-slate-200 px-4 py-2.5 text-center text-sm font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200"
-              >
-                Sign in
-              </button>
+            <div className={`grid gap-2 pt-2 ${isStandalone && !authenticated ? "grid-cols-1" : "grid-cols-2"}`}>
+              {!(isStandalone && !authenticated) && (
+                <button
+                  type="button"
+                  onClick={login}
+                  className="rounded-xl border border-slate-200 px-4 py-2.5 text-center text-sm font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200"
+                >
+                  Sign in
+                </button>
+              )}
               {authenticated ? (
                 <Link
                   href="/dashboard"
@@ -168,7 +174,7 @@ function Navbar() {
                   onClick={register}
                   className="rounded-xl bg-indigo-600 px-4 py-2.5 text-center text-sm font-semibold text-white"
                 >
-                  Get started
+                  {isStandalone ? "Sign in" : "Get started"}
                 </button>
               )}
             </div>
@@ -184,7 +190,8 @@ function Navbar() {
 /* ------------------------------------------------------------------ */
 
 function Hero() {
-  const { authenticated, isLoading, register } = useAuth();
+  const { authenticated, isLoading, register, deploymentMode } = useAuth();
+  const isStandalone = deploymentMode !== "saas";
 
   return (
     <section className="relative overflow-hidden pt-28 pb-20 sm:pt-36 sm:pb-28">
@@ -241,7 +248,7 @@ function Hero() {
                 onClick={register}
                 className="group inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-700 px-7 py-3.5 text-base font-semibold text-white shadow-xl shadow-indigo-500/30 transition-all hover:shadow-indigo-500/50 active:scale-[0.98] sm:w-auto"
               >
-                Start free — it&apos;s on us
+                {isStandalone ? "Sign in" : "Start free — it's on us"}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </button>
             )}
@@ -772,7 +779,8 @@ const PLANS = [
 ];
 
 function Pricing() {
-  const { register } = useAuth();
+  const { register, deploymentMode } = useAuth();
+  if (deploymentMode !== "saas") return null;
   return (
     <section id="pricing" className="py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -860,7 +868,8 @@ function Pricing() {
 /* ------------------------------------------------------------------ */
 
 function FinalCTA() {
-  const { authenticated, register } = useAuth();
+  const { authenticated, register, deploymentMode } = useAuth();
+  const isStandalone = deploymentMode !== "saas";
   return (
     <section className="py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -888,15 +897,15 @@ function FinalCTA() {
                 onClick={register}
                 className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-white px-7 py-3.5 text-base font-semibold text-indigo-700 shadow-lg transition-all hover:bg-indigo-50 active:scale-[0.98] sm:w-auto"
               >
-                Get started free
+                {isStandalone ? "Sign in" : "Get started free"}
                 <ArrowRight className="h-4 w-4" />
               </button>
             )}
             <a
-              href="#pricing"
+              href={isStandalone ? "#features" : "#pricing"}
               className="inline-flex w-full items-center justify-center rounded-2xl border border-white/30 px-7 py-3.5 text-base font-semibold text-white transition-all hover:bg-white/10 active:scale-[0.98] sm:w-auto"
             >
-              View pricing
+              {isStandalone ? "See features" : "View pricing"}
             </a>
           </div>
         </div>

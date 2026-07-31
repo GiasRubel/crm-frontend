@@ -47,23 +47,11 @@ import {
 import { useMyTickets } from "@/features/tickets/hooks/useTickets";
 import { Ticket, TICKET_STATUS_LABELS, TicketStatus } from "@/features/tickets/types";
 import { cn } from "@/lib/utils";
+import { currencyFormatter as currency, compactCurrencyFormatter as compactCurrency } from "@/lib/currency";
 
 /* ------------------------------------------------------------------ */
 /*  Formatters & palette                                               */
 /* ------------------------------------------------------------------ */
-
-const currency = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  maximumFractionDigits: 0,
-});
-
-const compactCurrency = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  notation: "compact",
-  maximumFractionDigits: 1,
-});
 
 const STAGE_COLORS: Record<string, string> = {
   discovery: "#38bdf8",

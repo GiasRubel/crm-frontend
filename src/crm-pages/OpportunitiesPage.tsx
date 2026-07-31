@@ -36,6 +36,7 @@ import {
 } from "@/features/opportunities/types";
 import { customerApi } from "@/features/customers/services/customerApi";
 import { accountApi } from "@/features/accounts/services/accountApi";
+import { currencyFormatter as currency } from "@/lib/currency";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -157,12 +158,6 @@ function FieldError({ message }: { message?: string }) {
   if (!message) return null;
   return <p className="text-xs text-red-600 dark:text-red-400 mt-1">{message}</p>;
 }
-
-const currency = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  maximumFractionDigits: 0,
-});
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
