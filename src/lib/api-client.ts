@@ -1,6 +1,6 @@
-import { keycloak } from "./keycloak";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
+// All calls go through the same-origin BFF proxy (/api/backend/*) — the
+// browser never holds a bearer token, the proxy route attaches it server-side.
+const PROXY_BASE = "/api/backend";
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -14,25 +14,12 @@ export function isSubscriptionLockedError(err: unknown): boolean {
 }
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint}`;
-  
+  const url = `${PROXY_BASE}${endpoint}`;
+
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
   };
-
-  // Attach Keycloak access token if authenticated on the client side
-  if (typeof window !== "undefined" && keycloak.authenticated) {
-    try {
-      // Refresh token if it will expire in less than 30 seconds
-      await keycloak.updateToken(30);
-      if (keycloak.token) {
-        headers["Authorization"] = `Bearer ${keycloak.token}`;
-      }
-    } catch (error) {
-      console.error("Failed to refresh Keycloak token before request", error);
-    }
-  }
 
   const response = await fetch(url, {
     ...options,
@@ -57,21 +44,9 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
 /** Non-JSON responses (file downloads, e.g. .ics calendar exports). */
 async function requestBlob(endpoint: string): Promise<Blob> {
-  const url = `${API_BASE_URL}${endpoint}`;
-  const headers: Record<string, string> = {};
+  const url = `${PROXY_BASE}${endpoint}`;
 
-  if (typeof window !== "undefined" && keycloak.authenticated) {
-    try {
-      await keycloak.updateToken(30);
-      if (keycloak.token) {
-        headers["Authorization"] = `Bearer ${keycloak.token}`;
-      }
-    } catch (error) {
-      console.error("Failed to refresh Keycloak token before request", error);
-    }
-  }
-
-  const response = await fetch(url, { headers, cache: "no-store" });
+  const response = await fetch(url, { cache: "no-store" });
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     const message = Array.isArray(errorData.message) ? errorData.message[0] : errorData.message;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/providers/keycloak-provider";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Header } from "@/components/Header";
 import { Sidebar } from "@/components/Sidebar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -13,16 +13,10 @@ export default function CrmLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { authenticated, isLoading, login, subscriptionStatus, deploymentMode, user } = useAuth();
+  // middleware.ts already gates every (crm) route on a valid session cookie
+  // before this ever renders — no client-side redirect-to-login needed here.
+  const { authenticated, isLoading, subscriptionStatus, deploymentMode, user } = useAuth();
   const [isRedirecting, setIsRedirecting] = useState(false);
-
-  useEffect(() => {
-    // Deep-linking into a protected route while logged out sends the user
-    // straight to Keycloak — no intermediate /auth/login stop ("one click").
-    if (!isLoading && !authenticated) {
-      login();
-    }
-  }, [isLoading, authenticated, login]);
 
   const handleManageBilling = async () => {
     try {
@@ -49,7 +43,7 @@ export default function CrmLayout({
           </div>
           <div className="flex flex-col items-center gap-1.5 text-center">
             <h3 className="font-semibold text-lg tracking-tight bg-gradient-to-r from-indigo-200 to-slate-200 bg-clip-text text-transparent">Securing Session</h3>
-            <p className="text-xs text-slate-400/80">Verifying authorization with Keycloak...</p>
+            <p className="text-xs text-slate-400/80">Loading your profile...</p>
           </div>
         </div>
       </div>
@@ -76,7 +70,7 @@ export default function CrmLayout({
             <div className="flex items-center gap-2.5">
               <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
               <AlertDescription className="text-sm font-medium">
-                Your organization's subscription is inactive or past due. Access is restricted to read-only mode until payment resolves.
+                Your organization&apos;s subscription is inactive or past due. Access is restricted to read-only mode until payment resolves.
               </AlertDescription>
             </div>
             {user?.role === "Admin" && (

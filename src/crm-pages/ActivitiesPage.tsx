@@ -42,7 +42,6 @@ import {
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/providers/keycloak-provider";
-import { keycloak } from "@/lib/keycloak";
 import { useDebouncedValue } from "@/features/customers/hooks/useCustomers";
 import { useActivities } from "@/features/activities/hooks/useActivities";
 import {
@@ -270,7 +269,7 @@ function toLocalInput(iso: string | null): string {
 export function ActivitiesPage() {
   const { user } = useAuth();
   const isStaffAdmin = user?.role === "Admin" || user?.role === "Administrator";
-  const myKeycloakId = keycloak.subject ?? "";
+  const myKeycloakId = user?.keycloakId ?? "";
 
   // Filters / paging / sorting
   const [searchTerm, setSearchTerm] = useState("");
