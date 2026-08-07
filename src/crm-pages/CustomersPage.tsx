@@ -32,6 +32,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/providers/keycloak-provider";
 import { useCustomers, useDebouncedValue } from "@/features/customers/hooks/useCustomers";
+import { initialSearchTermFromUrl } from "@/lib/initial-search-term";
 import { customerApi } from "@/features/customers/services/customerApi";
 import { CustomFieldsSection } from "@/features/custom-fields/components/CustomFieldsSection";
 import { AttachmentsSection } from "@/features/attachments/components/AttachmentsSection";
@@ -199,7 +200,7 @@ export function CustomersPage() {
   const isStaffAdmin = user?.role === "Admin" || user?.role === "Administrator";
 
   // Filters / paging / sorting
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(initialSearchTermFromUrl);
   const [statusFilter, setStatusFilter] = useState<CustomerStatus | "">("");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);

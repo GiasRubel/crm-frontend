@@ -34,6 +34,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/providers/keycloak-provider";
 import { useDebouncedValue } from "@/features/customers/hooks/useCustomers";
+import { initialSearchTermFromUrl } from "@/lib/initial-search-term";
 import { useMyTickets, useTickets } from "@/features/tickets/hooks/useTickets";
 import { CustomFieldsSection } from "@/features/custom-fields/components/CustomFieldsSection";
 import { AttachmentsSection } from "@/features/attachments/components/AttachmentsSection";
@@ -486,7 +487,7 @@ function StaffTicketsView() {
   const { user } = useAuth();
   const isStaffAdmin = user?.role === "Admin" || user?.role === "Administrator";
 
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(initialSearchTermFromUrl);
   const [statusFilter, setStatusFilter] = useState<TicketStatus | "">("");
   const [priorityFilter, setPriorityFilter] = useState<TicketPriority | "">("");
   const [typeFilter, setTypeFilter] = useState<TicketType | "">("");

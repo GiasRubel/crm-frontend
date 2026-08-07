@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/providers/keycloak-provider";
 import { useDebouncedValue } from "@/features/customers/hooks/useCustomers";
+import { initialSearchTermFromUrl } from "@/lib/initial-search-term";
 import { useKb } from "@/features/kb/hooks/useKb";
 import {
   KbArticle,
@@ -133,7 +134,7 @@ export function KnowledgeBasePage() {
   const { user } = useAuth();
   const isStaffAdmin = user?.role === "Admin" || user?.role === "Administrator";
 
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(initialSearchTermFromUrl);
   const [statusFilter, setStatusFilter] = useState<KbStatus | "">("");
   const [visibilityFilter, setVisibilityFilter] = useState<KbVisibility | "">("");
   const [page, setPage] = useState(1);

@@ -26,6 +26,9 @@ export const handlers = [
     }),
   ),
   http.get(`${BACKEND}/subscriptions/me`, () => HttpResponse.json({ status: "active" })),
+  // Header's notification bell polls these on every mount.
+  http.get(`${BACKEND}/notifications`, () => HttpResponse.json([])),
+  http.get(`${BACKEND}/notifications/unread-count`, () => HttpResponse.json({ count: 0 })),
 ];
 
 /** Convenience builders for per-test overrides. */

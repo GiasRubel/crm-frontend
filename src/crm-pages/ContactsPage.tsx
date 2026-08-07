@@ -38,6 +38,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/providers/keycloak-provider";
 import { useDebouncedValue } from "@/features/customers/hooks/useCustomers";
+import { initialSearchTermFromUrl } from "@/lib/initial-search-term";
 import { CustomFieldsSection } from "@/features/custom-fields/components/CustomFieldsSection";
 import { AttachmentsSection } from "@/features/attachments/components/AttachmentsSection";
 import { useContacts } from "@/features/contacts/hooks/useContacts";
@@ -244,7 +245,7 @@ export function ContactsPage() {
   const isStaffAdmin = user?.role === "Admin" || user?.role === "Administrator";
 
   // Filters / paging / sorting
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(initialSearchTermFromUrl);
   const [channelFilter, setChannelFilter] = useState<PreferredChannel | "">("");
   const [dncFilter, setDncFilter] = useState<"true" | "false" | "">("");
   const [page, setPage] = useState(1);

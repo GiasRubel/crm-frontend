@@ -2,10 +2,11 @@
 
 import React from 'react';
 import { usePathname } from 'next/navigation';
-import { Search, Bell, User, Settings, LogOut } from 'lucide-react';
+import { User, Settings, LogOut } from 'lucide-react';
 import { useAuth } from "@/providers/keycloak-provider";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Input } from "@/components/ui/input";
+import { GlobalSearch } from "@/features/search/components/GlobalSearch";
+import { NotificationBell } from "@/features/notifications/components/NotificationBell";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,7 +16,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 
 const pageTitles: Record<string, string> = {
   '/dashboard': 'Dashboard',
@@ -56,18 +56,7 @@ export function Header() {
           {currentTitle}
         </h2>
 
-        <div className="flex-1 max-w-xl">
-          <div className="relative group">
-            <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors"
-              size={18}
-            />
-            <Input
-              placeholder="Search everything..."
-              className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-full pl-10 h-11 focus-visible:ring-primary/20"
-            />
-          </div>
-        </div>
+        <GlobalSearch />
       </div>
 
       {/* Right Actions */}
@@ -76,10 +65,7 @@ export function Header() {
         <ThemeToggle />
 
         {/* Notification */}
-        <Button variant="ghost" size="icon" className="relative text-gray-400 hover:text-primary transition-colors rounded-full">
-          <Bell size={20} />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-destructive rounded-full border-2 border-white dark:border-slate-900"></span>
-        </Button>
+        <NotificationBell />
 
         {/* User Profile Dropdown */}
         <DropdownMenu>
