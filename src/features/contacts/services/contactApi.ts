@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/api-client";
+import { ImportResult } from "@/features/import-export/types";
 import {
   AddInteractionDto,
   AssignContactDto,
@@ -39,4 +40,10 @@ export const contactApi = {
   assign: (id: string, data: AssignContactDto) =>
     apiClient.patch<Contact>(`/contacts/${id}/assign`, data),
   delete: (id: string) => apiClient.delete<void>(`/contacts/${id}`),
+  exportCsv: (query: ContactQuery = {}) => apiClient.getBlob(`/contacts/export${toQueryString(query)}`),
+  importCsv: (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return apiClient.postFormData<ImportResult>("/contacts/import", formData);
+  },
 };

@@ -34,4 +34,5 @@ export const customerApi = {
     apiClient.patch<Customer>(`/customers/${id}/assign`, data),
   delete: (id: string) => apiClient.delete<void>(`/customers/${id}`),
   resendInvitation: (id: string) => apiClient.post<void>(`/customers/${id}/resend`, {}),
+  exportCsv: (query: CustomerQuery = {}) => apiClient.getBlob(`/customers/export${toQueryString(query)}`),
 };

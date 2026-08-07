@@ -37,7 +37,9 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/providers/keycloak-provider";
 import { useDebouncedValue } from "@/features/customers/hooks/useCustomers";
 import { CustomFieldsSection } from "@/features/custom-fields/components/CustomFieldsSection";
+import { ImportExportBar } from "@/features/import-export/components/ImportExportBar";
 import { useLeads } from "@/features/leads/hooks/useLeads";
+import { leadApi } from "@/features/leads/services/leadApi";
 import {
   ENGAGEMENT_TYPE_LABELS,
   EngagementType,
@@ -595,10 +597,18 @@ export function LeadsPage() {
               Capture, score, qualify, and convert potential business.
             </p>
           </div>
-          <Button onClick={openCreate} className="bg-[#3F51B5] hover:bg-[#303F9F] text-white gap-2">
-            <Plus size={18} />
-            Add Lead
-          </Button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <ImportExportBar
+              onExport={() => leadApi.exportCsv(query)}
+              exportFilename="leads.csv"
+              onImport={(file) => leadApi.importCsv(file)}
+              onImportComplete={() => leadsQuery.refetch()}
+            />
+            <Button onClick={openCreate} className="bg-[#3F51B5] hover:bg-[#303F9F] text-white gap-2">
+              <Plus size={18} />
+              Add Lead
+            </Button>
+          </div>
         </div>
 
         {/* Stats */}

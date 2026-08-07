@@ -28,7 +28,9 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/providers/keycloak-provider";
 import { useOpportunities } from "@/features/opportunities/hooks/useOpportunities";
+import { opportunityApi } from "@/features/opportunities/services/opportunityApi";
 import { CustomFieldsSection } from "@/features/custom-fields/components/CustomFieldsSection";
+import { ImportExportBar } from "@/features/import-export/components/ImportExportBar";
 import {
   BoardColumn,
   Opportunity,
@@ -382,10 +384,13 @@ export function OpportunitiesPage() {
               Track deals through the pipeline — drag cards between stages.
             </p>
           </div>
-          <Button onClick={openCreate} className="bg-[#3F51B5] hover:bg-[#303F9F] text-white gap-2">
-            <Plus size={18} />
-            Add Opportunity
-          </Button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <ImportExportBar onExport={() => opportunityApi.exportCsv()} exportFilename="opportunities.csv" />
+            <Button onClick={openCreate} className="bg-[#3F51B5] hover:bg-[#303F9F] text-white gap-2">
+              <Plus size={18} />
+              Add Opportunity
+            </Button>
+          </div>
         </div>
 
         {/* Stats */}

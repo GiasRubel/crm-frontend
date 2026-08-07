@@ -38,10 +38,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/providers/keycloak-provider";
 import { useDebouncedValue } from "@/features/customers/hooks/useCustomers";
 import { CustomFieldsSection } from "@/features/custom-fields/components/CustomFieldsSection";
+import { ImportExportBar } from "@/features/import-export/components/ImportExportBar";
 import {
   useAccounts,
   useAccountSummary,
 } from "@/features/accounts/hooks/useAccounts";
+import { accountApi } from "@/features/accounts/services/accountApi";
 import {
   Account,
   ACCOUNT_INDUSTRY_LABELS,
@@ -474,10 +476,18 @@ export function AccountsPage() {
               B2B company profiles — firmographics, linked contacts, and deals.
             </p>
           </div>
-          <Button onClick={openCreate} className="bg-[#3F51B5] hover:bg-[#303F9F] text-white gap-2">
-            <Plus size={18} />
-            Add Account
-          </Button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <ImportExportBar
+              onExport={() => accountApi.exportCsv(query)}
+              exportFilename="accounts.csv"
+              onImport={(file) => accountApi.importCsv(file)}
+              onImportComplete={() => accountsQuery.refetch()}
+            />
+            <Button onClick={openCreate} className="bg-[#3F51B5] hover:bg-[#303F9F] text-white gap-2">
+              <Plus size={18} />
+              Add Account
+            </Button>
+          </div>
         </div>
 
         {/* Stats */}

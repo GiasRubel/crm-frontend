@@ -40,6 +40,8 @@ import { useAuth } from "@/providers/keycloak-provider";
 import { useDebouncedValue } from "@/features/customers/hooks/useCustomers";
 import { CustomFieldsSection } from "@/features/custom-fields/components/CustomFieldsSection";
 import { useContacts } from "@/features/contacts/hooks/useContacts";
+import { contactApi } from "@/features/contacts/services/contactApi";
+import { ImportExportBar } from "@/features/import-export/components/ImportExportBar";
 import {
   Contact,
   ContactQuery,
@@ -535,10 +537,18 @@ export function ContactsPage() {
               People profiles — demographics, communication history, and preferences.
             </p>
           </div>
-          <Button onClick={openCreate} className="bg-[#3F51B5] hover:bg-[#303F9F] text-white gap-2">
-            <Plus size={18} />
-            Add Contact
-          </Button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <ImportExportBar
+              onExport={() => contactApi.exportCsv(query)}
+              exportFilename="contacts.csv"
+              onImport={(file) => contactApi.importCsv(file)}
+              onImportComplete={() => contactsQuery.refetch()}
+            />
+            <Button onClick={openCreate} className="bg-[#3F51B5] hover:bg-[#303F9F] text-white gap-2">
+              <Plus size={18} />
+              Add Contact
+            </Button>
+          </div>
         </div>
 
         {/* Stats */}

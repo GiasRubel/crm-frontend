@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/api-client";
+import { ImportResult } from "@/features/import-export/types";
 import {
   AddEngagementDto,
   AssignLeadDto,
@@ -43,4 +44,10 @@ export const leadApi = {
   convert: (id: string, data: ConvertLeadDto) =>
     apiClient.post<Lead>(`/leads/${id}/convert`, data),
   delete: (id: string) => apiClient.delete<void>(`/leads/${id}`),
+  exportCsv: (query: LeadQuery = {}) => apiClient.getBlob(`/leads/export${toQueryString(query)}`),
+  importCsv: (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return apiClient.postFormData<ImportResult>("/leads/import", formData);
+  },
 };

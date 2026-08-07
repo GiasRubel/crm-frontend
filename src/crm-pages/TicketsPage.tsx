@@ -36,6 +36,7 @@ import { useAuth } from "@/providers/keycloak-provider";
 import { useDebouncedValue } from "@/features/customers/hooks/useCustomers";
 import { useMyTickets, useTickets } from "@/features/tickets/hooks/useTickets";
 import { CustomFieldsSection } from "@/features/custom-fields/components/CustomFieldsSection";
+import { ImportExportBar } from "@/features/import-export/components/ImportExportBar";
 import {
   Ticket,
   TICKET_STATUS_LABELS,
@@ -695,17 +696,20 @@ function StaffTicketsView() {
               Customer issues, bugs, and inquiries — from first response to resolution.
             </p>
           </div>
-          <Button
-            onClick={() => {
-              form.reset();
-              setCustomFieldValues({});
-              setFormError(null);
-              setFormOpen(true);
-            }}
-            className="bg-[#3F51B5] hover:bg-[#303F9F] text-white gap-2"
-          >
-            <Plus size={18} /> New Ticket
-          </Button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <ImportExportBar onExport={() => ticketApi.exportCsv(query)} exportFilename="tickets.csv" />
+            <Button
+              onClick={() => {
+                form.reset();
+                setCustomFieldValues({});
+                setFormError(null);
+                setFormOpen(true);
+              }}
+              className="bg-[#3F51B5] hover:bg-[#303F9F] text-white gap-2"
+            >
+              <Plus size={18} /> New Ticket
+            </Button>
+          </div>
         </div>
 
         {/* Stats */}

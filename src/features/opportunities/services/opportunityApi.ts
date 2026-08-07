@@ -42,4 +42,5 @@ export const opportunityApi = {
   assign: (id: string, data: AssignOpportunityDto) =>
     apiClient.patch<Opportunity>(`/opportunities/${id}/assign`, data),
   delete: (id: string) => apiClient.delete<void>(`/opportunities/${id}`),
+  exportCsv: (query: OpportunityQuery = {}) => apiClient.getBlob(`/opportunities/export${toQueryString(query)}`),
 };

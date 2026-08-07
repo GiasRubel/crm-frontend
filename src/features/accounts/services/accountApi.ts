@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/api-client";
+import { ImportResult } from "@/features/import-export/types";
 import {
   Account,
   AccountListResponse,
@@ -39,4 +40,10 @@ export const accountApi = {
   assign: (id: string, data: AssignAccountDto) =>
     apiClient.patch<Account>(`/accounts/${id}/assign`, data),
   delete: (id: string) => apiClient.delete<void>(`/accounts/${id}`),
+  exportCsv: (query: AccountQuery = {}) => apiClient.getBlob(`/accounts/export${toQueryString(query)}`),
+  importCsv: (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return apiClient.postFormData<ImportResult>("/accounts/import", formData);
+  },
 };

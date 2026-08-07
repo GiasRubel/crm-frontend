@@ -32,7 +32,9 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/providers/keycloak-provider";
 import { useCustomers, useDebouncedValue } from "@/features/customers/hooks/useCustomers";
+import { customerApi } from "@/features/customers/services/customerApi";
 import { CustomFieldsSection } from "@/features/custom-fields/components/CustomFieldsSection";
+import { ImportExportBar } from "@/features/import-export/components/ImportExportBar";
 import {
   Customer,
   CustomerQuery,
@@ -418,15 +420,21 @@ export function CustomersPage() {
               Manage client profiles, sign-in access, and lifecycle status.
             </p>
           </div>
-          {isStaffAdmin && (
-            <Button
-              onClick={openCreate}
-              className="bg-[#3F51B5] hover:bg-[#303F9F] text-white gap-2"
-            >
-              <Plus size={18} />
-              Add Customer
-            </Button>
-          )}
+          <div className="flex items-center gap-2 flex-wrap">
+            <ImportExportBar
+              onExport={() => customerApi.exportCsv(query)}
+              exportFilename="customers.csv"
+            />
+            {isStaffAdmin && (
+              <Button
+                onClick={openCreate}
+                className="bg-[#3F51B5] hover:bg-[#303F9F] text-white gap-2"
+              >
+                <Plus size={18} />
+                Add Customer
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Stats */}

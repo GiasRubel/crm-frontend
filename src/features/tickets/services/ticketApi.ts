@@ -46,6 +46,7 @@ export const ticketApi = {
   assign: (id: string, data: AssignTicketDto) =>
     apiClient.patch<Ticket>(`/tickets/${id}/assign`, data),
   delete: (id: string) => apiClient.delete<void>(`/tickets/${id}`),
+  exportCsv: (query: TicketQuery = {}) => apiClient.getBlob(`/tickets/export${toQueryString(query)}`),
 
   // Customer portal (AppRole.Customer)
   getMy: () => apiClient.get<Ticket[]>("/tickets/my"),

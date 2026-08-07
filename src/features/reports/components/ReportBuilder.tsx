@@ -16,6 +16,7 @@ import {
   BarChart3,
   Bookmark,
   Check,
+  Download,
   Loader2,
   Plus,
   Play,
@@ -24,7 +25,9 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import { downloadBlob } from "@/features/import-export/downloadBlob";
 import { useDatasets, useSavedReports } from "../hooks/useReports";
+import { reportResultToCsv } from "../reportCsv";
 import {
   CreateSavedReportRequest,
   METRIC_LABELS,
@@ -914,9 +917,23 @@ function ResultView({
 
     return (
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-6 space-y-5">
-        <h3 className="font-bold text-gray-800 dark:text-white">
-          Summary <span className="text-gray-400 dark:text-slate-500 font-normal">· {rows.length} groups</span>
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-gray-800 dark:text-white">
+            Summary <span className="text-gray-400 dark:text-slate-500 font-normal">· {rows.length} groups</span>
+          </h3>
+          {rows.length > 0 && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => downloadBlob(new Blob([reportResultToCsv(result)], { type: "text/csv" }), "report.csv")}
+            >
+              <Download size={14} />
+              Export CSV
+            </Button>
+          )}
+        </div>
         {rows.length === 0 ? (
           <p className="text-sm text-gray-400 dark:text-slate-500 py-8 text-center">No data matched this report.</p>
         ) : (
@@ -983,10 +1000,24 @@ function ResultView({
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-6 space-y-4">
-      <h3 className="font-bold text-gray-800 dark:text-white">
-        Results{" "}
-        <span className="text-gray-400 dark:text-slate-500 font-normal">· {meta?.total ?? rows.length} records</span>
-      </h3>
+      <div className="flex items-center justify-between">
+        <h3 className="font-bold text-gray-800 dark:text-white">
+          Results{" "}
+          <span className="text-gray-400 dark:text-slate-500 font-normal">· {meta?.total ?? rows.length} records</span>
+        </h3>
+        {rows.length > 0 && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={() => downloadBlob(new Blob([reportResultToCsv(result)], { type: "text/csv" }), "report.csv")}
+          >
+            <Download size={14} />
+            Export CSV
+          </Button>
+        )}
+      </div>
       {rows.length === 0 ? (
         <p className="text-sm text-gray-400 dark:text-slate-500 py-8 text-center">No records matched this report.</p>
       ) : (
