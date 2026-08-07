@@ -39,6 +39,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/providers/keycloak-provider";
 import { useDebouncedValue } from "@/features/customers/hooks/useCustomers";
 import { CustomFieldsSection } from "@/features/custom-fields/components/CustomFieldsSection";
+import { AttachmentsSection } from "@/features/attachments/components/AttachmentsSection";
 import { useContacts } from "@/features/contacts/hooks/useContacts";
 import { contactApi } from "@/features/contacts/services/contactApi";
 import { ImportExportBar } from "@/features/import-export/components/ImportExportBar";
@@ -1271,6 +1272,8 @@ export function ContactsPage() {
               values={customFieldValues}
               onChange={setCustomFieldValues}
             />
+
+            <AttachmentsSection entityType="contact" entityId={editingContact?.id} />
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeForm} disabled={isSaving}>

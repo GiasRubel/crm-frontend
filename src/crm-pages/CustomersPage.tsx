@@ -34,6 +34,7 @@ import { useAuth } from "@/providers/keycloak-provider";
 import { useCustomers, useDebouncedValue } from "@/features/customers/hooks/useCustomers";
 import { customerApi } from "@/features/customers/services/customerApi";
 import { CustomFieldsSection } from "@/features/custom-fields/components/CustomFieldsSection";
+import { AttachmentsSection } from "@/features/attachments/components/AttachmentsSection";
 import { ImportExportBar } from "@/features/import-export/components/ImportExportBar";
 import {
   Customer,
@@ -926,6 +927,8 @@ export function CustomersPage() {
               values={customFieldValues}
               onChange={setCustomFieldValues}
             />
+
+            <AttachmentsSection entityType="customer" entityId={editingCustomer?.id} />
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeForm} disabled={isSaving}>

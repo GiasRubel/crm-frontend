@@ -36,6 +36,7 @@ import { useAuth } from "@/providers/keycloak-provider";
 import { useDebouncedValue } from "@/features/customers/hooks/useCustomers";
 import { useMyTickets, useTickets } from "@/features/tickets/hooks/useTickets";
 import { CustomFieldsSection } from "@/features/custom-fields/components/CustomFieldsSection";
+import { AttachmentsSection } from "@/features/attachments/components/AttachmentsSection";
 import { ImportExportBar } from "@/features/import-export/components/ImportExportBar";
 import {
   Ticket,
@@ -1076,6 +1077,8 @@ function StaffTicketsView() {
                 <div className="bg-gray-50/75 dark:bg-slate-800/50 p-4 rounded-xl border border-gray-100 dark:border-slate-800">
                   <p className="text-sm text-gray-700 dark:text-slate-200 whitespace-pre-wrap">{viewingTicket.description}</p>
                 </div>
+
+                <AttachmentsSection entityType="ticket" entityId={viewingTicket.id} />
 
                 <CommentThread ticket={viewingTicket} />
 

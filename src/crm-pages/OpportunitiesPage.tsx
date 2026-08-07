@@ -30,6 +30,7 @@ import { useAuth } from "@/providers/keycloak-provider";
 import { useOpportunities } from "@/features/opportunities/hooks/useOpportunities";
 import { opportunityApi } from "@/features/opportunities/services/opportunityApi";
 import { CustomFieldsSection } from "@/features/custom-fields/components/CustomFieldsSection";
+import { AttachmentsSection } from "@/features/attachments/components/AttachmentsSection";
 import { ImportExportBar } from "@/features/import-export/components/ImportExportBar";
 import {
   BoardColumn,
@@ -898,6 +899,8 @@ export function OpportunitiesPage() {
               values={customFieldValues}
               onChange={setCustomFieldValues}
             />
+
+            <AttachmentsSection entityType="opportunity" entityId={editingOpportunity?.id} />
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeForm} disabled={isSaving}>

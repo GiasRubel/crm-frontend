@@ -38,6 +38,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/providers/keycloak-provider";
 import { useDebouncedValue } from "@/features/customers/hooks/useCustomers";
 import { CustomFieldsSection } from "@/features/custom-fields/components/CustomFieldsSection";
+import { AttachmentsSection } from "@/features/attachments/components/AttachmentsSection";
 import { ImportExportBar } from "@/features/import-export/components/ImportExportBar";
 import {
   useAccounts,
@@ -1134,6 +1135,8 @@ export function AccountsPage() {
               values={customFieldValues}
               onChange={setCustomFieldValues}
             />
+
+            <AttachmentsSection entityType="account" entityId={editingAccount?.id} />
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeForm} disabled={isSaving}>
