@@ -6,14 +6,16 @@ import {
   ID_TOKEN_CHUNK_NAMES,
   SESSION_CHUNK_NAMES,
   joinIdTokenCookie,
+  joinSessionCookie,
   unsealIdToken,
+  unsealSession,
 } from "@/lib/auth/session";
 
 export const runtime = "nodejs";
 
 export async function GET() {
   const jar = await cookies();
-  const hadSession = Boolean(jar.get(SESSION_CHUNK_NAMES[0]));
+  const session = await unsealSession(joinSessionCookie((name) => jar.get(name)?.value));
   const idToken = await unsealIdToken(joinIdTokenCookie((name) => jar.get(name)?.value));
 
   SESSION_CHUNK_NAMES.forEach((name) => jar.delete(name));
@@ -25,7 +27,12 @@ export async function GET() {
   // "http://localhost:3001". Normalized here so either env spelling works.
   const postLogoutUrl = String(process.env.APP_BASE_URL).replace(/\/+$/, "");
 
-  if (!hadSession) {
+  // No session, or a local-auth one (there's no Keycloak IdP session for
+  // those to begin with) — just clear cookies and go home. A Keycloak
+  // session missing its id_token cookie still goes through end-session below
+  // (just without the hint), since skipping it would leave the user's actual
+  // Keycloak IdP session alive.
+  if (!session || session.provider === "local") {
     return NextResponse.redirect(postLogoutUrl);
   }
 

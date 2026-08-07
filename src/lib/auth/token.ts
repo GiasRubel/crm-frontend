@@ -15,6 +15,27 @@ import {
 // Refresh proactively — avoids a request racing a token that expires mid-flight.
 const REFRESH_SKEW_MS = 30_000;
 
+const BACKEND_URL = process.env.BACKEND_INTERNAL_URL ?? "http://localhost:5000";
+
+async function refreshLocalSession(session: SessionData): Promise<SessionData> {
+  const res = await fetch(`${BACKEND_URL}/auth/local/refresh`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ refreshToken: session.refreshToken }),
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    throw new Error(`Local auth refresh failed: ${res.status}`);
+  }
+  const tokens = await res.json();
+  return {
+    accessToken: tokens.accessToken,
+    refreshToken: tokens.refreshToken,
+    expiresAt: Date.now() + tokens.expiresIn * 1000,
+    provider: "local",
+  };
+}
+
 /**
  * Returns a live access token for the current request, transparently refreshing
  * it (and re-sealing the session cookie) if it's near expiry. Returns null if
@@ -39,19 +60,25 @@ export async function getValidAccessToken(): Promise<string | null> {
   }
 
   try {
-    const config = await getOidcConfig();
-    const tokens = await client.refreshTokenGrant(config, session.refreshToken);
-    const refreshed: SessionData = {
-      accessToken: tokens.access_token,
-      refreshToken: tokens.refresh_token ?? session.refreshToken,
-      expiresAt: Date.now() + (tokens.expiresIn() ?? 60) * 1000,
-    };
+    const refreshed: SessionData =
+      session.provider === "local"
+        ? await refreshLocalSession(session)
+        : await (async () => {
+            const config = await getOidcConfig();
+            const tokens = await client.refreshTokenGrant(config, session.refreshToken!);
+            return {
+              accessToken: tokens.access_token,
+              refreshToken: tokens.refresh_token ?? session.refreshToken,
+              expiresAt: Date.now() + (tokens.expiresIn() ?? 60) * 1000,
+              provider: "keycloak" as const,
+            };
+          })();
     for (const chunk of splitSessionCookie(await sealSession(refreshed))) {
       jar.set(chunk.name, chunk.value, sessionCookieOptions);
     }
     return refreshed.accessToken;
   } catch (error) {
-    console.error("Failed to refresh Keycloak session", error);
+    console.error("Failed to refresh session", error);
     clearSession();
     return null;
   }

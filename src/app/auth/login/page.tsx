@@ -1,10 +1,11 @@
 "use client";
 
 import { useAuth } from "@/providers/keycloak-provider";
-import { useEffect } from "react";
+import { apiClient } from "@/lib/api-client";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { LogIn, ArrowRight, ShieldCheck } from "lucide-react";
+import { LogIn, ArrowRight, ShieldCheck, Mail } from "lucide-react";
 
 
 // Official brand SVG icons (inline — no external library needed)
@@ -40,14 +41,55 @@ function FacebookIcon() {
 }
 
 export default function LoginPage() {
-  const { login, loginWithProvider, authenticated, isLoading } = useAuth();
+  const { login, loginWithProvider, loginLocal, authenticated, isLoading } = useAuth();
   const router = useRouter();
+
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [stage, setStage] = useState<"email" | "password">("email");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoading && authenticated) {
       router.replace("/dashboard");
     }
   }, [isLoading, authenticated, router]);
+
+  async function handleEmailContinue(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setSubmitting(true);
+    try {
+      const { authProvider } = await apiClient.post<{ authProvider: "keycloak" | "local" }>(
+        "/auth/local/resolve",
+        { email },
+      );
+      if (authProvider === "local") {
+        setStage("password");
+      } else {
+        // This account signs in via SSO — hand off to the Keycloak flow.
+        login();
+      }
+    } catch {
+      setError("Something went wrong — please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handlePasswordSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setSubmitting(true);
+    try {
+      await loginLocal(email, password);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Invalid email or password");
+      setSubmitting(false);
+    }
+  }
 
   if (isLoading || authenticated) {
     return (
@@ -67,6 +109,86 @@ export default function LoginPage() {
       </div>
 
       <div className="space-y-3">
+        {showEmailForm ? (
+          <div className="space-y-3">
+            {stage === "email" ? (
+              <form onSubmit={handleEmailContinue} className="space-y-3">
+                <input
+                  type="email"
+                  required
+                  autoFocus
+                  placeholder="you@company.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-800/50 px-4 py-3.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 px-5 py-4 text-sm font-semibold text-white shadow-lg active:scale-[0.98] transition-all duration-200 disabled:opacity-60"
+                >
+                  Continue
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handlePasswordSubmit} className="space-y-3">
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Signing in as <span className="font-medium">{email}</span>
+                </p>
+                <input
+                  type="password"
+                  required
+                  autoFocus
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-800/50 px-4 py-3.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 px-5 py-4 text-sm font-semibold text-white shadow-lg active:scale-[0.98] transition-all duration-200 disabled:opacity-60"
+                >
+                  Sign In
+                </button>
+              </form>
+            )}
+            {error && <p className="text-sm text-red-500 text-center">{error}</p>}
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowEmailForm(false);
+                  setStage("email");
+                  setError(null);
+                }}
+                className="text-sm text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-200"
+              >
+                Back to sign-in options
+              </button>
+            </div>
+
+            {/* Divider */}
+            <div className="relative flex py-1 items-center">
+              <div className="flex-grow border-t border-slate-200/80 dark:border-slate-800/80" />
+              <span className="flex-shrink mx-4 text-xs text-slate-400 uppercase tracking-widest font-semibold">
+                or
+              </span>
+              <div className="flex-grow border-t border-slate-200/80 dark:border-slate-800/80" />
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            id="login-email-toggle-btn"
+            onClick={() => setShowEmailForm(true)}
+            className="flex w-full items-center justify-center gap-2.5 rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800 px-5 py-4 text-sm font-semibold text-slate-700 dark:text-slate-200 shadow-sm hover:shadow-md active:scale-[0.98] transition-all duration-200"
+          >
+            <Mail className="h-5 w-5" />
+            <span>Sign in with Email</span>
+          </button>
+        )}
+
         {/* Primary SSO button */}
         <button
           id="login-keycloak-btn"

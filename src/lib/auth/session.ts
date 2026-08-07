@@ -22,6 +22,8 @@ export interface SessionData {
   refreshToken?: string;
   /** epoch ms when accessToken expires */
   expiresAt: number;
+  /** Which identity provider issued this session. Missing = 'keycloak' (old cookies, before local auth existed). */
+  provider?: "keycloak" | "local";
 }
 
 export const sessionCookieOptions = {

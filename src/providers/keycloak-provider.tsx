@@ -23,6 +23,7 @@ type AuthContextType = {
   deploymentMode: DeploymentMode | null;
   login: () => void;
   loginWithProvider: (provider: "google" | "facebook") => void;
+  loginLocal: (email: string, password: string) => Promise<void>;
   register: () => void;
   logout: () => void;
 };
@@ -105,6 +106,22 @@ export function KeycloakProvider({ children }: { children: React.ReactNode }) {
     window.location.href = `/api/auth/login?idpHint=${provider}`;
   }, []);
 
+  // Fetch-based counterpart to login()/loginWithProvider() — those redirect
+  // into Keycloak; this posts credentials directly for local-auth orgs, then
+  // does a full reload so the provider re-fetches session state fresh.
+  const loginLocal = useCallback(async (email: string, password: string) => {
+    const res = await fetch("/api/auth/local-login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.message ?? "Invalid email or password");
+    }
+    window.location.href = "/dashboard";
+  }, []);
+
   const logout = useCallback(() => {
     window.location.href = "/api/auth/logout";
   }, []);
@@ -119,6 +136,7 @@ export function KeycloakProvider({ children }: { children: React.ReactNode }) {
         deploymentMode,
         login,
         loginWithProvider,
+        loginLocal,
         register,
         logout,
       }}

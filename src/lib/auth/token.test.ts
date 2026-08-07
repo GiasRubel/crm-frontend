@@ -143,7 +143,7 @@ describe("getValidAccessToken — refresh failure", () => {
     await getValidAccessToken();
 
     expect(console.error).toHaveBeenCalledWith(
-      "Failed to refresh Keycloak session",
+      "Failed to refresh session",
       expect.any(Error),
     );
   });
