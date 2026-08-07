@@ -19,6 +19,7 @@ import {
   BookOpen,
   BarChart3,
   Shield,
+  History,
   LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -83,6 +84,7 @@ export function Sidebar() {
                 items: [
                   { icon: Zap, label: "Automations", href: "/automations" },
                   { icon: Shield, label: "Users", href: "/users" },
+                  { icon: History, label: "Audit Log", href: "/audit-log" },
                 ],
               } satisfies NavSection,
             ]
