@@ -67,6 +67,7 @@ export interface Ticket {
   assignedToName: string | null;
   assignedTeamId: string | null;
   assignedTeamName: string | null;
+  customFields: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
 }
@@ -79,6 +80,7 @@ export interface CreateTicketDto {
   priority?: TicketPriority;
   assignedToId?: string;
   assignedTeamId?: string;
+  customFields?: Record<string, unknown>;
 }
 
 /** Portal customers raise tickets for themselves. */
@@ -94,6 +96,7 @@ export interface UpdateTicketDto {
   type?: TicketType;
   priority?: TicketPriority;
   relatedArticleIds?: string[];
+  customFields?: Record<string, unknown>;
 }
 
 export interface AddCommentDto {

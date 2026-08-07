@@ -59,6 +59,7 @@ export interface Account {
   assignedToName: string | null;
   assignedTeamId: string | null;
   assignedTeamName: string | null;
+  customFields: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
 }
@@ -76,6 +77,7 @@ export interface CreateAccountDto {
   status?: AccountStatus;
   assignedToId?: string;
   assignedTeamId?: string;
+  customFields?: Record<string, unknown>;
 }
 
 export type UpdateAccountDto = Partial<

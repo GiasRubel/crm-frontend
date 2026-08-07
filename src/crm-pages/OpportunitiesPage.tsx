@@ -28,6 +28,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/providers/keycloak-provider";
 import { useOpportunities } from "@/features/opportunities/hooks/useOpportunities";
+import { CustomFieldsSection } from "@/features/custom-fields/components/CustomFieldsSection";
 import {
   BoardColumn,
   Opportunity,
@@ -213,6 +214,7 @@ export function OpportunitiesPage() {
     resolver: standardSchemaResolver(opportunityFormSchema),
     defaultValues: emptyFormValues,
   });
+  const [customFieldValues, setCustomFieldValues] = useState<Record<string, unknown>>({});
 
   const isSaving = createOpportunityMutation.isPending || updateOpportunityMutation.isPending;
 
@@ -225,6 +227,7 @@ export function OpportunitiesPage() {
 
   const openCreate = () => {
     form.reset(emptyFormValues);
+    setCustomFieldValues({});
     setEditingOpportunity(null);
     setFormError(null);
     setFormOpen(true);
@@ -244,6 +247,7 @@ export function OpportunitiesPage() {
         : "",
       notes: opportunity.notes ?? "",
     });
+    setCustomFieldValues(opportunity.customFields ?? {});
     setEditingOpportunity(opportunity);
     setFormError(null);
     setFormOpen(true);
@@ -269,6 +273,7 @@ export function OpportunitiesPage() {
             notes: values.notes?.trim() || undefined,
             // null explicitly unlinks the account when cleared in the form
             accountId: values.accountId || null,
+            customFields: customFieldValues,
           },
         });
         notifySuccess(`Deal "${values.name}" updated successfully.`);
@@ -281,6 +286,7 @@ export function OpportunitiesPage() {
           stage: values.stage,
           expectedCloseDate: values.expectedCloseDate || undefined,
           notes: values.notes?.trim() || undefined,
+          customFields: customFieldValues,
         });
         notifySuccess(`Deal "${values.name}" added to the pipeline.`);
       }
@@ -881,6 +887,12 @@ export function OpportunitiesPage() {
               />
               <FieldError message={form.formState.errors.notes?.message} />
             </div>
+
+            <CustomFieldsSection
+              entityType="opportunity"
+              values={customFieldValues}
+              onChange={setCustomFieldValues}
+            />
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeForm} disabled={isSaving}>

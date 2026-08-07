@@ -56,6 +56,7 @@ export interface Opportunity {
   assignedToName: string | null;
   assignedTeamId: string | null;
   assignedTeamName: string | null;
+  customFields: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
 }
@@ -72,6 +73,7 @@ export interface CreateOpportunityDto {
   assignedTeamId?: string;
   leadId?: string;
   accountId?: string;
+  customFields?: Record<string, unknown>;
 }
 
 export interface UpdateOpportunityDto {
@@ -82,6 +84,7 @@ export interface UpdateOpportunityDto {
   notes?: string;
   /** Account link: omitted = unchanged, null = unlink, id = set. */
   accountId?: string | null;
+  customFields?: Record<string, unknown>;
 }
 
 export interface MoveStageDto {

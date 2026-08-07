@@ -16,6 +16,7 @@ export interface Customer {
   assignedToName: string | null;
   assignedTeamId: string | null;
   assignedTeamName: string | null;
+  customFields: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
 }
@@ -29,6 +30,7 @@ export interface CreateCustomerDto {
   address?: string;
   notes?: string;
   status?: CustomerStatus;
+  customFields?: Record<string, unknown>;
 }
 
 export type UpdateCustomerDto = Partial<CreateCustomerDto>;

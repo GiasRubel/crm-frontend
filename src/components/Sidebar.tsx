@@ -20,6 +20,7 @@ import {
   BarChart3,
   Shield,
   History,
+  ListPlus,
   LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -83,6 +84,7 @@ export function Sidebar() {
                 title: "Administration",
                 items: [
                   { icon: Zap, label: "Automations", href: "/automations" },
+                  { icon: ListPlus, label: "Custom Fields", href: "/custom-fields" },
                   { icon: Shield, label: "Users", href: "/users" },
                   { icon: History, label: "Audit Log", href: "/audit-log" },
                 ],

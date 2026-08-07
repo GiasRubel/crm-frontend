@@ -35,6 +35,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/providers/keycloak-provider";
 import { useDebouncedValue } from "@/features/customers/hooks/useCustomers";
 import { useMyTickets, useTickets } from "@/features/tickets/hooks/useTickets";
+import { CustomFieldsSection } from "@/features/custom-fields/components/CustomFieldsSection";
 import {
   Ticket,
   TICKET_STATUS_LABELS,
@@ -552,6 +553,7 @@ function StaffTicketsView() {
     resolver: standardSchemaResolver(ticketFormSchema),
     defaultValues: { subject: "", description: "", customerId: "", type: "question", priority: "normal" },
   });
+  const [customFieldValues, setCustomFieldValues] = useState<Record<string, unknown>>({});
 
   // Pickers
   const customersPickerQuery = useQuery({
@@ -602,10 +604,14 @@ function StaffTicketsView() {
   const onSubmit = async (values: TicketFormValues) => {
     setFormError(null);
     try {
-      const created = await createTicketMutation.mutateAsync(values);
+      const created = await createTicketMutation.mutateAsync({
+        ...values,
+        customFields: customFieldValues,
+      });
       notifySuccess(`Ticket ${created.number} created.`);
       setFormOpen(false);
       form.reset();
+      setCustomFieldValues({});
       resetToFirstPage();
     } catch (err) {
       setFormError(err instanceof Error ? err.message : "Failed to create ticket");
@@ -692,6 +698,7 @@ function StaffTicketsView() {
           <Button
             onClick={() => {
               form.reset();
+              setCustomFieldValues({});
               setFormError(null);
               setFormOpen(true);
             }}
@@ -1240,6 +1247,13 @@ function StaffTicketsView() {
               />
               <FieldError message={form.formState.errors.description?.message} />
             </div>
+
+            <CustomFieldsSection
+              entityType="ticket"
+              values={customFieldValues}
+              onChange={setCustomFieldValues}
+            />
+
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setFormOpen(false)}>
                 Cancel

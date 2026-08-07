@@ -38,6 +38,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/providers/keycloak-provider";
 import { useDebouncedValue } from "@/features/customers/hooks/useCustomers";
+import { CustomFieldsSection } from "@/features/custom-fields/components/CustomFieldsSection";
 import { useContacts } from "@/features/contacts/hooks/useContacts";
 import {
   Contact,
@@ -326,6 +327,7 @@ export function ContactsPage() {
     resolver: standardSchemaResolver(contactFormSchema),
     defaultValues: emptyFormValues,
   });
+  const [customFieldValues, setCustomFieldValues] = useState<Record<string, unknown>>({});
 
   const interactionForm = useForm<InteractionFormValues>({
     resolver: standardSchemaResolver(interactionFormSchema),
@@ -357,6 +359,7 @@ export function ContactsPage() {
 
   const openCreate = () => {
     form.reset(emptyFormValues);
+    setCustomFieldValues({});
     setEditingContact(null);
     setFormError(null);
     setFormOpen(true);
@@ -384,6 +387,7 @@ export function ContactsPage() {
       doNotContact: contact.doNotContact,
       notes: contact.notes ?? "",
     });
+    setCustomFieldValues(contact.customFields ?? {});
     setEditingContact(contact);
     setFormError(null);
     setFormOpen(true);
@@ -423,6 +427,7 @@ export function ContactsPage() {
       smsOptIn: values.smsOptIn,
       doNotContact: values.doNotContact,
       notes: values.notes?.trim() || undefined,
+      customFields: customFieldValues,
     };
 
     try {
@@ -1250,6 +1255,12 @@ export function ContactsPage() {
               />
               <FieldError message={form.formState.errors.notes?.message} />
             </div>
+
+            <CustomFieldsSection
+              entityType="contact"
+              values={customFieldValues}
+              onChange={setCustomFieldValues}
+            />
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeForm} disabled={isSaving}>

@@ -37,6 +37,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/providers/keycloak-provider";
 import { useDebouncedValue } from "@/features/customers/hooks/useCustomers";
+import { CustomFieldsSection } from "@/features/custom-fields/components/CustomFieldsSection";
 import {
   useAccounts,
   useAccountSummary,
@@ -326,6 +327,7 @@ export function AccountsPage() {
     resolver: standardSchemaResolver(accountFormSchema),
     defaultValues: emptyFormValues,
   });
+  const [customFieldValues, setCustomFieldValues] = useState<Record<string, unknown>>({});
 
   const isSaving = createAccountMutation.isPending || updateAccountMutation.isPending;
 
@@ -354,6 +356,7 @@ export function AccountsPage() {
 
   const openCreate = () => {
     form.reset(emptyFormValues);
+    setCustomFieldValues({});
     setEditingAccount(null);
     setFormError(null);
     setFormOpen(true);
@@ -372,6 +375,7 @@ export function AccountsPage() {
       description: account.description ?? "",
       status: account.status,
     });
+    setCustomFieldValues(account.customFields ?? {});
     setEditingAccount(account);
     setFormError(null);
     setFormOpen(true);
@@ -397,6 +401,7 @@ export function AccountsPage() {
       address: values.address?.trim() || undefined,
       description: values.description?.trim() || undefined,
       status: values.status,
+      customFields: customFieldValues,
     };
 
     try {
@@ -1113,6 +1118,12 @@ export function AccountsPage() {
                 </select>
               </div>
             </div>
+
+            <CustomFieldsSection
+              entityType="account"
+              values={customFieldValues}
+              onChange={setCustomFieldValues}
+            />
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeForm} disabled={isSaving}>

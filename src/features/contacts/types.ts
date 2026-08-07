@@ -55,6 +55,7 @@ export interface Contact {
   assignedToName: string | null;
   assignedTeamId: string | null;
   assignedTeamName: string | null;
+  customFields: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
 }
@@ -82,6 +83,7 @@ export interface CreateContactDto {
   notes?: string;
   assignedToId?: string;
   assignedTeamId?: string;
+  customFields?: Record<string, unknown>;
 }
 
 /** accountId/customerId accept null to unlink. */

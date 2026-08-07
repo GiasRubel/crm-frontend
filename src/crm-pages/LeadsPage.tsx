@@ -36,6 +36,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/providers/keycloak-provider";
 import { useDebouncedValue } from "@/features/customers/hooks/useCustomers";
+import { CustomFieldsSection } from "@/features/custom-fields/components/CustomFieldsSection";
 import { useLeads } from "@/features/leads/hooks/useLeads";
 import {
   ENGAGEMENT_TYPE_LABELS,
@@ -357,6 +358,7 @@ export function LeadsPage() {
     resolver: standardSchemaResolver(leadFormSchema),
     defaultValues: emptyLeadForm,
   });
+  const [customFieldValues, setCustomFieldValues] = useState<Record<string, unknown>>({});
 
   const engagementForm = useForm<EngagementFormValues>({
     resolver: standardSchemaResolver(engagementFormSchema),
@@ -402,6 +404,7 @@ export function LeadsPage() {
 
   const openCreate = () => {
     form.reset(emptyLeadForm);
+    setCustomFieldValues({});
     setEditingLead(null);
     setFormError(null);
     setFormOpen(true);
@@ -419,6 +422,7 @@ export function LeadsPage() {
       source: lead.source,
       estimatedValue: lead.estimatedValue,
     });
+    setCustomFieldValues(lead.customFields ?? {});
     setEditingLead(lead);
     setFormError(null);
     setFormOpen(true);
@@ -443,6 +447,7 @@ export function LeadsPage() {
       notes: values.notes?.trim() || undefined,
       source: values.source,
       estimatedValue: values.estimatedValue,
+      customFields: customFieldValues,
     };
 
     try {
@@ -1181,6 +1186,12 @@ export function LeadsPage() {
               />
               <FieldError message={form.formState.errors.notes?.message} />
             </div>
+
+            <CustomFieldsSection
+              entityType="lead"
+              values={customFieldValues}
+              onChange={setCustomFieldValues}
+            />
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeForm} disabled={isSaving}>

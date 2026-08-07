@@ -57,6 +57,7 @@ export interface Lead {
   convertedOpportunityId: string | null;
   convertedAt: string | null;
   convertedBy: string | null;
+  customFields: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
 }
@@ -73,6 +74,7 @@ export interface CreateLeadDto {
   estimatedValue?: number;
   assignedToId?: string;
   assignedTeamId?: string;
+  customFields?: Record<string, unknown>;
 }
 
 export type UpdateLeadDto = Partial<

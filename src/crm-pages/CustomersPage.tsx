@@ -32,6 +32,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/providers/keycloak-provider";
 import { useCustomers, useDebouncedValue } from "@/features/customers/hooks/useCustomers";
+import { CustomFieldsSection } from "@/features/custom-fields/components/CustomFieldsSection";
 import {
   Customer,
   CustomerQuery,
@@ -269,6 +270,7 @@ export function CustomersPage() {
     resolver: standardSchemaResolver(customerFormSchema),
     defaultValues: emptyFormValues,
   });
+  const [customFieldValues, setCustomFieldValues] = useState<Record<string, unknown>>({});
 
   const isSaving = createCustomerMutation.isPending || updateCustomerMutation.isPending;
 
@@ -288,6 +290,7 @@ export function CustomersPage() {
 
   const openCreate = () => {
     form.reset(emptyFormValues);
+    setCustomFieldValues({});
     setEditingCustomer(null);
     setFormError(null);
     setFormOpen(true);
@@ -304,6 +307,7 @@ export function CustomersPage() {
       notes: customer.notes ?? "",
       status: customer.status,
     });
+    setCustomFieldValues(customer.customFields ?? {});
     setEditingCustomer(customer);
     setFormError(null);
     setFormOpen(true);
@@ -328,6 +332,7 @@ export function CustomersPage() {
       company: values.company?.trim() || undefined,
       address: values.address?.trim() || undefined,
       notes: values.notes?.trim() || undefined,
+      customFields: customFieldValues,
     };
 
     try {
@@ -907,6 +912,12 @@ export function CustomersPage() {
                 </p>
               </div>
             </div>
+
+            <CustomFieldsSection
+              entityType="customer"
+              values={customFieldValues}
+              onChange={setCustomFieldValues}
+            />
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeForm} disabled={isSaving}>
