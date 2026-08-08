@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Geist } from "next/font/google";
+import { getLocale, getMessages } from "next-intl/server";
 import { cn } from "@/lib/utils";
+import { isRtl } from "@/i18n/config";
 
 import { Providers } from "@/providers";
 
@@ -12,13 +14,22 @@ export const metadata: Metadata = {
   description: "CRM dashboard frontend",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+  const dir = isRtl(locale) ? "rtl" : "ltr";
+
   return (
-    <html lang="en" className={cn("h-full antialiased", "font-sans", geist.variable)} suppressHydrationWarning>
+    <html
+      lang={locale}
+      dir={dir}
+      className={cn("h-full antialiased", "font-sans", geist.variable)}
+      suppressHydrationWarning
+    >
       <head>
         {/* Set the theme before hydration to avoid a flash of the wrong theme. */}
         <script
@@ -28,7 +39,9 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
-        <Providers>{children}</Providers>
+        <Providers locale={locale} messages={messages}>
+          {children}
+        </Providers>
       </body>
     </html>
   );

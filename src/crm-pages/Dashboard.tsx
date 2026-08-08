@@ -35,6 +35,7 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { useAuth } from "@/providers/keycloak-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { useDashboard, useTeamPerformance } from "@/features/reports/hooks/useReports";
@@ -63,11 +64,12 @@ const STAGE_COLORS: Record<string, string> = {
 
 const SOURCE_COLORS = ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#0ea5e9"];
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-function monthLabel(ym: string): string {
+function monthLabel(ym: string, locale: string): string {
   const parts = ym.split("-");
+  const y = Number(parts[0]);
   const m = Number(parts[1]);
-  return Number.isFinite(m) && m >= 1 && m <= 12 ? MONTHS[m - 1] : ym;
+  if (!Number.isFinite(y) || !Number.isFinite(m) || m < 1 || m > 12) return ym;
+  return new Intl.DateTimeFormat(locale, { month: "short" }).format(new Date(y, m - 1, 1));
 }
 
 /* ------------------------------------------------------------------ */
@@ -158,9 +160,10 @@ function QuickAction({
 /* ------------------------------------------------------------------ */
 
 function RepLeaderboard({ reps }: { reps: RepPerformance[] }) {
+  const t = useTranslations("dashboard");
   const max = Math.max(1, ...reps.map((r) => r.wonValue));
   if (reps.length === 0) {
-    return <p className="py-8 text-center text-sm text-slate-400">No closed-won deals yet.</p>;
+    return <p className="py-8 text-center text-sm text-slate-400">{t("panels.noClosedWonDeals")}</p>;
   }
   return (
     <div className="space-y-3">
@@ -191,7 +194,7 @@ function RepLeaderboard({ reps }: { reps: RepPerformance[] }) {
               <div className="h-full rounded-full bg-indigo-600" style={{ width: `${(rep.wonValue / max) * 100}%` }} />
             </div>
             <p className="mt-0.5 text-[11px] text-slate-400 dark:text-slate-500">
-              {rep.wonCount} won · {rep.winRate}% win rate · {rep.openCount} open
+              {t("leaderboard.statsLine", { won: rep.wonCount, rate: rep.winRate, open: rep.openCount })}
             </p>
           </div>
         </div>
@@ -218,6 +221,8 @@ function FunnelRow({ label, value, total, tint }: { label: string; value: number
 }
 
 function StaffDashboard({ isAdmin }: { isAdmin: boolean }) {
+  const t = useTranslations("dashboard");
+  const locale = useLocale();
   const { theme } = useTheme();
   const dark = theme === "dark";
   const gridStroke = dark ? "#1e293b" : "#eef2f7";
@@ -240,7 +245,7 @@ function StaffDashboard({ isAdmin }: { isAdmin: boolean }) {
     return (
       <div className="flex items-center justify-center gap-2 py-24 text-slate-400">
         <Loader2 size={20} className="animate-spin" />
-        <span>Loading your dashboard…</span>
+        <span>{t("loadingDashboard")}</span>
       </div>
     );
   }
@@ -248,16 +253,16 @@ function StaffDashboard({ isAdmin }: { isAdmin: boolean }) {
   if (dashboardQuery.isError || !data) {
     return (
       <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
-        Failed to load dashboard.{" "}
+        {t("failedToLoad")}{" "}
         <button className="underline" onClick={() => dashboardQuery.refetch()}>
-          Retry
+          {t("retry")}
         </button>
       </div>
     );
   }
 
   const { totals, pipeline, funnel, revenueByMonth, leadsBySource, topReps } = data;
-  const revenueData = revenueByMonth.map((p) => ({ ...p, label: monthLabel(p.month) }));
+  const revenueData = revenueByMonth.map((p) => ({ ...p, label: monthLabel(p.month, locale) }));
   const stageData = pipeline.byStage.filter((b) => b.stage !== "closed_lost");
   const maxStageValue = Math.max(1, ...stageData.map((b) => b.totalAmount));
 
@@ -266,30 +271,30 @@ function StaffDashboard({ isAdmin }: { isAdmin: boolean }) {
       {/* Primary KPIs */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          label="Open pipeline"
+          label={t("stats.openPipeline")}
           value={compactCurrency.format(pipeline.openValue)}
-          sub={`${pipeline.openCount} open deals`}
+          sub={t("stats.openDeals", { count: pipeline.openCount })}
           icon={BadgeDollarSign}
           accent="bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400"
         />
         <StatCard
-          label="Weighted forecast"
+          label={t("stats.weightedForecast")}
           value={compactCurrency.format(pipeline.weightedValue)}
-          sub="Probability-adjusted"
+          sub={t("stats.probabilityAdjusted")}
           icon={Scale}
           accent="bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400"
         />
         <StatCard
-          label="Won this month"
+          label={t("stats.wonThisMonth")}
           value={compactCurrency.format(pipeline.wonThisMonthValue)}
-          sub={`${pipeline.wonThisMonthCount} deals closed`}
+          sub={t("stats.dealsClosed", { count: pipeline.wonThisMonthCount })}
           icon={TrendingUp}
           accent="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400"
         />
         <StatCard
-          label="Win rate"
+          label={t("stats.winRate")}
           value={`${pipeline.winRate}%`}
-          sub="Closed-won of decided"
+          sub={t("stats.closedWonOfDecided")}
           icon={Percent}
           accent="bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400"
         />
@@ -298,30 +303,30 @@ function StaffDashboard({ isAdmin }: { isAdmin: boolean }) {
       {/* Secondary KPIs */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
-          label="Active customers"
+          label={t("stats.activeCustomers")}
           value={totals.activeCustomers.toLocaleString()}
-          sub={`${totals.customers.toLocaleString()} total`}
+          sub={t("stats.totalCustomers", { count: totals.customers.toLocaleString() })}
           icon={Users}
           accent="bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
         />
         <StatCard
-          label="Open tickets"
+          label={t("stats.openTickets")}
           value={totals.openTickets.toLocaleString()}
-          sub="Awaiting resolution"
+          sub={t("stats.awaitingResolution")}
           icon={LifeBuoy}
           accent="bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400"
         />
         <StatCard
-          label="Pending tasks"
+          label={t("stats.pendingTasks")}
           value={totals.pendingTasks.toLocaleString()}
-          sub="To do"
+          sub={t("stats.todo")}
           icon={CheckCircle2}
           accent="bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400"
         />
         <StatCard
-          label="Overdue tasks"
+          label={t("stats.overdueTasks")}
           value={totals.overdueTasks.toLocaleString()}
-          sub={totals.overdueTasks > 0 ? "Needs attention" : "All caught up"}
+          sub={totals.overdueTasks > 0 ? t("stats.needsAttention") : t("stats.allCaughtUp")}
           icon={AlertTriangle}
           accent={
             totals.overdueTasks > 0
@@ -333,21 +338,21 @@ function StaffDashboard({ isAdmin }: { isAdmin: boolean }) {
 
       {/* Quick actions */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <QuickAction href="/leads" icon={Target} label="Capture lead" />
-        <QuickAction href="/opportunities" icon={Filter} label="New opportunity" />
-        <QuickAction href="/customers" icon={Contact} label="Add customer" />
-        <QuickAction href="/reports" icon={TrendingUp} label="View reports" />
+        <QuickAction href="/leads" icon={Target} label={t("quickActions.captureLead")} />
+        <QuickAction href="/opportunities" icon={Filter} label={t("quickActions.newOpportunity")} />
+        <QuickAction href="/customers" icon={Contact} label={t("quickActions.addCustomer")} />
+        <QuickAction href="/reports" icon={TrendingUp} label={t("quickActions.viewReports")} />
       </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Panel
-          title="Revenue (closed-won)"
-          subtitle="Last 12 months"
+          title={t("panels.revenue")}
+          subtitle={t("panels.last12Months")}
           className="lg:col-span-2"
           action={
             <Link href="/reports" className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400">
-              Full reports <ArrowRight size={14} />
+              {t("panels.fullReports")} <ArrowRight size={14} />
             </Link>
           }
         >
@@ -370,7 +375,7 @@ function StaffDashboard({ isAdmin }: { isAdmin: boolean }) {
                   width={64}
                 />
                 <Tooltip
-                  formatter={(v: number) => [currency.format(v), "Won"]}
+                  formatter={(v: number) => [currency.format(v), t("wonTooltip")]}
                   contentStyle={tooltipStyle}
                   itemStyle={tooltipText}
                   labelStyle={tooltipText}
@@ -381,9 +386,9 @@ function StaffDashboard({ isAdmin }: { isAdmin: boolean }) {
           </div>
         </Panel>
 
-        <Panel title="Leads by source" subtitle="New lead origins">
+        <Panel title={t("panels.leadsBySource")} subtitle={t("panels.newLeadOrigins")}>
           {leadsBySource.length === 0 ? (
-            <p className="py-16 text-center text-sm text-slate-400">No leads yet.</p>
+            <p className="py-16 text-center text-sm text-slate-400">{t("panels.noLeadsYet")}</p>
           ) : (
             <div className="flex h-64 flex-col">
               <div className="min-h-0 flex-1">
@@ -402,7 +407,7 @@ function StaffDashboard({ isAdmin }: { isAdmin: boolean }) {
                       ))}
                     </Pie>
                     <Tooltip
-                      formatter={(v: number, n: string) => [`${v} leads`, n]}
+                      formatter={(v: number, n: string) => [t("panels.leadsUnit", { count: v }), n]}
                       contentStyle={tooltipStyle}
                       itemStyle={tooltipText}
                       labelStyle={tooltipText}
@@ -425,9 +430,9 @@ function StaffDashboard({ isAdmin }: { isAdmin: boolean }) {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Pipeline by stage */}
-        <Panel title="Pipeline by stage" subtitle="Open deal value" className="lg:col-span-2">
+        <Panel title={t("panels.pipelineByStage")} subtitle={t("panels.openDealValue")} className="lg:col-span-2">
           {stageData.every((b) => b.count === 0) ? (
-            <p className="py-12 text-center text-sm text-slate-400">No open deals in the pipeline.</p>
+            <p className="py-12 text-center text-sm text-slate-400">{t("panels.noOpenDeals")}</p>
           ) : (
             <div className="space-y-4 py-1">
               {stageData.map((b) => (
@@ -435,7 +440,7 @@ function StaffDashboard({ isAdmin }: { isAdmin: boolean }) {
                   <div className="mb-1 flex items-center justify-between text-sm">
                     <span className="font-medium text-slate-600 dark:text-slate-300">
                       {STAGE_LABELS[b.stage]}{" "}
-                      <span className="text-xs text-slate-400 dark:text-slate-500">· {b.count} deals</span>
+                      <span className="text-xs text-slate-400 dark:text-slate-500">· {t("panels.dealsUnit", { count: b.count })}</span>
                     </span>
                     <span className="font-semibold text-slate-900 dark:text-white">{currency.format(b.totalAmount)}</span>
                   </div>
@@ -455,48 +460,48 @@ function StaffDashboard({ isAdmin }: { isAdmin: boolean }) {
         </Panel>
 
         {/* Lead funnel */}
-        <Panel title="Lead funnel" subtitle={`${funnel.conversionRate}% conversion`}>
+        <Panel title={t("panels.leadFunnel")} subtitle={t("panels.conversionRate", { rate: funnel.conversionRate })}>
           <div className="space-y-4 py-1">
-            <FunnelRow label="Total leads" value={funnel.totalLeads} total={funnel.totalLeads} tint="bg-slate-400" />
-            <FunnelRow label="Contacted" value={funnel.contacted} total={funnel.totalLeads} tint="bg-sky-500" />
-            <FunnelRow label="Qualified" value={funnel.qualified} total={funnel.totalLeads} tint="bg-indigo-500" />
-            <FunnelRow label="Converted" value={funnel.converted} total={funnel.totalLeads} tint="bg-emerald-500" />
+            <FunnelRow label={t("funnel.totalLeads")} value={funnel.totalLeads} total={funnel.totalLeads} tint="bg-slate-400" />
+            <FunnelRow label={t("funnel.contacted")} value={funnel.contacted} total={funnel.totalLeads} tint="bg-sky-500" />
+            <FunnelRow label={t("funnel.qualified")} value={funnel.qualified} total={funnel.totalLeads} tint="bg-indigo-500" />
+            <FunnelRow label={t("funnel.converted")} value={funnel.converted} total={funnel.totalLeads} tint="bg-emerald-500" />
           </div>
         </Panel>
       </div>
 
       {/* Leaderboards */}
       <div className={cn("grid grid-cols-1 gap-6", isAdmin && "lg:grid-cols-2")}>
-        <Panel title="Top performers" subtitle="By closed-won value">
+        <Panel title={t("panels.topPerformers")} subtitle={t("panels.byClosedWonValue")}>
           <RepLeaderboard reps={topReps} />
         </Panel>
 
         {isAdmin && (
-          <Panel title="Team performance" subtitle="Won value by team">
+          <Panel title={t("panels.teamPerformance")} subtitle={t("panels.wonValueByTeam")}>
             {!team || team.teams.length === 0 ? (
               <p className="py-8 text-center text-sm text-slate-400">
-                {teamQuery.isLoading ? "Loading teams…" : "No team data yet."}
+                {teamQuery.isLoading ? t("panels.loadingTeams") : t("panels.noTeamData")}
               </p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-slate-100 text-left text-xs uppercase tracking-wider text-slate-400 dark:border-slate-800">
-                      <th className="pb-2 font-semibold">Team</th>
-                      <th className="pb-2 text-center font-semibold">Members</th>
-                      <th className="pb-2 text-right font-semibold">Won</th>
-                      <th className="pb-2 text-right font-semibold">Win rate</th>
+                    <tr className="border-b border-slate-100 text-start text-xs uppercase tracking-wider text-slate-400 dark:border-slate-800">
+                      <th className="pb-2 font-semibold">{t("table.team")}</th>
+                      <th className="pb-2 text-center font-semibold">{t("table.members")}</th>
+                      <th className="pb-2 text-end font-semibold">{t("table.won")}</th>
+                      <th className="pb-2 text-end font-semibold">{t("table.winRate")}</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {team.teams.map((t) => (
-                      <tr key={t.teamId} className="border-b border-slate-50 last:border-0 dark:border-slate-800/60">
-                        <td className="py-2.5 font-medium text-slate-700 dark:text-slate-200">{t.teamName}</td>
-                        <td className="py-2.5 text-center text-slate-500 dark:text-slate-400">{t.memberCount}</td>
-                        <td className="py-2.5 text-right font-semibold text-slate-900 dark:text-white">
-                          {currency.format(t.wonValue)}
+                    {team.teams.map((row) => (
+                      <tr key={row.teamId} className="border-b border-slate-50 last:border-0 dark:border-slate-800/60">
+                        <td className="py-2.5 font-medium text-slate-700 dark:text-slate-200">{row.teamName}</td>
+                        <td className="py-2.5 text-center text-slate-500 dark:text-slate-400">{row.memberCount}</td>
+                        <td className="py-2.5 text-end font-semibold text-slate-900 dark:text-white">
+                          {currency.format(row.wonValue)}
                         </td>
-                        <td className="py-2.5 text-right text-slate-500 dark:text-slate-400">{t.winRate}%</td>
+                        <td className="py-2.5 text-end text-slate-500 dark:text-slate-400">{row.winRate}%</td>
                       </tr>
                     ))}
                   </tbody>
@@ -524,12 +529,13 @@ const STATUS_STYLES: Record<TicketStatus, string> = {
 };
 
 function CustomerDashboard() {
+  const t = useTranslations("dashboard");
   const { myTicketsQuery } = useMyTickets(true);
   const tickets: Ticket[] = myTicketsQuery.data ?? [];
 
-  const open = tickets.filter((t) => OPEN_STATUSES.includes(t.status)).length;
-  const waiting = tickets.filter((t) => t.status === "waiting_on_customer").length;
-  const resolved = tickets.filter((t) => t.status === "resolved" || t.status === "closed").length;
+  const open = tickets.filter((tk) => OPEN_STATUSES.includes(tk.status)).length;
+  const waiting = tickets.filter((tk) => tk.status === "waiting_on_customer").length;
+  const resolved = tickets.filter((tk) => tk.status === "resolved" || tk.status === "closed").length;
 
   const recent = [...tickets]
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
@@ -538,12 +544,12 @@ function CustomerDashboard() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Total tickets" value={tickets.length} icon={Inbox} accent="bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300" />
-        <StatCard label="Open" value={open} sub="Being worked on" icon={LifeBuoy} accent="bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400" />
+        <StatCard label={t("stats.totalTickets")} value={tickets.length} icon={Inbox} accent="bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300" />
+        <StatCard label={t("stats.open")} value={open} sub={t("stats.beingWorkedOn")} icon={LifeBuoy} accent="bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400" />
         <StatCard
-          label="Waiting on you"
+          label={t("stats.waitingOnYou")}
           value={waiting}
-          sub={waiting > 0 ? "Action needed" : "Nothing pending"}
+          sub={waiting > 0 ? t("stats.actionNeeded") : t("stats.nothingPending")}
           icon={Clock}
           accent={
             waiting > 0
@@ -551,44 +557,44 @@ function CustomerDashboard() {
               : "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400"
           }
         />
-        <StatCard label="Resolved" value={resolved} icon={CheckCircle2} accent="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400" />
+        <StatCard label={t("stats.resolved")} value={resolved} icon={CheckCircle2} accent="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400" />
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <QuickAction href="/tickets" icon={Plus} label="Open a support ticket" />
-        <QuickAction href="/faq" icon={LifeBuoy} label="Browse the help center" />
+        <QuickAction href="/tickets" icon={Plus} label={t("quickActions.openSupportTicket")} />
+        <QuickAction href="/faq" icon={LifeBuoy} label={t("quickActions.browseHelpCenter")} />
       </div>
 
       <Panel
-        title="Your recent tickets"
-        subtitle="Latest activity"
+        title={t("panels.yourRecentTickets")}
+        subtitle={t("panels.latestActivity")}
         action={
           <Link href="/tickets" className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400">
-            View all <ArrowRight size={14} />
+            {t("panels.viewAll")} <ArrowRight size={14} />
           </Link>
         }
       >
         {myTicketsQuery.isLoading ? (
           <div className="flex items-center justify-center gap-2 py-12 text-slate-400">
-            <Loader2 size={18} className="animate-spin" /> Loading tickets…
+            <Loader2 size={18} className="animate-spin" /> {t("panels.loadingTickets")}
           </div>
         ) : recent.length === 0 ? (
           <div className="py-12 text-center">
             <TicketCheck size={32} className="mx-auto mb-2 text-slate-300 dark:text-slate-600" />
-            <p className="text-sm text-slate-400">You have no tickets yet.</p>
+            <p className="text-sm text-slate-400">{t("panels.noTicketsYet")}</p>
             <Link href="/tickets" className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 dark:text-indigo-400">
-              Open your first ticket <ArrowRight size={14} />
+              {t("panels.openFirstTicket")} <ArrowRight size={14} />
             </Link>
           </div>
         ) : (
           <ul className="divide-y divide-slate-100 dark:divide-slate-800">
-            {recent.map((t) => (
-              <li key={t.id}>
+            {recent.map((tk) => (
+              <li key={tk.id}>
                 <Link href="/tickets" className="flex items-center gap-3 py-3 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                  <span className="font-mono text-xs text-slate-400 dark:text-slate-500">#{t.number}</span>
-                  <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-700 dark:text-slate-200">{t.subject}</span>
-                  <span className={cn("shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold", STATUS_STYLES[t.status])}>
-                    {TICKET_STATUS_LABELS[t.status]}
+                  <span className="font-mono text-xs text-slate-400 dark:text-slate-500">#{tk.number}</span>
+                  <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-700 dark:text-slate-200">{tk.subject}</span>
+                  <span className={cn("shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold", STATUS_STYLES[tk.status])}>
+                    {TICKET_STATUS_LABELS[tk.status]}
                   </span>
                 </Link>
               </li>
@@ -606,11 +612,12 @@ function CustomerDashboard() {
 
 export function Dashboard() {
   const { user } = useAuth();
+  const t = useTranslations("dashboard");
   const role = user?.role;
   const isCustomer = role === "Customer";
   const isAdmin = role === "Admin" || role === "Administrator";
 
-  const greetingName = user?.firstName || user?.username || "there";
+  const greetingName = user?.firstName || user?.username || t("there");
 
   return (
     <div className="min-h-full p-4 sm:p-6 lg:p-8">
@@ -618,12 +625,12 @@ export function Dashboard() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-              Welcome back, {greetingName}
+              {t("greeting", { name: greetingName })}
             </h1>
             <p className="text-sm text-slate-500 dark:text-slate-400">
               {isCustomer
-                ? "Track your support requests and get help."
-                : "Here's what's happening across your CRM today."}
+                ? t("subtitleCustomer")
+                : t("subtitleStaff")}
             </p>
           </div>
           {role && (

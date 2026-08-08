@@ -16,12 +16,13 @@ const renderPage = (auth = { user: adminUser }) => renderWithProviders(<UsersPag
 describe("UsersPage — loading, empty, error", () => {
   it("shows a loading state", async () => {
     mockPending("/users/staff");
+    mockGets({ "/roles": [] });
     renderPage();
     expect(await screen.findByRole("heading", { name: /Team Management/ })).toBeInTheDocument();
   });
 
   it("shows the empty state", async () => {
-    mockGets({ "/users/staff": [] });
+    mockGets({ "/users/staff": [], "/roles": [] });
     renderPage();
     expect(await screen.findByText(/No team members found/)).toBeInTheDocument();
   });
@@ -30,6 +31,7 @@ describe("UsersPage — loading, empty, error", () => {
   // the shell and the empty row rather than crashing.
   it("degrades to the empty state when the directory fetch fails", async () => {
     mockGetError("/users/staff", 403, "Only admins can list staff");
+    mockGets({ "/roles": [] });
     renderPage();
 
     expect(await screen.findByRole("heading", { name: /Team Management/ })).toBeInTheDocument();
@@ -39,7 +41,7 @@ describe("UsersPage — loading, empty, error", () => {
 
 describe("UsersPage — staff directory", () => {
   it("lists staff names, emails and roles", async () => {
-    mockGets({ "/users/staff": staff });
+    mockGets({ "/users/staff": staff, "/roles": [] });
     renderPage();
 
     expect(await screen.findByText("Ada Admin")).toBeInTheDocument();
@@ -48,7 +50,7 @@ describe("UsersPage — staff directory", () => {
   });
 
   it("filters the directory by name or email", async () => {
-    mockGets({ "/users/staff": staff });
+    mockGets({ "/users/staff": staff, "/roles": [] });
     const { user } = renderPage();
     await screen.findByText("Ada Admin");
 
@@ -61,13 +63,13 @@ describe("UsersPage — staff directory", () => {
 
 describe("UsersPage — role gating", () => {
   it("shows Add Staff Member to an admin", async () => {
-    mockGets({ "/users/staff": staff });
+    mockGets({ "/users/staff": staff, "/roles": [] });
     renderPage();
     expect(await screen.findByRole("button", { name: /Add Staff/ })).toBeInTheDocument();
   });
 
   it("hides Add Staff Member from a non-admin", async () => {
-    mockGets({ "/users/staff": staff });
+    mockGets({ "/users/staff": staff, "/roles": [] });
     renderPage({ user: staffUser });
     await screen.findByText("Ada Admin");
     expect(screen.queryByRole("button", { name: /Add Staff/ })).not.toBeInTheDocument();
@@ -76,7 +78,7 @@ describe("UsersPage — role gating", () => {
 
 describe("UsersPage — invite flow", () => {
   it("posts the invite with the chosen role", async () => {
-    mockGets({ "/users/staff": staff });
+    mockGets({ "/users/staff": staff, "/roles": [] });
     const write = captureWrite("post", "/users", () => HttpResponse.json(staff[1]) as unknown as Response);
     const { user } = renderPage();
     await screen.findByText("Ada Admin");
@@ -95,7 +97,7 @@ describe("UsersPage — invite flow", () => {
   });
 
   it("never sends a password — the invite email sets it", async () => {
-    mockGets({ "/users/staff": staff });
+    mockGets({ "/users/staff": staff, "/roles": [] });
     const write = captureWrite("post", "/users", () => HttpResponse.json(staff[1]) as unknown as Response);
     const { user } = renderPage();
     await screen.findByText("Ada Admin");
@@ -112,7 +114,7 @@ describe("UsersPage — invite flow", () => {
   });
 
   it("reports a duplicate-email rejection", async () => {
-    mockGets({ "/users/staff": staff });
+    mockGets({ "/users/staff": staff, "/roles": [] });
     mockWriteError("post", "/users", 409, "User already exists");
     const { user } = renderPage();
     await screen.findByText("Ada Admin");

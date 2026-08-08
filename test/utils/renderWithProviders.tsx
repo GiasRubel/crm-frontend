@@ -2,9 +2,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, type RenderOptions, type RenderResult } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
+import { NextIntlClientProvider } from "next-intl";
 import type { ReactElement, ReactNode } from "react";
 import { KeycloakProvider, type UserProfile } from "@/providers/keycloak-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
+import enMessages from "@/i18n/messages/en.json";
 import { server } from "../msw/server";
 
 /** A fresh client per test: no retries (errors surface immediately) and no cache bleed. */
@@ -83,11 +85,13 @@ export function renderWithProviders(
   if (auth !== false) mockAuthSession(auth ?? {});
 
   const wrapper = ({ children }: { children: ReactNode }) => (
-    <ThemeProvider>
-      <QueryClientProvider client={queryClient}>
-        <KeycloakProvider>{children}</KeycloakProvider>
-      </QueryClientProvider>
-    </ThemeProvider>
+    <NextIntlClientProvider locale="en" messages={enMessages}>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <KeycloakProvider>{children}</KeycloakProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
+    </NextIntlClientProvider>
   );
 
   return {

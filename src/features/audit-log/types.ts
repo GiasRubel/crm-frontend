@@ -23,7 +23,10 @@ export type AuditEntityType =
   | "automation_rule"
   | "user"
   | "organization"
-  | "auth";
+  | "auth"
+  | "custom_field_definition"
+  | "attachment"
+  | "custom_role";
 
 export const ACTION_LABELS: Record<AuditAction, string> = {
   create: "Created",
@@ -52,6 +55,9 @@ export const ENTITY_TYPE_LABELS: Record<AuditEntityType, string> = {
   user: "Staff user",
   organization: "Organization",
   auth: "Sign-in",
+  custom_field_definition: "Custom field",
+  attachment: "Attachment",
+  custom_role: "Role",
 };
 
 export interface AuditFieldChange {

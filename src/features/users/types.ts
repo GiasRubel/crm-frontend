@@ -5,6 +5,8 @@ export interface StaffUser {
   firstName: string;
   lastName: string;
   role: string;
+  customRoleId: string | null;
+  customRoleName: string | null;
 }
 
 export type StaffRole = "User" | "Admin" | "Administrator";

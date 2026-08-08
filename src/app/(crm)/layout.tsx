@@ -64,7 +64,7 @@ export default function CrmLayout({
   return (
     <div className="flex min-h-screen bg-slate-50/50 dark:bg-slate-950">
       <Sidebar />
-      <div className="flex min-w-0 flex-1 flex-col lg:ml-64 transition-all duration-300">
+      <div className="flex min-w-0 flex-1 flex-col lg:ms-64 transition-all duration-300">
         {isLocked && (
           <Alert variant="destructive" className="rounded-none border-b border-rose-500/20 bg-rose-500/10 text-rose-200 py-3 px-6 flex items-center justify-between gap-4">
             <div className="flex items-center gap-2.5">

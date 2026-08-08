@@ -4,6 +4,7 @@ import { useAuth } from "@/providers/keycloak-provider";
 import { apiClient } from "@/lib/api-client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { LogIn, ArrowRight, ShieldCheck, Mail } from "lucide-react";
 
@@ -43,6 +44,7 @@ function FacebookIcon() {
 export default function LoginPage() {
   const { login, loginWithProvider, loginLocal, authenticated, isLoading } = useAuth();
   const router = useRouter();
+  const t = useTranslations("auth.login");
 
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [stage, setStage] = useState<"email" | "password">("email");
@@ -73,7 +75,7 @@ export default function LoginPage() {
         login();
       }
     } catch {
-      setError("Something went wrong — please try again.");
+      setError(t("genericError"));
     } finally {
       setSubmitting(false);
     }
@@ -102,9 +104,9 @@ export default function LoginPage() {
   return (
     <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-800/80 rounded-3xl shadow-2xl p-8 transition-all duration-300">
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Welcome Back</h2>
+        <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{t("welcomeBack")}</h2>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
-          Securely sign in to manage your leads, customers, and operations.
+          {t("subtitle")}
         </p>
       </div>
 
@@ -117,7 +119,7 @@ export default function LoginPage() {
                   type="email"
                   required
                   autoFocus
-                  placeholder="you@company.com"
+                  placeholder={t("emailPlaceholder")}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-800/50 px-4 py-3.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -127,19 +129,19 @@ export default function LoginPage() {
                   disabled={submitting}
                   className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 px-5 py-4 text-sm font-semibold text-white shadow-lg active:scale-[0.98] transition-all duration-200 disabled:opacity-60"
                 >
-                  Continue
+                  {t("continue")}
                 </button>
               </form>
             ) : (
               <form onSubmit={handlePasswordSubmit} className="space-y-3">
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Signing in as <span className="font-medium">{email}</span>
+                  {t("signingInAs", { email })}
                 </p>
                 <input
                   type="password"
                   required
                   autoFocus
-                  placeholder="Password"
+                  placeholder={t("passwordPlaceholder")}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-800/50 px-4 py-3.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -149,7 +151,7 @@ export default function LoginPage() {
                   disabled={submitting}
                   className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 px-5 py-4 text-sm font-semibold text-white shadow-lg active:scale-[0.98] transition-all duration-200 disabled:opacity-60"
                 >
-                  Sign In
+                  {t("signIn")}
                 </button>
               </form>
             )}
@@ -164,7 +166,7 @@ export default function LoginPage() {
                 }}
                 className="text-sm text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-200"
               >
-                Back to sign-in options
+                {t("backToOptions")}
               </button>
             </div>
 
@@ -172,7 +174,7 @@ export default function LoginPage() {
             <div className="relative flex py-1 items-center">
               <div className="flex-grow border-t border-slate-200/80 dark:border-slate-800/80" />
               <span className="flex-shrink mx-4 text-xs text-slate-400 uppercase tracking-widest font-semibold">
-                or
+                {t("or")}
               </span>
               <div className="flex-grow border-t border-slate-200/80 dark:border-slate-800/80" />
             </div>
@@ -185,7 +187,7 @@ export default function LoginPage() {
             className="flex w-full items-center justify-center gap-2.5 rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800 px-5 py-4 text-sm font-semibold text-slate-700 dark:text-slate-200 shadow-sm hover:shadow-md active:scale-[0.98] transition-all duration-200"
           >
             <Mail className="h-5 w-5" />
-            <span>Sign in with Email</span>
+            <span>{t("signInWithEmail")}</span>
           </button>
         )}
 
@@ -196,7 +198,7 @@ export default function LoginPage() {
           className="group relative flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 px-5 py-4 text-sm font-semibold text-white shadow-lg hover:shadow-indigo-500/20 active:scale-[0.98] transition-all duration-200"
         >
           <LogIn className="h-5 w-5 opacity-90 group-hover:scale-110 transition-transform duration-200" />
-          <span>Sign In with Keycloak</span>
+          <span>{t("signInWithKeycloak")}</span>
           <ArrowRight className="h-4 w-4 opacity-70 group-hover:translate-x-1 transition-transform duration-200" />
         </button>
 
@@ -206,7 +208,7 @@ export default function LoginPage() {
             href="/auth/forgot-password"
             className="text-sm text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-200"
           >
-            Forgot your password?
+            {t("forgotPassword")}
           </Link>
         </div>
 
@@ -214,7 +216,7 @@ export default function LoginPage() {
         <div className="relative flex py-1 items-center">
           <div className="flex-grow border-t border-slate-200/80 dark:border-slate-800/80" />
           <span className="flex-shrink mx-4 text-xs text-slate-400 uppercase tracking-widest font-semibold">
-            or continue with
+            {t("orContinueWith")}
           </span>
           <div className="flex-grow border-t border-slate-200/80 dark:border-slate-800/80" />
         </div>
@@ -227,7 +229,7 @@ export default function LoginPage() {
             className="flex items-center justify-center gap-2.5 rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800 px-4 py-3.5 text-sm font-semibold text-slate-700 dark:text-slate-200 shadow-sm hover:shadow-md active:scale-[0.98] transition-all duration-200"
           >
             <GoogleIcon />
-            <span>Google</span>
+            <span>{t("google")}</span>
           </button>
 
           <button
@@ -236,7 +238,7 @@ export default function LoginPage() {
             className="flex items-center justify-center gap-2.5 rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800 px-4 py-3.5 text-sm font-semibold text-slate-700 dark:text-slate-200 shadow-sm hover:shadow-md active:scale-[0.98] transition-all duration-200"
           >
             <FacebookIcon />
-            <span>Facebook</span>
+            <span>{t("facebook")}</span>
           </button>
         </div>
 
@@ -244,7 +246,7 @@ export default function LoginPage() {
         <div className="relative flex py-1 items-center">
           <div className="flex-grow border-t border-slate-200/80 dark:border-slate-800/80" />
           <span className="flex-shrink mx-4 text-xs text-slate-400 uppercase tracking-widest font-semibold">
-            New to CRM Pro?
+            {t("newToCrm")}
           </span>
           <div className="flex-grow border-t border-slate-200/80 dark:border-slate-800/80" />
         </div>
@@ -253,13 +255,13 @@ export default function LoginPage() {
           href="/auth/register"
           className="flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40 px-5 py-4 text-sm font-semibold text-slate-700 dark:text-slate-300 active:scale-[0.98] transition-all duration-200"
         >
-          Create an Account
+          {t("createAnAccount")}
         </a>
       </div>
 
       <div className="mt-6 flex items-center justify-center gap-2 text-xs text-slate-400 dark:text-slate-500">
         <ShieldCheck className="h-4 w-4 text-emerald-500" />
-        <span>Enterprise-grade Single Sign-On enabled</span>
+        <span>{t("ssoEnabled")}</span>
       </div>
     </div>
   );
