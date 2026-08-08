@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CRM Pro — User Manual</title>
+<style>
+  :root {
+    --brand: #3F51B5;
+    --brand-dark: #303F9F;
+    --ink: #1a1f36;
+    --muted: #5b6472;
+    --line: #e3e6ec;
+    --bg-soft: #f4f5f7;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    background: #ffffff;
+    line-height: 1.6;
+  }
+  .cover {
+    background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+    color: #fff;
+    padding: 64px 40px;
+    text-align: center;
+  }
+  .cover h1 { font-size: 2.4rem; margin: 0 0 8px; }
+  .cover p { margin: 0; opacity: .9; font-size: 1.05rem; }
+  .cover .meta { margin-top: 24px; font-size: .85rem; opacity: .75; }
+  .toolbar {
+    position: sticky; top: 0; z-index: 10;
+    background: #fff; border-bottom: 1px solid var(--line);
+    padding: 10px 24px; display: flex; gap: 10px; justify-content: flex-end; align-items: center;
+  }
+  .toolbar button {
+    background: var(--brand); color: #fff; border: none; border-radius: 6px;
+    padding: 8px 16px; font-size: .85rem; font-weight: 600; cursor: pointer;
+  }
+  .toolbar button:hover { background: var(--brand-dark); }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 40px 24px 100px; }
+  .toc {
+    background: var(--bg-soft); border: 1px solid var(--line); border-radius: 10px;
+    padding: 24px 28px; margin: 32px 0;
+  }
+  .toc h2 { margin-top: 0; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+  .toc ol { margin: 0; padding-left: 20px; columns: 2; column-gap: 32px; }
+  .toc a { color: var(--brand-dark); text-decoration: none; font-size: .92rem; }
+  .toc a:hover { text-decoration: underline; }
+  section { margin: 56px 0; scroll-margin-top: 70px; }
+  section h2 {
+    font-size: 1.5rem; color: var(--brand-dark); border-bottom: 2px solid var(--line);
+    padding-bottom: 10px; margin-bottom: 18px;
+  }
+  section h3 { font-size: 1.1rem; margin-top: 28px; color: var(--ink); }
+  p { color: #2b2f38; }
+  ul, ol { color: #2b2f38; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: .92rem; }
+  th, td { border: 1px solid var(--line); padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: var(--bg-soft); font-weight: 600; }
+  code { background: var(--bg-soft); padding: 1px 6px; border-radius: 4px; font-size: .88em; }
+  .note {
+    background: #eef1fb; border-left: 4px solid var(--brand); padding: 12px 16px;
+    border-radius: 4px; margin: 16px 0; font-size: .92rem;
+  }
+  .role-badge {
+    display: inline-block; background: var(--bg-soft); border: 1px solid var(--line);
+    border-radius: 999px; padding: 2px 10px; font-size: .78rem; margin: 2px 4px 2px 0; color: var(--muted);
+  }
+  footer { text-align: center; color: var(--muted); font-size: .8rem; padding: 40px 0; border-top: 1px solid var(--line); }
+  @media print {
+    .toolbar { display: none; }
+    .cover { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    section { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <button onclick="window.print()">Download as PDF</button>
+  <a href="/user-manual.html" download="CRM-Pro-User-Manual.html">
+    <button style="background:#fff;color:#3F51B5;border:1px solid #3F51B5;">Download HTML</button>
+  </a>
+</div>
+
+<div class="cover">
+  <h1>CRM Pro</h1>
+  <p>Complete User Manual</p>
+  <div class="meta">Covers Leads &amp; Pipeline · Accounts &amp; Contacts · Activities · Automation · Service &amp; Support · Reporting · Teams · Administration</div>
+</div>
+
+<div class="wrap">
+
+<div class="toc">
+  <h2>Contents</h2>
+  <ol>
+    <li><a href="#getting-started">Getting Started</a></li>
+    <li><a href="#dashboard">Dashboard</a></li>
+    <li><a href="#leads">Leads</a></li>
+    <li><a href="#opportunities">Opportunities &amp; Pipeline</a></li>
+    <li><a href="#accounts-contacts">Accounts &amp; Contacts</a></li>
+    <li><a href="#activities">Activities, Tasks &amp; Calendar</a></li>
+    <li><a href="#automations">Automation &amp; Workflows</a></li>
+    <li><a href="#service">Tickets &amp; Knowledge Base</a></li>
+    <li><a href="#reports">Reports &amp; Analytics</a></li>
+    <li><a href="#teams">Teams &amp; Territories</a></li>
+    <li><a href="#admin">Users, Roles &amp; Permissions</a></li>
+    <li><a href="#settings">Settings, Billing &amp; Licensing</a></li>
+    <li><a href="#faq">Help Center &amp; FAQ</a></li>
+    <li><a href="#glossary">Glossary</a></li>
+  </ol>
+</div>
+
+<section id="getting-started">
+  <h2>1. Getting Started</h2>
+  <p>CRM Pro is a web application — there is nothing to install. Open the app URL in your
+  browser and sign in with the account your administrator created for you.</p>
+  <h3>Signing in</h3>
+  <ul>
+    <li><strong>Company single sign-on:</strong> click <em>Sign in</em> and use your work
+      email/password, or a connected provider (Google/Facebook) if your organization enabled it.</li>
+    <li><strong>Email &amp; password:</strong> some organizations use a direct email/password
+      login instead of single sign-on. Use <em>Forgot password</em> on the login screen if you
+      need a reset link.</li>
+    <li><strong>First-time staff:</strong> you'll receive an email invitation from an
+      administrator with a link to set your password before your first login.</li>
+  </ul>
+  <h3>Finding your way around</h3>
+  <p>Once signed in you land on the <strong>Dashboard</strong>. The left sidebar lists every
+  module you have access to (Leads, Opportunities, Accounts, Contacts, Activities, Tickets,
+  Reports, Automations, Users, Settings). Menu items you can't use are hidden — what you see is
+  based on your role.</p>
+  <div class="note">If a module you expect to see is missing, ask your administrator to check
+  your role and permissions (see <a href="#admin">Users, Roles &amp; Permissions</a>).</div>
+</section>
+
+<section id="dashboard">
+  <h2>2. Dashboard</h2>
+  <p>The Dashboard is your daily starting point. It shows a real-time snapshot of the business:
+  open pipeline value, new leads, tasks due today/overdue, ticket volume, and team performance —
+  scoped to what your role is allowed to see (your own records, your team's, or the whole
+  organization).</p>
+  <p>Charts are click-through: selecting a pipeline stage or a lead-source slice jumps you to the
+  filtered list behind it.</p>
+</section>
+
+<section id="leads">
+  <h2>3. Leads</h2>
+  <p>A <strong>Lead</strong> is a potential customer who hasn't been qualified yet — an inbound
+  web enquiry, a trade-show contact, a cold-call prospect. Leads keep the pipeline free of
+  half-formed records until they're worth turning into a real Account/Contact/Opportunity.</p>
+  <h3>Capturing leads</h3>
+  <ul>
+    <li><strong>Manually:</strong> click <em>New Lead</em> and fill in name, company, contact
+      details and source.</li>
+    <li><strong>Public web form:</strong> the <code>/capture</code> page is a public,
+      no-login form you can embed on your website or share as a link — submissions land directly
+      in the Leads list.</li>
+  </ul>
+  <h3>Scoring &amp; qualification</h3>
+  <p>Leads are automatically scored based on fields like company size, engagement, and source
+  quality, helping reps prioritize hot prospects over tyre-kickers. Move a lead through statuses
+  (New → Contacted → Qualified → Converted/Disqualified) as work progresses.</p>
+  <h3>Converting a lead</h3>
+  <p>Qualifying a lead and clicking <em>Convert</em> creates the real records in one step: an
+  Account (if a company doesn't already exist), a Contact, and an Opportunity — carrying over the
+  lead's details so nothing has to be re-typed.</p>
+  <table>
+    <tr><th>Role</th><th>Can do</th></tr>
+    <tr><td><span class="role-badge">Sales Rep</span></td><td>Create, view and work their own assigned leads</td></tr>
+    <tr><td><span class="role-badge">Manager</span></td><td>View and reassign leads across their team</td></tr>
+    <tr><td><span class="role-badge">Admin</span></td><td>Full access, including lead-routing and scoring configuration</td></tr>
+  </table>
+</section>
+
+<section id="opportunities">
+  <h2>4. Opportunities &amp; Pipeline</h2>
+  <p>An <strong>Opportunity</strong> is a deal in progress with a value, an expected close date,
+  and a stage. The <strong>Pipeline</strong> view is a Kanban board — drag a deal card between
+  stages (e.g. Qualifying → Proposal → Negotiation → Closed Won/Lost) as it advances.</p>
+  <p>Each Opportunity links back to its Account and Contact, so anyone opening the company record
+  can see every deal ever run against it, won or lost.</p>
+  <div class="note">Marking a deal <em>Closed Lost</em> requires a reason — this feeds the loss
+  analysis in Reports.</div>
+</section>
+
+<section id="accounts-contacts">
+  <h2>5. Accounts &amp; Contacts</h2>
+  <p><strong>Accounts</strong> are companies; <strong>Contacts</strong> are the individual people
+  at those companies. This is the central address book every other module (deals, tickets,
+  activities) hangs off.</p>
+  <h3>Accounts</h3>
+  <p>An Account profile holds company details (industry, size, website), every Contact at that
+  company, every Opportunity ever opened with them, and the full interaction history.</p>
+  <h3>Contacts</h3>
+  <p>A Contact record is a person — not necessarily a portal user. You can store a procurement
+  manager's or an assistant's details without granting them a login. Only <strong>Customers</strong>
+  (see Service &amp; Support) get portal access.</p>
+  <p>Communication preferences (e.g. "email only, no calls") are recorded on the Contact and
+  respected by Activities and Automation.</p>
+</section>
+
+<section id="activities">
+  <h2>6. Activities, Tasks &amp; Calendar</h2>
+  <p>Activities are the "what happens next" layer: tasks, calls, meetings and logged
+  communications tied to a Lead, Account, Contact, or Opportunity.</p>
+  <h3>Tasks</h3>
+  <p>Create a task with a due date and owner; it shows up on that person's Dashboard and in the
+  team's workload view so nothing is dropped when someone is out.</p>
+  <h3>Communication log</h3>
+  <p>Every call, email, or meeting note logged against a record appears on a unified timeline —
+  open any Account/Contact/Lead and scroll through its entire history in one place.</p>
+  <h3>Calendar</h3>
+  <p>Export tasks and meetings as an <code>.ics</code> file to subscribe from Outlook, Google
+  Calendar, or Apple Calendar.</p>
+</section>
+
+<section id="automations">
+  <h2>7. Automation &amp; Workflows</h2>
+  <p>Automations turn manual habits into rules the system enforces automatically. An
+  administrator configures trigger-based actions such as:</p>
+  <ul>
+    <li>"When a lead is qualified → create a follow-up task and send a welcome email."</li>
+    <li>"When a record sits untouched for N days → escalate it to the manager (SLA tracking)."</li>
+    <li>"When a new web lead arrives → notify the assigned rep instantly."</li>
+  </ul>
+  <p>This closes the gap between process (what should always happen) and practice (what a
+  busy rep remembers to do).</p>
+</section>
+
+<section id="service">
+  <h2>8. Tickets &amp; Knowledge Base</h2>
+  <p>The helpdesk module keeps the relationship going after a deal closes.</p>
+  <h3>Tickets</h3>
+  <p>Customers (or staff on their behalf) raise support tickets. Staff work them through a
+  status flow with response-time tracking, so "we answer within a day" is a measured SLA, not a
+  hope. Customers with portal accounts see only their own organization's tickets; staff see the
+  full helpdesk queue.</p>
+  <h3>Knowledge Base</h3>
+  <p>Staff author help articles in the KB editor. Published, public articles appear on the
+  <strong>Help Center</strong> (<code>/faq</code>) — a no-login page anyone can search, with
+  helpful/not-helpful feedback on each article, deflecting repeat questions before they become
+  tickets.</p>
+</section>
+
+<section id="reports">
+  <h2>9. Reports &amp; Analytics</h2>
+  <p>Two ways to see the numbers:</p>
+  <ul>
+    <li><strong>Dashboards</strong> — a ready-made, real-time overview of pipeline, conversion
+      rate, revenue and team performance. No setup required.</li>
+    <li><strong>Custom Report Builder</strong> — a point-and-click tool for specific questions
+      the dashboards don't answer, e.g. <em>"All lost opportunities in Q3 where value &gt;
+      $10,000."</em> Save a report and re-run it any time.</li>
+  </ul>
+  <p>Reporting never shows a person more than they can already see elsewhere in the CRM — the
+  same row-level visibility rules apply (see <a href="#teams">Teams &amp; Territories</a>).</p>
+</section>
+
+<section id="teams">
+  <h2>10. Teams &amp; Territories</h2>
+  <p>Teams group users (e.g. "East Region Sales") and determine who can see whose records. An
+  administrator assigns a team to a manager and members; the visibility matrix then controls
+  whether a person sees only their own records, their team's, or every record in the
+  organization.</p>
+  <p>Records (leads, accounts, opportunities) can be assigned to a specific team or territory so
+  work is routed to the right group automatically.</p>
+</section>
+
+<section id="admin">
+  <h2>11. Users, Roles &amp; Permissions</h2>
+  <p>Administrators manage the staff directory under <strong>Users</strong>. Standard roles:</p>
+  <table>
+    <tr><th>Role</th><th>Scope</th></tr>
+    <tr><td>User / Sales Rep</td><td>Everyday CRM user — sees their own and team-assigned records</td></tr>
+    <tr><td>Manager</td><td>Team-wide visibility and reassignment rights</td></tr>
+    <tr><td>Admin / Administrator</td><td>Full organization access, configuration, user management</td></tr>
+    <tr><td>Customer</td><td>Portal-only access — their own tickets and KB articles</td></tr>
+    <tr><td>Platform Admin</td><td>Cross-organization operator role (SaaS deployments only)</td></tr>
+  </table>
+  <p>Custom roles with fine-grained permissions can also be defined for organizations that need
+  more precise control than the standard roles above.</p>
+  <h3>Adding teammates</h3>
+  <p>Use <em>Add Staff</em> on the Users page to invite a new teammate by email — they receive a
+  link to set their password and sign in.</p>
+</section>
+
+<section id="settings">
+  <h2>12. Settings, Billing &amp; Licensing</h2>
+  <p>CRM Pro ships in two modes from a single codebase:</p>
+  <ul>
+    <li><strong>Standalone</strong> — one company, one installation, no subscriptions or billing
+      screens.</li>
+    <li><strong>SaaS</strong> — the CRM operator hosts multiple customer organizations, each on
+      its own subscription plan with self-service billing.</li>
+  </ul>
+  <p>In SaaS mode, an organization's Admin manages their subscription plan and payment details
+  under <strong>Settings → Billing</strong>. In Standalone mode this section is hidden entirely.</p>
+</section>
+
+<section id="faq">
+  <h2>13. Help Center &amp; FAQ</h2>
+  <p>The public Help Center at <code>/faq</code> requires no login. Search or browse by category,
+  read an article, and mark it helpful or not — useful for sending to customers directly, or for
+  staff who want a quick refresher without opening a ticket.</p>
+</section>
+
+<section id="glossary">
+  <h2>14. Glossary</h2>
+  <table>
+    <tr><th>Term</th><th>Meaning</th></tr>
+    <tr><td>Lead</td><td>An unqualified potential customer, not yet a real Account/Contact</td></tr>
+    <tr><td>Account</td><td>A company record</td></tr>
+    <tr><td>Contact</td><td>A person record, linked to an Account</td></tr>
+    <tr><td>Opportunity</td><td>A deal in progress with a value and stage</td></tr>
+    <tr><td>Pipeline</td><td>The Kanban view of Opportunities by stage</td></tr>
+    <tr><td>Activity</td><td>A task, call, meeting or logged communication</td></tr>
+    <tr><td>Automation</td><td>A configured trigger → action rule</td></tr>
+    <tr><td>SLA</td><td>Service-level agreement — a response-time target that can trigger escalation</td></tr>
+    <tr><td>Team / Territory</td><td>A grouping of users and records that controls visibility and routing</td></tr>
+  </table>
+</section>
+
+</div>
+
+<footer>CRM Pro — User Manual · Generated for your organization</footer>
+
+</body>
+</html>
