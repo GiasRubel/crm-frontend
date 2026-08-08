@@ -36,6 +36,7 @@ import {
   X,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/providers/keycloak-provider";
 import { useDebouncedValue } from "@/features/customers/hooks/useCustomers";
 import { initialSearchTermFromUrl } from "@/lib/initial-search-term";
@@ -48,9 +49,7 @@ import {
   Contact,
   ContactQuery,
   ContactSortField,
-  INTERACTION_TYPE_LABELS,
   InteractionType,
-  PREFERRED_CHANNEL_LABELS,
   PreferredChannel,
 } from "@/features/contacts/types";
 import { accountApi } from "@/features/accounts/services/accountApi";
@@ -224,16 +223,17 @@ function FieldError({ message }: { message?: string }) {
 }
 
 function PreferenceBadge({ contact }: { contact: Contact }) {
+  const t = useTranslations("contacts");
   if (contact.doNotContact) {
     return (
       <Badge variant="outline" className="bg-red-50 dark:bg-red-500/15 text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/30 font-semibold gap-1">
-        <Ban size={11} /> Do not contact
+        <Ban size={11} /> {t("doNotContact")}
       </Badge>
     );
   }
   return (
     <Badge variant="outline" className="bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 font-semibold">
-      {PREFERRED_CHANNEL_LABELS[contact.preferredChannel]}
+      {t(`preferredChannel.${contact.preferredChannel}`)}
     </Badge>
   );
 }
@@ -241,6 +241,8 @@ function PreferenceBadge({ contact }: { contact: Contact }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export function ContactsPage() {
+  const t = useTranslations("contacts");
+  const tc = useTranslations("common");
   const { user } = useAuth();
   const isStaffAdmin = user?.role === "Admin" || user?.role === "Administrator";
 
@@ -319,7 +321,7 @@ export function ContactsPage() {
   });
 
   const assignTeams = assignTeamsQuery.data?.data ?? [];
-  const selectedAssignTeam = assignTeams.find((t) => t.id === assignTeamId);
+  const selectedAssignTeam = assignTeams.find((tm) => tm.id === assignTeamId);
   // When a team is chosen, the owner must be one of its members
   const assignOwnerOptions = selectedAssignTeam
     ? (assignStaffQuery.data ?? []).filter((s) =>
@@ -408,7 +410,7 @@ export function ContactsPage() {
     setFormError(null);
 
     if (values.isPrimary && !values.accountId) {
-      setFormError("A primary contact must be linked to an account.");
+      setFormError(t("toasts.primaryNeedsAccount"));
       return;
     }
 
@@ -441,19 +443,19 @@ export function ContactsPage() {
           // null explicitly unlinks the account when cleared in the form
           data: { ...base, accountId: values.accountId || null },
         });
-        notifySuccess(`Contact "${values.firstName} ${values.lastName}" updated successfully.`);
+        notifySuccess(t("toasts.updated", { name: `${values.firstName} ${values.lastName}` }));
       } else {
         await createContactMutation.mutateAsync({
           ...base,
           accountId: values.accountId || undefined,
         });
-        notifySuccess(`Contact "${values.firstName} ${values.lastName}" created.`);
+        notifySuccess(t("toasts.created", { name: `${values.firstName} ${values.lastName}` }));
         resetToFirstPage();
       }
       setFormOpen(false);
       setEditingContact(null);
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : "Failed to save contact");
+      setFormError(err instanceof Error ? err.message : t("toasts.saveFailed"));
     }
   };
 
@@ -461,10 +463,10 @@ export function ContactsPage() {
     if (!deletingContact) return;
     try {
       await deleteContactMutation.mutateAsync(deletingContact.id);
-      notifySuccess(`Contact "${deletingContact.firstName} ${deletingContact.lastName}" was deleted.`);
+      notifySuccess(t("toasts.deleted", { name: `${deletingContact.firstName} ${deletingContact.lastName}` }));
       setDeletingContact(null);
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Failed to delete contact");
+      setErrorMsg(err instanceof Error ? err.message : t("toasts.deleteFailed"));
       setDeletingContact(null);
     }
   };
@@ -488,11 +490,11 @@ export function ContactsPage() {
         },
       });
       notifySuccess(
-        `Routing updated for "${assigningContact.firstName} ${assigningContact.lastName}".`,
+        t("toasts.assignmentUpdated", { name: `${assigningContact.firstName} ${assigningContact.lastName}` }),
       );
       setAssigningContact(null);
     } catch (err) {
-      setAssignError(err instanceof Error ? err.message : "Failed to update assignment");
+      setAssignError(err instanceof Error ? err.message : t("toasts.assignmentFailed"));
     }
   };
 
@@ -515,12 +517,10 @@ export function ContactsPage() {
           note: values.note?.trim() || undefined,
         },
       });
-      notifySuccess(
-        `${INTERACTION_TYPE_LABELS[values.type]} logged for "${interactingContact.firstName} ${interactingContact.lastName}".`,
-      );
+      notifySuccess(t("toasts.interactionLogged"));
       setInteractingContact(null);
     } catch (err) {
-      setInteractionError(err instanceof Error ? err.message : "Failed to log interaction");
+      setInteractionError(err instanceof Error ? err.message : t("toasts.interactionFailed"));
     }
   };
 
@@ -534,9 +534,9 @@ export function ContactsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Contacts</h1>
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t("title")}</h1>
             <p className="text-sm text-gray-500 dark:text-slate-400">
-              People profiles — demographics, communication history, and preferences.
+              {t("subtitle")}
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
@@ -548,19 +548,19 @@ export function ContactsPage() {
             />
             <Button onClick={openCreate} className="bg-[#3F51B5] hover:bg-[#303F9F] text-white gap-2">
               <Plus size={18} />
-              Add Contact
+              {t("addContact")}
             </Button>
           </div>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <StatCard label="Total" value={stats?.total} icon={BookUser} accent="bg-[#3F51B5]/10 dark:bg-indigo-500/15 text-[#3F51B5] dark:text-indigo-300" />
-          <StatCard label="With Account" value={stats?.withAccount} icon={Building2} accent="bg-sky-50 dark:bg-sky-500/15 text-sky-600 dark:text-sky-400" />
-          <StatCard label="Do Not Contact" value={stats?.doNotContact} icon={Ban} accent="bg-red-50 dark:bg-red-500/15 text-red-600 dark:text-red-400" />
-          <StatCard label="New this month" value={stats?.newThisMonth} icon={UserPlus} accent="bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" />
+          <StatCard label={t("stats.total")} value={stats?.total} icon={BookUser} accent="bg-[#3F51B5]/10 dark:bg-indigo-500/15 text-[#3F51B5] dark:text-indigo-300" />
+          <StatCard label={t("stats.withAccount")} value={stats?.withAccount} icon={Building2} accent="bg-sky-50 dark:bg-sky-500/15 text-sky-600 dark:text-sky-400" />
+          <StatCard label={t("stats.doNotContact")} value={stats?.doNotContact} icon={Ban} accent="bg-red-50 dark:bg-red-500/15 text-red-600 dark:text-red-400" />
+          <StatCard label={t("stats.newThisMonth")} value={stats?.newThisMonth} icon={UserPlus} accent="bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" />
           <StatCard
-            label="Interactions (mo.)"
+            label={t("stats.interactionsThisMonth")}
             value={stats?.interactionsThisMonth}
             icon={MessageSquarePlus}
             accent="bg-amber-50 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400"
@@ -588,7 +588,7 @@ export function ContactsPage() {
                 {errorMsg ??
                   (contactsQuery.error instanceof Error
                     ? contactsQuery.error.message
-                    : "Failed to load contacts")}
+                    : t("loadFailed"))}
               </span>
             </div>
             <button
@@ -610,7 +610,7 @@ export function ContactsPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" size={18} />
               <Input
                 type="text"
-                placeholder="Search by name, email, phone, title, or location..."
+                placeholder={t("searchPlaceholder")}
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
@@ -632,10 +632,10 @@ export function ContactsPage() {
                 }}
                 className={cn(inputClasses, "w-auto py-1.5")}
               >
-                <option value="">Any Channel</option>
-                <option value="email">Prefers Email</option>
-                <option value="phone">Prefers Phone</option>
-                <option value="sms">Prefers SMS</option>
+                <option value="">{t("filters.anyChannel")}</option>
+                <option value="email">{t("filters.prefersEmail")}</option>
+                <option value="phone">{t("filters.prefersPhone")}</option>
+                <option value="sms">{t("filters.prefersSms")}</option>
               </select>
               <select
                 value={dncFilter}
@@ -645,9 +645,9 @@ export function ContactsPage() {
                 }}
                 className={cn(inputClasses, "w-auto py-1.5")}
               >
-                <option value="">All Contacts</option>
-                <option value="false">Contactable</option>
-                <option value="true">Do Not Contact</option>
+                <option value="">{t("filters.allContacts")}</option>
+                <option value="false">{t("filters.contactable")}</option>
+                <option value="true">{t("filters.doNotContact")}</option>
               </select>
             </div>
           </div>
@@ -656,21 +656,21 @@ export function ContactsPage() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-50/75 dark:bg-slate-800/50 hover:bg-gray-50/75 dark:hover:bg-slate-800/50">
-                  <SortableHead field="lastName" className="px-6" {...sortProps}>Contact</SortableHead>
-                  <SortableHead field="jobTitle" className="px-6" {...sortProps}>Title</SortableHead>
+                  <SortableHead field="lastName" className="px-6" {...sortProps}>{t("table.contact")}</SortableHead>
+                  <SortableHead field="jobTitle" className="px-6" {...sortProps}>{t("table.jobTitle")}</SortableHead>
                   <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
-                    Account
+                    {t("table.account")}
                   </TableHead>
-                  <SortableHead field="city" className="px-6" {...sortProps}>Location</SortableHead>
+                  <SortableHead field="city" className="px-6" {...sortProps}>{t("table.location")}</SortableHead>
                   <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
-                    Preference
+                    {t("table.preferences")}
                   </TableHead>
                   <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
-                    Assigned To
+                    {t("table.assignedTo")}
                   </TableHead>
-                  <SortableHead field="createdAt" className="px-6" {...sortProps}>Created</SortableHead>
+                  <SortableHead field="createdAt" className="px-6" {...sortProps}>{t("table.created")}</SortableHead>
                   <TableHead className="px-6 text-right text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
-                    Actions
+                    {t("table.actions")}
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -680,7 +680,7 @@ export function ContactsPage() {
                     <TableCell colSpan={8} className="px-6 py-12 text-center text-gray-400 dark:text-slate-500">
                       <div className="flex justify-center items-center gap-2">
                         <Loader2 size={18} className="animate-spin" />
-                        <span>Fetching contacts...</span>
+                        <span>{t("fetchingContacts")}</span>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -689,11 +689,11 @@ export function ContactsPage() {
                     <TableCell colSpan={8} className="px-6 py-16 text-center">
                       <div className="flex flex-col items-center gap-2 text-gray-500 dark:text-slate-400">
                         <BookUser size={32} className="text-gray-300 dark:text-slate-600" />
-                        <p className="font-medium">No contacts found</p>
+                        <p className="font-medium">{t("noContactsFound")}</p>
                         <p className="text-sm text-gray-400 dark:text-slate-500">
                           {debouncedSearch || channelFilter || dncFilter
-                            ? "Try adjusting your search or filters."
-                            : "Add your first contact to build the central database."}
+                            ? t("adjustFilters")
+                            : t("addFirstContact")}
                         </p>
                       </div>
                     </TableCell>
@@ -711,7 +711,7 @@ export function ContactsPage() {
                             <span className="font-semibold text-gray-900 dark:text-white truncate flex items-center gap-1.5">
                               {contact.firstName} {contact.lastName}
                               {contact.isPrimary && (
-                                <span title="Primary contact for their account">
+                                <span title={t("details.primaryContact")}>
                                   <Star size={12} className="text-amber-500 fill-amber-400 shrink-0" />
                                 </span>
                               )}
@@ -768,7 +768,7 @@ export function ContactsPage() {
                             )}
                           </div>
                         ) : (
-                          <span className="text-gray-300 dark:text-slate-600">Unassigned</span>
+                          <span className="text-gray-300 dark:text-slate-600">{t("unassigned")}</span>
                         )}
                       </TableCell>
                       <TableCell className="px-6 py-4 text-gray-500 dark:text-slate-400">
@@ -779,30 +779,30 @@ export function ContactsPage() {
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="text-gray-400 dark:text-slate-500 hover:text-gray-700 dark:hover:text-slate-200">
                               <MoreHorizontal size={18} />
-                              <span className="sr-only">Open actions</span>
+                              <span className="sr-only">{t("openActions")}</span>
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => setViewingContact(contact)}>
-                              <Info size={15} /> View details
+                              <Info size={15} /> {t("viewDetails")}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => openInteraction(contact)}>
-                              <MessageSquarePlus size={15} /> Log interaction
+                              <MessageSquarePlus size={15} /> {t("logInteraction")}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => openEdit(contact)}>
-                              <Pencil size={15} /> Edit contact
+                              <Pencil size={15} /> {t("editContact")}
                             </DropdownMenuItem>
                             {isStaffAdmin && (
                               <>
                                 <DropdownMenuItem onClick={() => openAssign(contact)}>
-                                  <UsersRound size={15} /> Assign owner / team
+                                  <UsersRound size={15} /> {t("assignOwnerTeam")}
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                   variant="destructive"
                                   onClick={() => setDeletingContact(contact)}
                                 >
-                                  <Trash2 size={15} /> Delete contact
+                                  <Trash2 size={15} /> {t("deleteContact")}
                                 </DropdownMenuItem>
                               </>
                             )}
@@ -821,8 +821,11 @@ export function ContactsPage() {
             <div className="p-4 border-t border-gray-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
               <div className="flex items-center gap-3">
                 <span>
-                  {(meta.page - 1) * meta.limit + 1}–{Math.min(meta.page * meta.limit, meta.total)} of{" "}
-                  {meta.total} contacts
+                  {t("range", {
+                    from: (meta.page - 1) * meta.limit + 1,
+                    to: Math.min(meta.page * meta.limit, meta.total),
+                    total: meta.total,
+                  })}
                 </span>
                 <select
                   value={limit}
@@ -832,9 +835,9 @@ export function ContactsPage() {
                   }}
                   className={cn(inputClasses, "w-auto py-1 text-xs")}
                 >
-                  <option value={10}>10 / page</option>
-                  <option value={25}>25 / page</option>
-                  <option value={50}>50 / page</option>
+                  <option value={10}>{t("perPage", { count: 10 })}</option>
+                  <option value={25}>{t("perPage", { count: 25 })}</option>
+                  <option value={50}>{t("perPage", { count: 50 })}</option>
                 </select>
               </div>
               <div className="flex items-center gap-1">
@@ -847,7 +850,7 @@ export function ContactsPage() {
                   <ChevronLeft size={16} />
                 </Button>
                 <span className="px-3 text-sm font-bold text-gray-700 dark:text-slate-200">
-                  {meta.page} / {meta.totalPages}
+                  {t("pageOf", { page: meta.page, totalPages: meta.totalPages })}
                 </span>
                 <Button
                   variant="outline"
@@ -869,9 +872,9 @@ export function ContactsPage() {
           {viewingContact && (
             <>
               <DialogHeader>
-                <DialogTitle>Contact Details</DialogTitle>
+                <DialogTitle>{t("details.title")}</DialogTitle>
                 <DialogDescription>
-                  Profile, preferences, and communication history.
+                  {t("details.subtitle")}
                 </DialogDescription>
               </DialogHeader>
 
@@ -885,7 +888,7 @@ export function ContactsPage() {
                     <h4 className="text-lg font-bold text-gray-900 dark:text-white truncate flex items-center gap-2">
                       {viewingContact.firstName} {viewingContact.lastName}
                       {viewingContact.isPrimary && (
-                        <span title="Primary contact for their account">
+                        <span title={t("details.primaryContact")}>
                           <Star size={14} className="text-amber-500 fill-amber-400" />
                         </span>
                       )}
@@ -902,41 +905,41 @@ export function ContactsPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {[
-                    { icon: Mail, label: "Email", value: viewingContact.email },
-                    { icon: Phone, label: "Phone", value: viewingContact.phone || "—" },
+                    { icon: Mail, label: t("form.email"), value: viewingContact.email },
+                    { icon: Phone, label: t("details.phone"), value: viewingContact.phone || tc("notAvailable") },
                     {
                       icon: Building2,
-                      label: "Account",
-                      value: viewingContact.accountName || "No account",
+                      label: t("details.account"),
+                      value: viewingContact.accountName || t("details.noAccount"),
                     },
                     {
                       icon: Info,
-                      label: "Department",
-                      value: viewingContact.department || "—",
+                      label: t("details.department"),
+                      value: viewingContact.department || tc("notAvailable"),
                     },
                     {
                       icon: Cake,
-                      label: "Birthday",
+                      label: t("details.birthday"),
                       value: viewingContact.birthday
                         ? new Date(viewingContact.birthday).toLocaleDateString()
-                        : "—",
+                        : tc("notAvailable"),
                     },
-                    { icon: Globe, label: "Language", value: viewingContact.language || "—" },
+                    { icon: Globe, label: t("details.language"), value: viewingContact.language || tc("notAvailable") },
                     {
                       icon: MapPin,
-                      label: "Location",
+                      label: t("details.location"),
                       value:
                         [viewingContact.address, viewingContact.city, viewingContact.country]
                           .filter(Boolean)
-                          .join(", ") || "—",
+                          .join(", ") || tc("notAvailable"),
                     },
                     {
                       icon: UsersRound,
-                      label: "Owner / Team",
+                      label: t("details.ownerTeam"),
                       value:
                         [viewingContact.assignedToName, viewingContact.assignedTeamName]
                           .filter(Boolean)
-                          .join(" · ") || "Unassigned",
+                          .join(" · ") || t("unassigned"),
                     },
                   ].map(({ icon: Icon, label, value }) => (
                     <div key={label} className="flex items-center gap-3 text-sm text-gray-600 dark:text-slate-300">
@@ -952,16 +955,16 @@ export function ContactsPage() {
                 {/* Preferences */}
                 <div className="bg-gray-50/75 dark:bg-slate-800/50 p-4 rounded-xl border border-gray-100 dark:border-slate-800">
                   <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold mb-2">
-                    Communication Preferences
+                    {t("details.preferences")}
                   </p>
                   <div className="flex flex-wrap gap-2">
                     <Badge variant="outline" className="bg-white dark:bg-slate-900 text-gray-700 dark:text-slate-200 border-gray-200 dark:border-slate-800">
-                      Prefers {PREFERRED_CHANNEL_LABELS[viewingContact.preferredChannel]}
+                      {t("details.preferredChannel")}: {t(`preferredChannel.${viewingContact.preferredChannel}`)}
                     </Badge>
                     {[
-                      { label: "Email", ok: viewingContact.emailOptIn },
-                      { label: "Phone", ok: viewingContact.phoneOptIn },
-                      { label: "SMS", ok: viewingContact.smsOptIn },
+                      { label: t("preferredChannel.email"), ok: viewingContact.emailOptIn },
+                      { label: t("preferredChannel.phone"), ok: viewingContact.phoneOptIn },
+                      { label: t("preferredChannel.sms"), ok: viewingContact.smsOptIn },
                     ].map(({ label, ok }) => (
                       <Badge
                         key={label}
@@ -979,7 +982,7 @@ export function ContactsPage() {
                     ))}
                     {viewingContact.doNotContact && (
                       <Badge variant="outline" className="bg-red-50 dark:bg-red-500/15 text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/30 gap-1">
-                        <Ban size={11} /> Do not contact — overrides all opt-ins
+                        <Ban size={11} /> {t("details.doNotContactBadge")}
                       </Badge>
                     )}
                   </div>
@@ -987,7 +990,7 @@ export function ContactsPage() {
 
                 {viewingContact.notes && (
                   <div className="bg-gray-50/75 dark:bg-slate-800/50 p-4 rounded-xl border border-gray-100 dark:border-slate-800 space-y-1">
-                    <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold">Notes</p>
+                    <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold">{t("details.notes")}</p>
                     <p className="text-sm text-gray-700 dark:text-slate-200 whitespace-pre-wrap">{viewingContact.notes}</p>
                   </div>
                 )}
@@ -995,10 +998,10 @@ export function ContactsPage() {
                 {/* Communication history */}
                 <div className="space-y-2">
                   <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold">
-                    Communication History ({viewingContact.interactions.length})
+                    {t("details.interactionHistory", { count: viewingContact.interactions.length })}
                   </p>
                   {viewingContact.interactions.length === 0 ? (
-                    <p className="text-sm text-gray-400 dark:text-slate-500">No interactions logged yet.</p>
+                    <p className="text-sm text-gray-400 dark:text-slate-500">{t("details.noInteractionsYet")}</p>
                   ) : (
                     <ul className="space-y-2 max-h-56 overflow-y-auto pr-1">
                       {viewingContact.interactions.map((i, idx) => (
@@ -1017,7 +1020,7 @@ export function ContactsPage() {
                           </span>
                           <div className="min-w-0 flex-1">
                             <p className="font-medium text-gray-800 dark:text-white">
-                              {INTERACTION_TYPE_LABELS[i.type]}
+                              {t(`interactionTypes.${i.type}`)}
                               {i.subject ? ` — ${i.subject}` : ""}
                             </p>
                             {i.note && (
@@ -1025,7 +1028,7 @@ export function ContactsPage() {
                             )}
                             <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-0.5">
                               {new Date(i.occurredAt).toLocaleString()}
-                              {i.recordedByName ? ` · by ${i.recordedByName}` : ""}
+                              {i.recordedByName ? t("details.loggedBy", { name: i.recordedByName }) : ""}
                             </p>
                           </div>
                         </li>
@@ -1044,10 +1047,10 @@ export function ContactsPage() {
                     openInteraction(target);
                   }}
                 >
-                  <MessageSquarePlus size={15} /> Log interaction
+                  <MessageSquarePlus size={15} /> {t("logInteraction")}
                 </Button>
                 <Button variant="secondary" onClick={() => setViewingContact(null)}>
-                  Close
+                  {tc("close")}
                 </Button>
               </DialogFooter>
             </>
@@ -1059,11 +1062,11 @@ export function ContactsPage() {
       <Dialog open={formOpen} onOpenChange={(open) => !open && closeForm()}>
         <DialogContent className="max-w-xl max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingContact ? "Edit Contact" : "Add New Contact"}</DialogTitle>
+            <DialogTitle>{editingContact ? t("form.editTitle") : t("form.addTitle")}</DialogTitle>
             <DialogDescription>
               {editingContact
-                ? "Update the person's profile, links, and preferences."
-                : "Add a person to the central contact database."}
+                ? t("form.editDesc")
+                : t("form.addDesc")}
             </DialogDescription>
           </DialogHeader>
 
@@ -1078,14 +1081,14 @@ export function ContactsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  First Name *
+                  {t("form.firstName")}
                 </label>
                 <Input disabled={isSaving} {...form.register("firstName")} />
                 <FieldError message={form.formState.errors.firstName?.message} />
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Last Name *
+                  {t("form.lastName")}
                 </label>
                 <Input disabled={isSaving} {...form.register("lastName")} />
                 <FieldError message={form.formState.errors.lastName?.message} />
@@ -1095,14 +1098,14 @@ export function ContactsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Email Address *
+                  {t("form.email")}
                 </label>
                 <Input type="email" placeholder="name@example.com" disabled={isSaving} {...form.register("email")} />
                 <FieldError message={form.formState.errors.email?.message} />
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Phone
+                  {t("form.phone")}
                 </label>
                 <Input type="tel" placeholder="+1 234 567 890" disabled={isSaving} {...form.register("phone")} />
                 <FieldError message={form.formState.errors.phone?.message} />
@@ -1112,16 +1115,16 @@ export function ContactsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Job Title
+                  {t("form.jobTitle")}
                 </label>
-                <Input placeholder="Head of Procurement" disabled={isSaving} {...form.register("jobTitle")} />
+                <Input placeholder={t("form.jobTitlePlaceholder")} disabled={isSaving} {...form.register("jobTitle")} />
                 <FieldError message={form.formState.errors.jobTitle?.message} />
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Department
+                  {t("form.department")}
                 </label>
-                <Input placeholder="Operations" disabled={isSaving} {...form.register("department")} />
+                <Input placeholder={t("form.departmentPlaceholder")} disabled={isSaving} {...form.register("department")} />
                 <FieldError message={form.formState.errors.department?.message} />
               </div>
             </div>
@@ -1130,7 +1133,7 @@ export function ContactsPage() {
             <div className="border border-gray-100 dark:border-slate-800 rounded-xl p-4 bg-gray-50/50 dark:bg-slate-800/50 space-y-3">
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Account (Company)
+                  {t("form.account")}
                 </label>
                 <select
                   className={inputClasses}
@@ -1138,7 +1141,7 @@ export function ContactsPage() {
                   {...form.register("accountId")}
                 >
                   <option value="">
-                    {accountsPickerQuery.isLoading ? "Loading accounts..." : "No account (B2C contact)"}
+                    {accountsPickerQuery.isLoading ? t("form.loadingAccounts") : t("form.noAccountOption")}
                   </option>
                   {accountOptions.map((a) => (
                     <option key={a.id} value={a.id}>
@@ -1159,7 +1162,7 @@ export function ContactsPage() {
                   disabled={isSaving || !watchAccountId}
                   {...form.register("isPrimary")}
                 />
-                Primary contact for this account
+                {t("form.primaryContact")}
               </label>
             </div>
 
@@ -1167,20 +1170,20 @@ export function ContactsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Birthday
+                  {t("form.birthday")}
                 </label>
                 <Input type="date" disabled={isSaving} {...form.register("birthday")} />
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  City
+                  {t("form.city")}
                 </label>
                 <Input placeholder="Berlin" disabled={isSaving} {...form.register("city")} />
                 <FieldError message={form.formState.errors.city?.message} />
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Country
+                  {t("form.country")}
                 </label>
                 <Input placeholder="Germany" disabled={isSaving} {...form.register("country")} />
                 <FieldError message={form.formState.errors.country?.message} />
@@ -1190,16 +1193,16 @@ export function ContactsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Address
+                  {t("form.address")}
                 </label>
-                <Input placeholder="Street, ZIP" disabled={isSaving} {...form.register("address")} />
+                <Input placeholder={t("form.addressPlaceholder")} disabled={isSaving} {...form.register("address")} />
                 <FieldError message={form.formState.errors.address?.message} />
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Language
+                  {t("form.language")}
                 </label>
-                <Input placeholder="en / German / ..." disabled={isSaving} {...form.register("language")} />
+                <Input placeholder={t("form.languagePlaceholder")} disabled={isSaving} {...form.register("language")} />
                 <FieldError message={form.formState.errors.language?.message} />
               </div>
             </div>
@@ -1207,25 +1210,25 @@ export function ContactsPage() {
             {/* Preferences */}
             <div className="border border-gray-100 dark:border-slate-800 rounded-xl p-4 bg-gray-50/50 dark:bg-slate-800/50 space-y-3">
               <p className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-                Communication Preferences
+                {t("form.preferences")}
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
                 <div>
                   <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                    Preferred Channel
+                    {t("form.preferredChannel")}
                   </label>
                   <select disabled={isSaving} className={inputClasses} {...form.register("preferredChannel")}>
-                    <option value="email">Email</option>
-                    <option value="phone">Phone</option>
-                    <option value="sms">SMS</option>
+                    <option value="email">{t("preferredChannel.email")}</option>
+                    <option value="phone">{t("preferredChannel.phone")}</option>
+                    <option value="sms">{t("preferredChannel.sms")}</option>
                   </select>
                 </div>
                 <div className="space-y-1.5 pt-1">
                   {(
                     [
-                      { name: "emailOptIn", label: "Email opt-in" },
-                      { name: "phoneOptIn", label: "Phone opt-in" },
-                      { name: "smsOptIn", label: "SMS opt-in" },
+                      { name: "emailOptIn", label: t("form.emailOptIn") },
+                      { name: "phoneOptIn", label: t("form.phoneOptIn") },
+                      { name: "smsOptIn", label: t("form.smsOptIn") },
                     ] as const
                   ).map(({ name, label }) => (
                     <label
@@ -1250,18 +1253,18 @@ export function ContactsPage() {
                   disabled={isSaving}
                   {...form.register("doNotContact")}
                 />
-                Do not contact — overrides all opt-ins
+                {t("form.doNotContact")}
               </label>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                Notes
+                {t("form.notes")}
               </label>
               <textarea
                 rows={2}
                 disabled={isSaving}
-                placeholder="Relationship context, preferences, history..."
+                placeholder={t("form.notesPlaceholder")}
                 className={cn(inputClasses, "resize-none")}
                 {...form.register("notes")}
               />
@@ -1278,11 +1281,11 @@ export function ContactsPage() {
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeForm} disabled={isSaving}>
-                Cancel
+                {tc("cancel")}
               </Button>
               <Button type="submit" disabled={isSaving} className="bg-[#3F51B5] hover:bg-[#303F9F] text-white">
                 {isSaving && <Loader2 size={15} className="animate-spin" />}
-                {editingContact ? "Update Contact" : "Create Contact"}
+                {editingContact ? t("form.updateContact") : t("form.createContact")}
               </Button>
             </DialogFooter>
           </form>
@@ -1295,15 +1298,14 @@ export function ContactsPage() {
           {interactingContact && (
             <>
               <DialogHeader>
-                <DialogTitle>Log Interaction</DialogTitle>
+                <DialogTitle>{t("interactionDialog.title")}</DialogTitle>
                 <DialogDescription>
-                  Record a touchpoint with{" "}
-                  <span className="font-semibold text-gray-700 dark:text-slate-200">
-                    {interactingContact.firstName} {interactingContact.lastName}
-                  </span>
+                  {t("interactionDialog.desc", {
+                    name: `${interactingContact.firstName} ${interactingContact.lastName}`,
+                  })}
                   {interactingContact.doNotContact && (
                     <span className="block mt-1 text-red-600 dark:text-red-400 font-medium">
-                      ⚠ This contact is flagged do-not-contact.
+                      ⚠ {t("interactionDialog.flaggedDnc")}
                     </span>
                   )}
                 </DialogDescription>
@@ -1320,17 +1322,17 @@ export function ContactsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                      Type *
+                      {t("interactionDialog.type")}
                     </label>
                     <select
                       className={inputClasses}
                       disabled={addInteractionMutation.isPending}
                       {...interactionForm.register("type")}
                     >
-                      {(Object.entries(INTERACTION_TYPE_LABELS) as [InteractionType, string][]).map(
-                        ([value, label]) => (
+                      {(["call", "email", "meeting", "sms", "note"] as InteractionType[]).map(
+                        (value) => (
                           <option key={value} value={value}>
-                            {label}
+                            {t(`interactionTypes.${value}`)}
                           </option>
                         ),
                       )}
@@ -1338,7 +1340,7 @@ export function ContactsPage() {
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                      Direction
+                      {t("interactionDialog.direction")}
                     </label>
                     <select
                       className={inputClasses}
@@ -1347,18 +1349,18 @@ export function ContactsPage() {
                       }
                       {...interactionForm.register("direction")}
                     >
-                      <option value="outbound">Outbound (we reached out)</option>
-                      <option value="inbound">Inbound (they reached out)</option>
+                      <option value="outbound">{t("interactionDialog.outbound")}</option>
+                      <option value="inbound">{t("interactionDialog.inbound")}</option>
                     </select>
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                    Subject
+                    {t("interactionDialog.subject")}
                   </label>
                   <Input
-                    placeholder="Quarterly review call"
+                    placeholder={t("interactionDialog.subjectPlaceholder")}
                     disabled={addInteractionMutation.isPending}
                     {...interactionForm.register("subject")}
                   />
@@ -1367,12 +1369,12 @@ export function ContactsPage() {
 
                 <div>
                   <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                    Notes
+                    {t("interactionDialog.notes")}
                   </label>
                   <textarea
                     rows={3}
                     disabled={addInteractionMutation.isPending}
-                    placeholder="What was discussed?"
+                    placeholder={t("interactionDialog.notesPlaceholder")}
                     className={cn(inputClasses, "resize-none")}
                     {...interactionForm.register("note")}
                   />
@@ -1386,7 +1388,7 @@ export function ContactsPage() {
                     onClick={() => setInteractingContact(null)}
                     disabled={addInteractionMutation.isPending}
                   >
-                    Cancel
+                    {tc("cancel")}
                   </Button>
                   <Button
                     type="submit"
@@ -1394,7 +1396,7 @@ export function ContactsPage() {
                     className="bg-[#3F51B5] hover:bg-[#303F9F] text-white"
                   >
                     {addInteractionMutation.isPending && <Loader2 size={15} className="animate-spin" />}
-                    Log Interaction
+                    {t("interactionDialog.logInteraction")}
                   </Button>
                 </DialogFooter>
               </form>
@@ -1409,13 +1411,11 @@ export function ContactsPage() {
           {assigningContact && (
             <>
               <DialogHeader>
-                <DialogTitle>Assign Contact</DialogTitle>
+                <DialogTitle>{t("assignDialog.title")}</DialogTitle>
                 <DialogDescription>
-                  Route{" "}
-                  <span className="font-semibold text-gray-700 dark:text-slate-200">
-                    {assigningContact.firstName} {assigningContact.lastName}
-                  </span>{" "}
-                  to a team and/or a record owner. Team members gain visibility of this record.
+                  {t("assignDialog.desc", {
+                    name: `${assigningContact.firstName} ${assigningContact.lastName}`,
+                  })}
                 </DialogDescription>
               </DialogHeader>
 
@@ -1429,7 +1429,7 @@ export function ContactsPage() {
 
                 <div>
                   <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                    Team
+                    {t("assignDialog.team")}
                   </label>
                   <select
                     className={inputClasses}
@@ -1439,7 +1439,7 @@ export function ContactsPage() {
                       const teamId = e.target.value;
                       setAssignTeamId(teamId);
                       // Owner must belong to the newly selected team
-                      const team = assignTeams.find((t) => t.id === teamId);
+                      const team = assignTeams.find((tm) => tm.id === teamId);
                       if (
                         teamId &&
                         team &&
@@ -1450,7 +1450,7 @@ export function ContactsPage() {
                       }
                     }}
                   >
-                    <option value="">Unassigned (no team)</option>
+                    <option value="">{t("assignDialog.noTeam")}</option>
                     {assignTeams.map((team) => (
                       <option key={team.id} value={team.id}>
                         {team.name}
@@ -1459,13 +1459,13 @@ export function ContactsPage() {
                     ))}
                   </select>
                   {assignTeamsQuery.isLoading && (
-                    <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">Loading teams...</p>
+                    <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">{t("assignDialog.loadingTeams")}</p>
                   )}
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                    Record Owner
+                    {t("assignDialog.recordOwner")}
                   </label>
                   <select
                     className={inputClasses}
@@ -1473,7 +1473,7 @@ export function ContactsPage() {
                     disabled={assignContactMutation.isPending || assignStaffQuery.isLoading}
                     onChange={(e) => setAssignOwnerId(e.target.value)}
                   >
-                    <option value="">Unassigned (no owner)</option>
+                    <option value="">{t("assignDialog.noOwner")}</option>
                     {assignOwnerOptions.map((s) => (
                       <option key={s.keycloakId} value={s.keycloakId}>
                         {staffDisplayName(s)} ({s.role})
@@ -1482,8 +1482,8 @@ export function ContactsPage() {
                   </select>
                   <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">
                     {assignTeamId
-                      ? "Only members of the selected team can own this record."
-                      : "Pick a team first to narrow the list to its members."}
+                      ? t("assignDialog.onlyTeamMembers")
+                      : t("assignDialog.pickTeamFirst")}
                   </p>
                 </div>
               </div>
@@ -1494,7 +1494,7 @@ export function ContactsPage() {
                   onClick={() => setAssigningContact(null)}
                   disabled={assignContactMutation.isPending}
                 >
-                  Cancel
+                  {tc("cancel")}
                 </Button>
                 <Button
                   onClick={handleAssign}
@@ -1502,7 +1502,7 @@ export function ContactsPage() {
                   className="bg-[#3F51B5] hover:bg-[#303F9F] text-white"
                 >
                   {assignContactMutation.isPending && <Loader2 size={15} className="animate-spin" />}
-                  Save Assignment
+                  {t("assignDialog.saveAssignment")}
                 </Button>
               </DialogFooter>
             </>
@@ -1516,13 +1516,11 @@ export function ContactsPage() {
           {deletingContact && (
             <>
               <DialogHeader>
-                <DialogTitle>Delete contact?</DialogTitle>
+                <DialogTitle>{t("deleteDialog.title")}</DialogTitle>
                 <DialogDescription>
-                  This permanently removes{" "}
-                  <span className="font-semibold text-gray-700 dark:text-slate-200">
-                    {deletingContact.firstName} {deletingContact.lastName}
-                  </span>{" "}
-                  ({deletingContact.email}) and their communication history. This action cannot be undone.
+                  {t("deleteDialog.desc", {
+                    name: `${deletingContact.firstName} ${deletingContact.lastName}`,
+                  })}
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
@@ -1531,7 +1529,7 @@ export function ContactsPage() {
                   onClick={() => setDeletingContact(null)}
                   disabled={deleteContactMutation.isPending}
                 >
-                  Cancel
+                  {tc("cancel")}
                 </Button>
                 <Button
                   variant="destructive"
@@ -1539,7 +1537,7 @@ export function ContactsPage() {
                   disabled={deleteContactMutation.isPending}
                 >
                   {deleteContactMutation.isPending && <Loader2 size={15} className="animate-spin" />}
-                  Delete Contact
+                  {t("deleteDialog.deleteContact")}
                 </Button>
               </DialogFooter>
             </>

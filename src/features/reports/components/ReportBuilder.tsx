@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Bar,
   BarChart,
@@ -105,6 +106,8 @@ function encodeFilter(
 }
 
 export function ReportBuilder() {
+  const t = useTranslations("reports.builder");
+  const tc = useTranslations("common");
   const { user } = useAuth();
   const canShare = user?.role === "Admin" || user?.role === "Administrator";
 
@@ -214,7 +217,7 @@ export function ReportBuilder() {
       const res = await runReportMutation.mutateAsync(req);
       setResult(res);
     } catch (err) {
-      setRunError(err instanceof Error ? err.message : "Failed to run report");
+      setRunError(err instanceof Error ? err.message : t("errors.runFailed"));
     }
   };
 
@@ -273,7 +276,7 @@ export function ReportBuilder() {
   const submitSave = async () => {
     setSaveError(null);
     if (!saveName.trim()) {
-      setSaveError("Give the report a name.");
+      setSaveError(t("errors.giveName"));
       return;
     }
     const payload: CreateSavedReportRequest = {
@@ -285,16 +288,16 @@ export function ReportBuilder() {
     try {
       if (editingSavedId) {
         await updateSavedMutation.mutateAsync({ id: editingSavedId, dto: payload });
-        setToast("Report updated.");
+        setToast(t("errors.reportUpdated"));
       } else {
         const created = await createSavedMutation.mutateAsync(payload);
         setEditingSavedId(created.canManage ? created.id : null);
         setLoadedName(created.name);
-        setToast("Report saved.");
+        setToast(t("errors.reportSaved"));
       }
       setSaveOpen(false);
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : "Failed to save report");
+      setSaveError(err instanceof Error ? err.message : t("errors.saveFailed"));
     }
   };
 
@@ -305,9 +308,9 @@ export function ReportBuilder() {
         setEditingSavedId(null);
         setLoadedName(null);
       }
-      setToast("Report deleted.");
+      setToast(t("errors.reportDeleted"));
     } catch (err) {
-      setToast(err instanceof Error ? err.message : "Failed to delete report");
+      setToast(err instanceof Error ? err.message : t("errors.deleteFailed"));
     }
   };
 
@@ -373,8 +376,8 @@ export function ReportBuilder() {
             value={row.value || "true"}
             onChange={(e) => updateFilter(row.id, { value: e.target.value })}
           >
-            <option value="true">exists</option>
-            <option value="false">is empty</option>
+            <option value="true">{t("existsOption")}</option>
+            <option value="false">{t("isEmptyOption")}</option>
           </select>
         );
       }
@@ -388,7 +391,7 @@ export function ReportBuilder() {
           value={row.value}
           onChange={(e) => updateFilter(row.id, { value: e.target.value })}
         >
-          <option value="">Select…</option>
+          <option value="">{t("selectPlaceholder")}</option>
           {field.enumValues?.map((v) => (
             <option key={v} value={v}>
               {v}
@@ -404,7 +407,7 @@ export function ReportBuilder() {
           placeholder={
             field.type === "enum"
               ? `${field.enumValues?.slice(0, 2).join(", ")}…`
-              : "comma,separated,values"
+              : t("commaSeparated")
           }
           value={row.value}
           onChange={(e) => updateFilter(row.id, { value: e.target.value })}
@@ -448,7 +451,7 @@ export function ReportBuilder() {
   if (datasetsQuery.isLoading) {
     return (
       <div className="flex items-center justify-center gap-2 text-gray-400 dark:text-slate-500 py-24">
-        <Loader2 size={20} className="animate-spin" /> Loading builder…
+        <Loader2 size={20} className="animate-spin" /> {t("loadingBuilder")}
       </div>
     );
   }
@@ -460,11 +463,11 @@ export function ReportBuilder() {
         <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-4">
           <div className="flex items-center gap-2 mb-3">
             <Bookmark size={16} className="text-[#3F51B5]" />
-            <h3 className="font-bold text-sm text-gray-800 dark:text-white">Saved Reports</h3>
+            <h3 className="font-bold text-sm text-gray-800 dark:text-white">{t("savedReports")}</h3>
           </div>
           {savedReports.length === 0 ? (
             <p className="text-xs text-gray-400 dark:text-slate-500 py-2">
-              No saved reports yet. Build one and hit Save.
+              {t("noSavedReports")}
             </p>
           ) : (
             <ul className="space-y-1.5 max-h-[420px] overflow-y-auto">
@@ -481,7 +484,7 @@ export function ReportBuilder() {
                       <p className="text-sm font-medium text-gray-800 dark:text-white truncate">{r.name}</p>
                       <p className="text-[11px] text-gray-400 dark:text-slate-500 truncate">
                         {r.dataset}
-                        {r.shared ? " · shared" : ""}
+                        {r.shared ? t("shared") : ""}
                       </p>
                     </div>
                     {r.canManage && (
@@ -521,7 +524,7 @@ export function ReportBuilder() {
           <div className="flex flex-col sm:flex-row gap-4 sm:items-end">
             <div className="flex-1">
               <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                Dataset
+                {t("dataset")}
               </label>
               <select
                 className={inputClasses}
@@ -544,7 +547,7 @@ export function ReportBuilder() {
                   mode === "rows" ? "bg-[#3F51B5] text-white" : "bg-white dark:bg-slate-900 text-gray-600 dark:text-slate-300",
                 )}
               >
-                <Table2 size={15} /> Table
+                <Table2 size={15} /> {t("table")}
               </button>
               <button
                 onClick={() => setMode("aggregate")}
@@ -553,7 +556,7 @@ export function ReportBuilder() {
                   mode === "aggregate" ? "bg-[#3F51B5] text-white" : "bg-white dark:bg-slate-900 text-gray-600 dark:text-slate-300",
                 )}
               >
-                <BarChart3 size={15} /> Summary
+                <BarChart3 size={15} /> {t("summary")}
               </button>
             </div>
           </div>
@@ -562,14 +565,14 @@ export function ReportBuilder() {
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-                Filters
+                {t("filters")}
               </label>
               <Button variant="outline" size="sm" onClick={addFilter} className="gap-1 h-8">
-                <Plus size={14} /> Add filter
+                <Plus size={14} /> {t("addFilter")}
               </Button>
             </div>
             {filters.length === 0 ? (
-              <p className="text-xs text-gray-400 dark:text-slate-500">No filters — the report covers all records you can see.</p>
+              <p className="text-xs text-gray-400 dark:text-slate-500">{t("noFilters")}</p>
             ) : (
               <div className="space-y-2">
                 {filters.map((row) => {
@@ -616,10 +619,10 @@ export function ReportBuilder() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                Date field
+                {t("dateField")}
               </label>
               <select className={inputClasses} value={dateField} onChange={(e) => setDateField(e.target.value)}>
-                <option value="">{dataset ? `${dataset.defaultDateField} (default)` : "default"}</option>
+                <option value="">{dataset ? t("defaultSuffix", { field: dataset.defaultDateField }) : t("default")}</option>
                 {dateFields.map((f) => (
                   <option key={f.key} value={f.key}>
                     {f.label}
@@ -628,11 +631,11 @@ export function ReportBuilder() {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">From</label>
+              <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">{t("from")}</label>
               <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">To</label>
+              <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">{t("to")}</label>
               <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
             </div>
           </div>
@@ -643,10 +646,10 @@ export function ReportBuilder() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                    Group by
+                    {t("groupBy")}
                   </label>
                   <select className={inputClasses} value={groupBy} onChange={(e) => setGroupBy(e.target.value)}>
-                    <option value="">No grouping (totals)</option>
+                    <option value="">{t("noGrouping")}</option>
                     {groupableFields.map((f) => (
                       <option key={f.key} value={f.key}>
                         {f.label}
@@ -657,7 +660,7 @@ export function ReportBuilder() {
                 {fieldByKey(dataset, groupBy)?.type === "date" && (
                   <div>
                     <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                      Bucket
+                      {t("bucket")}
                     </label>
                     <select className={inputClasses} value={granularity} onChange={(e) => setGranularity(e.target.value)}>
                       {registry?.granularities.map((g) => (
@@ -672,14 +675,14 @@ export function ReportBuilder() {
 
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Measures</label>
+                  <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">{t("measures")}</label>
                   <Button
                     variant="outline"
                     size="sm"
                     className="gap-1 h-8"
                     onClick={() => setMetrics((prev) => [...prev, { id: nextId(), fn: "count", field: "" }])}
                   >
-                    <Plus size={14} /> Add measure
+                    <Plus size={14} /> {t("addMeasure")}
                   </Button>
                 </div>
                 <div className="space-y-2">
@@ -710,7 +713,7 @@ export function ReportBuilder() {
                           )
                         }
                       >
-                        <option value="">{m.fn === "count" ? "— (rows)" : "Select field…"}</option>
+                        <option value="">{m.fn === "count" ? t("rowsOption") : t("selectFieldPlaceholder")}</option>
                         {aggregatableFields.map((f) => (
                           <option key={f.key} value={f.key}>
                             {f.label}
@@ -733,9 +736,9 @@ export function ReportBuilder() {
             <div className="space-y-4 border-t border-gray-100 dark:border-slate-800 pt-4">
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                  Columns{" "}
+                  {t("columns")}{" "}
                   <span className="text-gray-300 dark:text-slate-600 font-medium normal-case">
-                    (none selected → default columns)
+                    {t("columnsHint")}
                   </span>
                 </label>
                 <div className="flex flex-wrap gap-1.5">
@@ -758,10 +761,10 @@ export function ReportBuilder() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                    Sort by
+                    {t("sortBy")}
                   </label>
                   <select className={inputClasses} value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-                    <option value="">Default</option>
+                    <option value="">{t("defaultOption")}</option>
                     {sortableFields.map((f) => (
                       <option key={f.key} value={f.key}>
                         {f.label}
@@ -771,15 +774,15 @@ export function ReportBuilder() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                    Direction
+                    {t("direction")}
                   </label>
                   <select
                     className={inputClasses}
                     value={sortOrder}
                     onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
                   >
-                    <option value="desc">Descending</option>
-                    <option value="asc">Ascending</option>
+                    <option value="desc">{t("descending")}</option>
+                    <option value="asc">{t("ascending")}</option>
                   </select>
                 </div>
               </div>
@@ -794,15 +797,15 @@ export function ReportBuilder() {
               className="bg-[#3F51B5] hover:bg-[#303F9F] text-white gap-2"
             >
               {isRunning ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}
-              Run report
+              {t("runReport")}
             </Button>
             <Button variant="outline" onClick={prepareSaveDialog} className="gap-2">
               <Save size={16} />
-              {editingSavedId ? "Update saved" : "Save"}
+              {editingSavedId ? t("updateSaved") : t("save")}
             </Button>
             {loadedName && (
               <span className="text-xs text-gray-400 dark:text-slate-500 ml-1">
-                Editing: <span className="font-medium text-gray-600 dark:text-slate-300">{loadedName}</span>
+                {t("editing")} <span className="font-medium text-gray-600 dark:text-slate-300">{loadedName}</span>
               </span>
             )}
           </div>
@@ -823,9 +826,9 @@ export function ReportBuilder() {
       <Dialog open={saveOpen} onOpenChange={(open) => !open && setSaveOpen(false)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{editingSavedId ? "Update saved report" : "Save report"}</DialogTitle>
+            <DialogTitle>{editingSavedId ? t("updateSavedReportTitle") : t("saveReportTitle")}</DialogTitle>
             <DialogDescription>
-              Store this definition to re-run it later. Shared reports are visible to all staff.
+              {t("saveDialogDesc")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
@@ -836,33 +839,33 @@ export function ReportBuilder() {
               </div>
             )}
             <div>
-              <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">Name *</label>
-              <Input value={saveName} onChange={(e) => setSaveName(e.target.value)} placeholder="Q3 lost deals over $10k" />
+              <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">{t("name")}</label>
+              <Input value={saveName} onChange={(e) => setSaveName(e.target.value)} placeholder={t("namePlaceholder")} />
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">Description</label>
+              <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">{t("description")}</label>
               <textarea
                 rows={2}
                 className={cn(inputClasses, "resize-none")}
                 value={saveDescription}
                 onChange={(e) => setSaveDescription(e.target.value)}
-                placeholder="What this report answers…"
+                placeholder={t("descriptionPlaceholder")}
               />
             </div>
             {canShare && (
               <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-slate-300">
                 <input type="checkbox" checked={saveShared} onChange={(e) => setSaveShared(e.target.checked)} />
-                Share with all staff
+                {t("shareWithStaff")}
               </label>
             )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setSaveOpen(false)} disabled={isSaving}>
-              Cancel
+              {tc("cancel")}
             </Button>
             <Button onClick={submitSave} disabled={isSaving} className="bg-[#3F51B5] hover:bg-[#303F9F] text-white gap-2">
               {isSaving && <Loader2 size={15} className="animate-spin" />}
-              {editingSavedId ? "Update" : "Save"}
+              {editingSavedId ? t("update") : t("save")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -873,9 +876,9 @@ export function ReportBuilder() {
 
 // ── Result rendering ───────────────────────────────────────────────────────────
 
-function formatCell(value: unknown): string {
+function formatCell(value: unknown, yes: string, no: string): string {
   if (value === null || value === undefined || value === "") return "—";
-  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (typeof value === "boolean") return value ? yes : no;
   if (typeof value === "string") {
     // ISO date → local date
     if (/^\d{4}-\d{2}-\d{2}T/.test(value)) {
@@ -895,6 +898,7 @@ function ResultView({
   result: ReportResult;
   onPage: (page: number) => void;
 }) {
+  const t = useTranslations("reports.builder.results");
   const { theme } = useTheme();
   const dark = theme === "dark";
   const gridStroke = dark ? "#1e293b" : "#eef2f7";
@@ -919,7 +923,7 @@ function ResultView({
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-6 space-y-5">
         <div className="flex items-center justify-between">
           <h3 className="font-bold text-gray-800 dark:text-white">
-            Summary <span className="text-gray-400 dark:text-slate-500 font-normal">· {rows.length} groups</span>
+            {t("summaryTitle")} <span className="text-gray-400 dark:text-slate-500 font-normal">· {t("groups", { count: rows.length })}</span>
           </h3>
           {rows.length > 0 && (
             <Button
@@ -930,12 +934,12 @@ function ResultView({
               onClick={() => downloadBlob(new Blob([reportResultToCsv(result)], { type: "text/csv" }), "report.csv")}
             >
               <Download size={14} />
-              Export CSV
+              {t("exportCsv")}
             </Button>
           )}
         </div>
         {rows.length === 0 ? (
-          <p className="text-sm text-gray-400 dark:text-slate-500 py-8 text-center">No data matched this report.</p>
+          <p className="text-sm text-gray-400 dark:text-slate-500 py-8 text-center">{t("noData")}</p>
         ) : (
           <>
             {primary && (
@@ -964,7 +968,7 @@ function ResultView({
                 <thead>
                   <tr className="text-left text-gray-400 dark:text-slate-500 text-xs uppercase tracking-wider border-b border-gray-100 dark:border-slate-800">
                     <th className="py-2 pr-4 font-semibold">
-                      {result.groupBy ? result.groupBy : "Group"}
+                      {result.groupBy ? result.groupBy : t("group")}
                     </th>
                     {aliases.map((a) => (
                       <th key={a} className="py-2 px-4 font-semibold text-right">
@@ -1002,8 +1006,8 @@ function ResultView({
     <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-6 space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="font-bold text-gray-800 dark:text-white">
-          Results{" "}
-          <span className="text-gray-400 dark:text-slate-500 font-normal">· {meta?.total ?? rows.length} records</span>
+          {t("resultsTitle")}{" "}
+          <span className="text-gray-400 dark:text-slate-500 font-normal">· {t("records", { count: meta?.total ?? rows.length })}</span>
         </h3>
         {rows.length > 0 && (
           <Button
@@ -1014,12 +1018,12 @@ function ResultView({
             onClick={() => downloadBlob(new Blob([reportResultToCsv(result)], { type: "text/csv" }), "report.csv")}
           >
             <Download size={14} />
-            Export CSV
+            {t("exportCsv")}
           </Button>
         )}
       </div>
       {rows.length === 0 ? (
-        <p className="text-sm text-gray-400 dark:text-slate-500 py-8 text-center">No records matched this report.</p>
+        <p className="text-sm text-gray-400 dark:text-slate-500 py-8 text-center">{t("noRecords")}</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -1037,7 +1041,7 @@ function ResultView({
                 <tr key={(row.id as string) ?? i} className="border-b border-gray-50 dark:border-slate-800 last:border-0">
                   {columns.map((c) => (
                     <td key={c} className="py-2.5 px-3 text-gray-700 dark:text-slate-200 whitespace-nowrap">
-                      {formatCell(row[c])}
+                      {formatCell(row[c], t("yes"), t("no"))}
                     </td>
                   ))}
                 </tr>
@@ -1050,7 +1054,7 @@ function ResultView({
       {meta && meta.totalPages > 1 && (
         <div className="flex items-center justify-between pt-2">
           <span className="text-xs text-gray-400 dark:text-slate-500">
-            Page {meta.page} of {meta.totalPages}
+            {t("page", { page: meta.page, totalPages: meta.totalPages })}
           </span>
           <div className="flex gap-2">
             <Button
@@ -1059,7 +1063,7 @@ function ResultView({
               disabled={meta.page <= 1}
               onClick={() => onPage(meta.page - 1)}
             >
-              Previous
+              {t("previous")}
             </Button>
             <Button
               variant="outline"
@@ -1067,7 +1071,7 @@ function ResultView({
               disabled={meta.page >= meta.totalPages}
               onClick={() => onPage(meta.page + 1)}
             >
-              Next
+              {t("next")}
             </Button>
           </div>
         </div>

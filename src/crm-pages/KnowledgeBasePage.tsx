@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { z } from "zod";
@@ -131,6 +132,8 @@ function FieldError({ message }: { message?: string }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export function KnowledgeBasePage() {
+  const t = useTranslations("kb");
+  const tc = useTranslations("common");
   const { user } = useAuth();
   const isStaffAdmin = user?.role === "Admin" || user?.role === "Administrator";
 
@@ -220,25 +223,33 @@ export function KnowledgeBasePage() {
     try {
       if (editingArticle) {
         await updateArticleMutation.mutateAsync({ id: editingArticle.id, data: payload });
-        notifySuccess(`Article "${values.title}" updated.`);
+        notifySuccess(t("toasts.updated", { title: values.title }));
       } else {
         await createArticleMutation.mutateAsync(payload);
-        notifySuccess(`Article "${values.title}" created${values.status === "published" ? " and published" : " as draft"}.`);
+        notifySuccess(
+          values.status === "published"
+            ? t("toasts.createdPublished", { title: values.title })
+            : t("toasts.createdDraft", { title: values.title }),
+        );
         setPage(1);
       }
       setFormOpen(false);
       setEditingArticle(null);
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : "Failed to save article");
+      setFormError(err instanceof Error ? err.message : t("toasts.saveFailed"));
     }
   };
 
   const quickStatus = async (article: KbArticle, status: KbStatus) => {
     try {
       await updateArticleMutation.mutateAsync({ id: article.id, data: { status } });
-      notifySuccess(`"${article.title}" ${status === "published" ? "published" : status}.`);
+      notifySuccess(
+        status === "published"
+          ? t("toasts.publishedMsg", { title: article.title })
+          : t("toasts.archivedMsg", { title: article.title }),
+      );
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Failed to update article");
+      setErrorMsg(err instanceof Error ? err.message : t("toasts.updateFailed"));
     }
   };
 
@@ -246,10 +257,10 @@ export function KnowledgeBasePage() {
     if (!deletingArticle) return;
     try {
       await deleteArticleMutation.mutateAsync(deletingArticle.id);
-      notifySuccess(`Article "${deletingArticle.title}" deleted.`);
+      notifySuccess(t("toasts.deletedMsg", { title: deletingArticle.title }));
       setDeletingArticle(null);
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Failed to delete article");
+      setErrorMsg(err instanceof Error ? err.message : t("toasts.deleteFailed"));
       setDeletingArticle(null);
     }
   };
@@ -260,29 +271,29 @@ export function KnowledgeBasePage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Knowledge Base</h1>
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t("title")}</h1>
             <p className="text-sm text-gray-500 dark:text-slate-400">
-              Internal wiki and public FAQ — write once, resolve tickets faster.
+              {t("subtitle")}
             </p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => window.open("/faq", "_blank", "noopener")} className="gap-2">
-              <Globe size={16} /> View public FAQ
+              <Globe size={16} /> {t("viewPublicFaq")}
             </Button>
             <Button onClick={openCreate} className="bg-[#3F51B5] hover:bg-[#303F9F] text-white gap-2">
-              <Plus size={18} /> New Article
+              <Plus size={18} /> {t("newArticle")}
             </Button>
           </div>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <StatCard label="Articles" value={stats?.total} icon={BookOpen} accent="bg-[#3F51B5]/10 text-[#3F51B5] dark:bg-indigo-500/15 dark:text-indigo-300" />
-          <StatCard label="Published" value={stats?.published} icon={Send} accent="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400" />
-          <StatCard label="Drafts" value={stats?.drafts} icon={FileText} accent="bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400" />
-          <StatCard label="Archived" value={stats?.archived} icon={Archive} accent="bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400" />
-          <StatCard label="Public FAQ" value={stats?.publicArticles} icon={Globe} accent="bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400" />
-          <StatCard label="Total Views" value={stats?.totalViews} icon={Eye} accent="bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400" />
+          <StatCard label={t("stats.articles")} value={stats?.total} icon={BookOpen} accent="bg-[#3F51B5]/10 text-[#3F51B5] dark:bg-indigo-500/15 dark:text-indigo-300" />
+          <StatCard label={t("stats.published")} value={stats?.published} icon={Send} accent="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400" />
+          <StatCard label={t("stats.drafts")} value={stats?.drafts} icon={FileText} accent="bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400" />
+          <StatCard label={t("stats.archived")} value={stats?.archived} icon={Archive} accent="bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400" />
+          <StatCard label={t("stats.publicFaq")} value={stats?.publicArticles} icon={Globe} accent="bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400" />
+          <StatCard label={t("stats.totalViews")} value={stats?.totalViews} icon={Eye} accent="bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400" />
         </div>
 
         {/* Notifications */}
@@ -301,7 +312,7 @@ export function KnowledgeBasePage() {
             <span className="text-sm font-medium flex items-center gap-2">
               <AlertCircle size={18} className="text-red-600 dark:text-red-400" />
               {errorMsg ??
-                (articlesQuery.error instanceof Error ? articlesQuery.error.message : "Failed to load articles")}
+                (articlesQuery.error instanceof Error ? articlesQuery.error.message : t("toasts.loadFailed"))}
             </span>
             <button
               onClick={() => {
@@ -322,7 +333,7 @@ export function KnowledgeBasePage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" size={18} />
               <Input
                 type="text"
-                placeholder="Search title, body, tags..."
+                placeholder={t("searchPlaceholder")}
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
@@ -343,10 +354,10 @@ export function KnowledgeBasePage() {
                 }}
                 className={cn(inputClasses, "w-auto py-1.5")}
               >
-                <option value="">All Statuses</option>
-                <option value="draft">Draft</option>
-                <option value="published">Published</option>
-                <option value="archived">Archived</option>
+                <option value="">{t("allStatuses")}</option>
+                <option value="draft">{t("statusDraft")}</option>
+                <option value="published">{t("statusPublished")}</option>
+                <option value="archived">{t("statusArchived")}</option>
               </select>
               <select
                 value={visibilityFilter}
@@ -356,9 +367,9 @@ export function KnowledgeBasePage() {
                 }}
                 className={cn(inputClasses, "w-auto py-1.5")}
               >
-                <option value="">Any Visibility</option>
-                <option value="internal">Internal wiki</option>
-                <option value="public">Public FAQ</option>
+                <option value="">{t("anyVisibility")}</option>
+                <option value="internal">{t("internalWiki")}</option>
+                <option value="public">{t("publicFaqOption")}</option>
               </select>
             </div>
           </div>
@@ -367,9 +378,18 @@ export function KnowledgeBasePage() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-50/75 hover:bg-gray-50/75 dark:bg-slate-800/50 dark:hover:bg-slate-800/50">
-                  {["Article", "Category", "Visibility", "Status", "Views", "Feedback", "Updated", ""].map((h) => (
+                  {[
+                    t("table.article"),
+                    t("table.category"),
+                    t("table.visibility"),
+                    t("table.status"),
+                    t("table.views"),
+                    t("table.feedback"),
+                    t("table.updated"),
+                    "",
+                  ].map((h, i) => (
                     <TableHead
-                      key={h}
+                      key={i}
                       className={cn(
                         "px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400",
                         h === "" && "text-right",
@@ -385,7 +405,7 @@ export function KnowledgeBasePage() {
                   <TableRow>
                     <TableCell colSpan={8} className="px-6 py-12 text-center text-gray-400 dark:text-slate-500">
                       <div className="flex justify-center items-center gap-2">
-                        <Loader2 size={18} className="animate-spin" /> Fetching articles...
+                        <Loader2 size={18} className="animate-spin" /> {t("fetchingArticles")}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -394,9 +414,9 @@ export function KnowledgeBasePage() {
                     <TableCell colSpan={8} className="px-6 py-16 text-center">
                       <div className="flex flex-col items-center gap-2 text-gray-500 dark:text-slate-400">
                         <BookOpen size={32} className="text-gray-300 dark:text-slate-600" />
-                        <p className="font-medium">No articles yet</p>
+                        <p className="font-medium">{t("noArticlesYet")}</p>
                         <p className="text-sm text-gray-400 dark:text-slate-500">
-                          Document a fix once and link it from every ticket it resolves.
+                          {t("noArticlesDesc")}
                         </p>
                       </div>
                     </TableCell>
@@ -422,17 +442,17 @@ export function KnowledgeBasePage() {
                       <TableCell className="px-6 py-4">
                         {article.visibility === "public" ? (
                           <Badge variant="outline" className="bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-500/15 dark:text-sky-300 font-semibold gap-1">
-                            <Globe size={11} /> Public
+                            <Globe size={11} /> {t("publicBadge")}
                           </Badge>
                         ) : (
                           <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800/50 dark:text-slate-300 dark:border-slate-800 font-semibold gap-1">
-                            <Lock size={11} /> Internal
+                            <Lock size={11} /> {t("internalBadge")}
                           </Badge>
                         )}
                       </TableCell>
                       <TableCell className="px-6 py-4">
                         <Badge variant="outline" className={cn("capitalize font-semibold", statusStyles[article.status])}>
-                          {article.status}
+                          {article.status === "draft" ? t("statusDraft") : article.status === "published" ? t("statusPublished") : t("statusArchived")}
                         </Badge>
                       </TableCell>
                       <TableCell className="px-6 py-4 text-sm font-semibold text-gray-700 dark:text-slate-200">{article.views}</TableCell>
@@ -454,31 +474,31 @@ export function KnowledgeBasePage() {
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-700 dark:text-slate-500 dark:hover:text-slate-200">
                               <MoreHorizontal size={18} />
-                              <span className="sr-only">Open actions</span>
+                              <span className="sr-only">{t("openActions")}</span>
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => setViewingArticle(article)}>
-                              <Eye size={15} /> Read
+                              <Eye size={15} /> {t("read")}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => openEdit(article)}>
-                              <Pencil size={15} /> Edit
+                              <Pencil size={15} /> {t("edit")}
                             </DropdownMenuItem>
                             {article.status !== "published" && (
                               <DropdownMenuItem onClick={() => quickStatus(article, "published")}>
-                                <Send size={15} /> Publish
+                                <Send size={15} /> {t("publish")}
                               </DropdownMenuItem>
                             )}
                             {article.status === "published" && (
                               <DropdownMenuItem onClick={() => quickStatus(article, "archived")}>
-                                <Archive size={15} /> Archive
+                                <Archive size={15} /> {t("archive")}
                               </DropdownMenuItem>
                             )}
                             {isStaffAdmin && (
                               <>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem variant="destructive" onClick={() => setDeletingArticle(article)}>
-                                  <Trash2 size={15} /> Delete
+                                  <Trash2 size={15} /> {t("delete")}
                                 </DropdownMenuItem>
                               </>
                             )}
@@ -495,15 +515,18 @@ export function KnowledgeBasePage() {
           {!articlesQuery.isLoading && meta && meta.total > 0 && (
             <div className="p-4 border-t border-gray-100 dark:border-slate-800 flex items-center justify-between text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
               <span>
-                {(meta.page - 1) * meta.limit + 1}–{Math.min(meta.page * meta.limit, meta.total)} of {meta.total}{" "}
-                articles
+                {t("articlesRange", {
+                  from: (meta.page - 1) * meta.limit + 1,
+                  to: Math.min(meta.page * meta.limit, meta.total),
+                  total: meta.total,
+                })}
               </span>
               <div className="flex items-center gap-1">
                 <Button variant="outline" size="icon" onClick={() => setPage((p) => Math.max(p - 1, 1))} disabled={page <= 1}>
                   <ChevronLeft size={16} />
                 </Button>
                 <span className="px-3 text-sm font-bold text-gray-700 dark:text-slate-200">
-                  {meta.page} / {meta.totalPages}
+                  {t("pageOf", { page: meta.page, totalPages: meta.totalPages })}
                 </span>
                 <Button
                   variant="outline"
@@ -528,15 +551,15 @@ export function KnowledgeBasePage() {
                 <DialogTitle>{viewingArticle.title}</DialogTitle>
                 <DialogDescription className="flex items-center gap-2 flex-wrap">
                   <Badge variant="outline" className={cn("capitalize font-semibold", statusStyles[viewingArticle.status])}>
-                    {viewingArticle.status}
+                    {viewingArticle.status === "draft" ? t("statusDraft") : viewingArticle.status === "published" ? t("statusPublished") : t("statusArchived")}
                   </Badge>
                   {viewingArticle.visibility === "public" ? (
                     <Badge variant="outline" className="bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-500/15 dark:text-sky-300 gap-1">
-                      <Globe size={11} /> Public FAQ
+                      <Globe size={11} /> {t("view.publicFaqBadge")}
                     </Badge>
                   ) : (
                     <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800/50 dark:text-slate-300 dark:border-slate-800 gap-1">
-                      <Lock size={11} /> Internal
+                      <Lock size={11} /> {t("view.internalBadge")}
                     </Badge>
                   )}
                   {viewingArticle.category && <span className="capitalize">· {viewingArticle.category}</span>}
@@ -548,17 +571,20 @@ export function KnowledgeBasePage() {
                 </div>
                 {viewingArticle.tags.length > 0 && (
                   <div className="flex gap-1.5 flex-wrap">
-                    {viewingArticle.tags.map((t) => (
-                      <Badge key={t} variant="outline" className="bg-white text-gray-500 border-gray-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800">
-                        #{t}
+                    {viewingArticle.tags.map((tag) => (
+                      <Badge key={tag} variant="outline" className="bg-white text-gray-500 border-gray-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800">
+                        #{tag}
                       </Badge>
                     ))}
                   </div>
                 )}
                 <p className="text-[11px] text-gray-400 dark:text-slate-500">
-                  By {viewingArticle.authorName ?? "unknown"} · {viewingArticle.views} views ·{" "}
-                  {viewingArticle.helpfulCount} found it helpful
-                  {viewingArticle.updatedByName ? ` · last edited by ${viewingArticle.updatedByName}` : ""}
+                  {t("view.byAuthor", {
+                    author: viewingArticle.authorName ?? t("view.unknownAuthor"),
+                    views: viewingArticle.views,
+                    helpful: viewingArticle.helpfulCount,
+                  })}
+                  {viewingArticle.updatedByName ? t("view.lastEditedBy", { name: viewingArticle.updatedByName }) : ""}
                 </p>
               </div>
               <DialogFooter>
@@ -570,10 +596,10 @@ export function KnowledgeBasePage() {
                     openEdit(target);
                   }}
                 >
-                  <Pencil size={15} /> Edit
+                  <Pencil size={15} /> {t("view.edit")}
                 </Button>
                 <Button variant="secondary" onClick={() => setViewingArticle(null)}>
-                  Close
+                  {t("view.close")}
                 </Button>
               </DialogFooter>
             </>
@@ -585,11 +611,9 @@ export function KnowledgeBasePage() {
       <Dialog open={formOpen} onOpenChange={(open) => !open && !isSaving && setFormOpen(false)}>
         <DialogContent className="max-w-2xl max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingArticle ? "Edit Article" : "New Article"}</DialogTitle>
+            <DialogTitle>{editingArticle ? t("form.editTitle") : t("form.newTitle")}</DialogTitle>
             <DialogDescription>
-              {editingArticle
-                ? "The public URL (slug) stays stable even if you rename the article."
-                : "Draft it first; publish when it's ready. Public articles appear on the FAQ page."}
+              {editingArticle ? t("form.editDesc") : t("form.newDesc")}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -600,32 +624,32 @@ export function KnowledgeBasePage() {
             )}
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                Title *
+                {t("form.titleLabel")}
               </label>
-              <Input placeholder="How do I reset my password?" disabled={isSaving} {...form.register("title")} />
+              <Input placeholder={t("form.titlePlaceholder")} disabled={isSaving} {...form.register("title")} />
               <FieldError message={form.formState.errors.title?.message} />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Category
+                  {t("form.category")}
                 </label>
-                <Input placeholder="billing / how-to / troubleshooting" disabled={isSaving} {...form.register("category")} />
+                <Input placeholder={t("form.categoryPlaceholder")} disabled={isSaving} {...form.register("category")} />
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Tags (comma-separated)
+                  {t("form.tags")}
                 </label>
-                <Input placeholder="password, login, account" disabled={isSaving} {...form.register("tags")} />
+                <Input placeholder={t("form.tagsPlaceholder")} disabled={isSaving} {...form.register("tags")} />
               </div>
             </div>
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                Body *
+                {t("form.body")}
               </label>
               <textarea
                 rows={10}
-                placeholder="Write the article (plain text / markdown source)..."
+                placeholder={t("form.bodyPlaceholder")}
                 className={cn(inputClasses, "resize-y font-mono text-[13px]")}
                 disabled={isSaving}
                 {...form.register("body")}
@@ -635,31 +659,31 @@ export function KnowledgeBasePage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Visibility
+                  {t("form.visibility")}
                 </label>
                 <select className={inputClasses} disabled={isSaving} {...form.register("visibility")}>
-                  <option value="internal">Internal wiki (staff only)</option>
-                  <option value="public">Public FAQ</option>
+                  <option value="internal">{t("form.internalOption")}</option>
+                  <option value="public">{t("form.publicOption")}</option>
                 </select>
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Status
+                  {t("form.status")}
                 </label>
                 <select className={inputClasses} disabled={isSaving} {...form.register("status")}>
-                  <option value="draft">Draft</option>
-                  <option value="published">Published</option>
-                  <option value="archived">Archived</option>
+                  <option value="draft">{t("form.draftOption")}</option>
+                  <option value="published">{t("form.publishedOption")}</option>
+                  <option value="archived">{t("form.archivedOption")}</option>
                 </select>
               </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setFormOpen(false)} disabled={isSaving}>
-                Cancel
+                {tc("cancel")}
               </Button>
               <Button type="submit" disabled={isSaving} className="bg-[#3F51B5] hover:bg-[#303F9F] text-white">
                 {isSaving && <Loader2 size={15} className="animate-spin" />}
-                {editingArticle ? "Update Article" : "Create Article"}
+                {editingArticle ? t("form.updateArticle") : t("form.createArticle")}
               </Button>
             </DialogFooter>
           </form>
@@ -672,11 +696,11 @@ export function KnowledgeBasePage() {
           {deletingArticle && (
             <>
               <DialogHeader>
-                <DialogTitle>Delete article?</DialogTitle>
+                <DialogTitle>{t("deleteDialog.title")}</DialogTitle>
                 <DialogDescription>
-                  This permanently removes{" "}
-                  <span className="font-semibold text-gray-700 dark:text-slate-200">{deletingArticle.title}</span>. Tickets that
-                  linked it lose the reference. Consider archiving instead.
+                  {t("deleteDialog.desc", {
+                    title: deletingArticle.title,
+                  })}
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
@@ -685,11 +709,11 @@ export function KnowledgeBasePage() {
                   onClick={() => setDeletingArticle(null)}
                   disabled={deleteArticleMutation.isPending}
                 >
-                  Cancel
+                  {tc("cancel")}
                 </Button>
                 <Button variant="destructive" onClick={handleDelete} disabled={deleteArticleMutation.isPending}>
                   {deleteArticleMutation.isPending && <Loader2 size={15} className="animate-spin" />}
-                  Delete Article
+                  {t("deleteDialog.deleteArticle")}
                 </Button>
               </DialogFooter>
             </>

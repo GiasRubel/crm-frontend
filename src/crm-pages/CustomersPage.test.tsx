@@ -86,7 +86,7 @@ describe("CustomersPage — populated list", () => {
     mockPage([customer({ status: "prospect" })]);
     renderPage();
 
-    expect(await screen.findByText("prospect")).toBeInTheDocument();
+    expect(await screen.findByText("Prospect")).toBeInTheDocument();
   });
 
   it("shows the stat card values", async () => {

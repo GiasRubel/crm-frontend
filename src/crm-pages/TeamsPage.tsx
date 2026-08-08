@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { z } from "zod";
@@ -102,6 +103,7 @@ function parseRegions(text?: string): string[] {
 // ── Small presentational helpers ──────────────────────────────────────────────
 
 function ActiveBadge({ isActive }: { isActive: boolean }) {
+  const t = useTranslations("teams");
   return (
     <Badge
       variant="outline"
@@ -112,7 +114,7 @@ function ActiveBadge({ isActive }: { isActive: boolean }) {
           : "bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700",
       )}
     >
-      {isActive ? "active" : "inactive"}
+      {isActive ? t("active") : t("inactive")}
     </Badge>
   );
 }
@@ -215,6 +217,8 @@ function RegionBadges({ regions }: { regions: string[] }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export function TeamsPage() {
+  const t = useTranslations("teams");
+  const tc = useTranslations("common");
   const { user } = useAuth();
   const isStaffAdmin = user?.role === "Admin" || user?.role === "Administrator";
 
@@ -365,16 +369,16 @@ export function TeamsPage() {
     try {
       if (editingTeam) {
         await updateTeamMutation.mutateAsync({ id: editingTeam.id, data: payload });
-        notifySuccess(`Team "${payload.name}" updated successfully.`);
+        notifySuccess(t("toasts.updated", { name: payload.name }));
       } else {
         await createTeamMutation.mutateAsync(payload);
-        notifySuccess(`Team "${payload.name}" created successfully.`);
+        notifySuccess(t("toasts.created", { name: payload.name }));
         resetToFirstPage();
       }
       setFormOpen(false);
       setEditingTeam(null);
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : "Failed to save team");
+      setFormError(err instanceof Error ? err.message : t("toasts.saveFailed"));
     }
   };
 
@@ -383,11 +387,11 @@ export function TeamsPage() {
     try {
       await deleteTeamMutation.mutateAsync(deletingTeam.id);
       notifySuccess(
-        `Team "${deletingTeam.name}" was deleted — its ${deletingTeam.customerCount} assigned customer(s) returned to the unassigned pool.`,
+        t("toasts.deleted", { name: deletingTeam.name, count: deletingTeam.customerCount }),
       );
       setDeletingTeam(null);
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Failed to delete team");
+      setErrorMsg(err instanceof Error ? err.message : t("toasts.deleteFailed"));
       setDeletingTeam(null);
     }
   };
@@ -408,26 +412,26 @@ export function TeamsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Teams &amp; Territories</h1>
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t("title")}</h1>
             <p className="text-sm text-gray-500 dark:text-slate-400">
-              Organize staff into teams, route customer records, and control data visibility.
+              {t("subtitle")}
             </p>
           </div>
           {isStaffAdmin && (
             <Button onClick={openCreate} className="bg-[#3F51B5] hover:bg-[#303F9F] text-white gap-2">
               <Plus size={18} />
-              Add Team
+              {t("addTeam")}
             </Button>
           )}
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <StatCard label="Total Teams" value={stats?.total} icon={UsersRound} accent="bg-[#3F51B5]/10 text-[#3F51B5] dark:bg-indigo-500/15 dark:text-indigo-300" />
-          <StatCard label="Active" value={stats?.active} icon={Check} accent="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400" />
-          <StatCard label="Inactive" value={stats?.inactive} icon={X} accent="bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400" />
-          <StatCard label="Staff in Teams" value={stats?.totalMembers} icon={UserCheck} accent="bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400" />
-          <StatCard label="Routed Customers" value={stats?.assignedCustomers} icon={Users} accent="bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400" />
+          <StatCard label={t("stats.totalTeams")} value={stats?.total} icon={UsersRound} accent="bg-[#3F51B5]/10 text-[#3F51B5] dark:bg-indigo-500/15 dark:text-indigo-300" />
+          <StatCard label={t("stats.active")} value={stats?.active} icon={Check} accent="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400" />
+          <StatCard label={t("stats.inactive")} value={stats?.inactive} icon={X} accent="bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400" />
+          <StatCard label={t("stats.staffInTeams")} value={stats?.totalMembers} icon={UserCheck} accent="bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400" />
+          <StatCard label={t("stats.routedCustomers")} value={stats?.assignedCustomers} icon={Users} accent="bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400" />
         </div>
 
         {/* Notifications */}
@@ -449,7 +453,7 @@ export function TeamsPage() {
               <AlertCircle className="text-red-600 dark:text-red-400 shrink-0" size={20} />
               <span className="text-sm font-medium">
                 {errorMsg ??
-                  (teamsQuery.error instanceof Error ? teamsQuery.error.message : "Failed to load teams")}
+                  (teamsQuery.error instanceof Error ? teamsQuery.error.message : t("loadFailed"))}
               </span>
             </div>
             <button
@@ -471,7 +475,7 @@ export function TeamsPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" size={18} />
               <Input
                 type="text"
-                placeholder="Search by name, description, or region..."
+                placeholder={t("searchPlaceholder")}
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
@@ -485,7 +489,7 @@ export function TeamsPage() {
               {teamsQuery.isFetching && !teamsQuery.isLoading && (
                 <Loader2 size={16} className="animate-spin text-gray-400 dark:text-slate-500" />
               )}
-              <label className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Status:</label>
+              <label className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">{t("status")}</label>
               <select
                 value={activeFilter}
                 onChange={(e) => {
@@ -494,9 +498,9 @@ export function TeamsPage() {
                 }}
                 className={cn(inputClasses, "w-auto py-1.5")}
               >
-                <option value="">All Teams</option>
-                <option value="true">Active</option>
-                <option value="false">Inactive</option>
+                <option value="">{t("allTeams")}</option>
+                <option value="true">{t("stats.active")}</option>
+                <option value="false">{t("stats.inactive")}</option>
               </select>
             </div>
           </div>
@@ -505,25 +509,25 @@ export function TeamsPage() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-50/75 hover:bg-gray-50/75 dark:bg-slate-800/50 dark:hover:bg-slate-800/50">
-                  <SortableHead field="name" className="px-6" {...sortProps}>Team</SortableHead>
+                  <SortableHead field="name" className="px-6" {...sortProps}>{t("table.team")}</SortableHead>
                   <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
-                    Regions
+                    {t("table.regions")}
                   </TableHead>
                   <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
-                    Team Lead
+                    {t("table.teamLead")}
                   </TableHead>
                   <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
-                    Members
+                    {t("table.members")}
                   </TableHead>
                   <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
-                    Customers
+                    {t("table.customers")}
                   </TableHead>
                   <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
-                    Status
+                    {t("table.status")}
                   </TableHead>
-                  <SortableHead field="createdAt" className="px-6" {...sortProps}>Created</SortableHead>
+                  <SortableHead field="createdAt" className="px-6" {...sortProps}>{t("table.created")}</SortableHead>
                   <TableHead className="px-6 text-right text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
-                    Actions
+                    {t("table.actions")}
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -533,7 +537,7 @@ export function TeamsPage() {
                     <TableCell colSpan={8} className="px-6 py-12 text-center text-gray-400 dark:text-slate-500">
                       <div className="flex justify-center items-center gap-2">
                         <Loader2 size={18} className="animate-spin" />
-                        <span>Fetching teams...</span>
+                        <span>{t("fetchingTeams")}</span>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -542,13 +546,13 @@ export function TeamsPage() {
                     <TableCell colSpan={8} className="px-6 py-16 text-center">
                       <div className="flex flex-col items-center gap-2 text-gray-500 dark:text-slate-400">
                         <UsersRound size={32} className="text-gray-300 dark:text-slate-600" />
-                        <p className="font-medium">No teams found</p>
+                        <p className="font-medium">{t("noTeamsFound")}</p>
                         <p className="text-sm text-gray-400 dark:text-slate-500">
                           {debouncedSearch || activeFilter
-                            ? "Try adjusting your search or filters."
+                            ? t("adjustFilters")
                             : isStaffAdmin
-                              ? "Create your first team to start routing records."
-                              : "Teams will appear here once created."}
+                              ? t("createFirstTeam")
+                              : t("teamsAppearHere")}
                         </p>
                       </div>
                     </TableCell>
@@ -599,24 +603,24 @@ export function TeamsPage() {
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-700 dark:text-slate-500 dark:hover:text-slate-200">
                               <MoreHorizontal size={18} />
-                              <span className="sr-only">Open actions</span>
+                              <span className="sr-only">{t("openActions")}</span>
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => setViewingTeam(team)}>
-                              <Info size={15} /> View details
+                              <Info size={15} /> {t("viewDetails")}
                             </DropdownMenuItem>
                             {isStaffAdmin && (
                               <>
                                 <DropdownMenuItem onClick={() => openEdit(team)}>
-                                  <Pencil size={15} /> Edit team
+                                  <Pencil size={15} /> {t("editTeam")}
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                   variant="destructive"
                                   onClick={() => setDeletingTeam(team)}
                                 >
-                                  <Trash2 size={15} /> Delete team
+                                  <Trash2 size={15} /> {t("deleteTeam")}
                                 </DropdownMenuItem>
                               </>
                             )}
@@ -635,8 +639,11 @@ export function TeamsPage() {
             <div className="p-4 border-t border-gray-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
               <div className="flex items-center gap-3">
                 <span>
-                  {(meta.page - 1) * meta.limit + 1}–{Math.min(meta.page * meta.limit, meta.total)} of{" "}
-                  {meta.total} teams
+                  {t("range", {
+                    from: (meta.page - 1) * meta.limit + 1,
+                    to: Math.min(meta.page * meta.limit, meta.total),
+                    total: meta.total,
+                  })}
                 </span>
                 <select
                   value={limit}
@@ -646,9 +653,9 @@ export function TeamsPage() {
                   }}
                   className={cn(inputClasses, "w-auto py-1 text-xs")}
                 >
-                  <option value={10}>10 / page</option>
-                  <option value={25}>25 / page</option>
-                  <option value={50}>50 / page</option>
+                  <option value={10}>{t("perPage", { count: 10 })}</option>
+                  <option value={25}>{t("perPage", { count: 25 })}</option>
+                  <option value={50}>{t("perPage", { count: 50 })}</option>
                 </select>
               </div>
               <div className="flex items-center gap-1">
@@ -661,7 +668,7 @@ export function TeamsPage() {
                   <ChevronLeft size={16} />
                 </Button>
                 <span className="px-3 text-sm font-bold text-gray-700 dark:text-slate-200">
-                  {meta.page} / {meta.totalPages}
+                  {t("pageOf", { page: meta.page, totalPages: meta.totalPages })}
                 </span>
                 <Button
                   variant="outline"
@@ -683,8 +690,8 @@ export function TeamsPage() {
           {viewingTeam && (
             <>
               <DialogHeader>
-                <DialogTitle>Team Details</DialogTitle>
-                <DialogDescription>Territory scope, membership, and routing summary.</DialogDescription>
+                <DialogTitle>{t("details.title")}</DialogTitle>
+                <DialogDescription>{t("details.subtitle")}</DialogDescription>
               </DialogHeader>
 
               <div className="space-y-6">
@@ -695,7 +702,7 @@ export function TeamsPage() {
                   <div className="min-w-0">
                     <h4 className="text-lg font-bold text-gray-900 dark:text-white truncate">{viewingTeam.name}</h4>
                     <span className="text-sm text-gray-500 dark:text-slate-400">
-                      {viewingTeam.members.length} member(s) · {viewingTeam.customerCount} customer(s)
+                      {t("details.memberCustomerLine", { members: viewingTeam.members.length, customers: viewingTeam.customerCount })}
                     </span>
                   </div>
                   <div className="ml-auto shrink-0">
@@ -709,15 +716,15 @@ export function TeamsPage() {
 
                 <div className="space-y-1">
                   <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold flex items-center gap-1.5">
-                    <Globe2 size={13} /> Territory Regions
+                    <Globe2 size={13} /> {t("details.territoryRegions")}
                   </p>
                   <RegionBadges regions={viewingTeam.regions} />
                 </div>
 
                 <div className="space-y-2">
-                  <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold">Members</p>
+                  <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold">{t("details.members")}</p>
                   {viewingTeam.members.length === 0 ? (
-                    <p className="text-sm text-gray-400 dark:text-slate-500">No members yet.</p>
+                    <p className="text-sm text-gray-400 dark:text-slate-500">{t("details.noMembersYet")}</p>
                   ) : (
                     <div className="space-y-2">
                       {viewingTeam.members.map((member) => (
@@ -736,7 +743,7 @@ export function TeamsPage() {
                           </div>
                           {viewingTeam.leaderId === member.keycloakId && (
                             <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 gap-1 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/30">
-                              <Crown size={11} /> Lead
+                              <Crown size={11} /> {t("details.lead")}
                             </Badge>
                           )}
                         </div>
@@ -747,11 +754,11 @@ export function TeamsPage() {
 
                 <div className="text-[11px] text-gray-400 dark:text-slate-500 space-y-1 border-t border-gray-100 dark:border-slate-800 pt-4">
                   <p>
-                    <span className="font-bold">Created:</span>{" "}
+                    <span className="font-bold">{t("details.created")}</span>{" "}
                     {viewingTeam.createdAt ? new Date(viewingTeam.createdAt).toLocaleString() : "—"}
                   </p>
                   <p>
-                    <span className="font-bold">Last updated:</span>{" "}
+                    <span className="font-bold">{t("details.lastUpdated")}</span>{" "}
                     {viewingTeam.updatedAt ? new Date(viewingTeam.updatedAt).toLocaleString() : "—"}
                   </p>
                 </div>
@@ -767,11 +774,11 @@ export function TeamsPage() {
                       openEdit(target);
                     }}
                   >
-                    <Pencil size={15} /> Edit
+                    <Pencil size={15} /> {t("details.edit")}
                   </Button>
                 )}
                 <Button variant="secondary" onClick={() => setViewingTeam(null)}>
-                  Close
+                  {t("details.close")}
                 </Button>
               </DialogFooter>
             </>
@@ -783,11 +790,9 @@ export function TeamsPage() {
       <Dialog open={formOpen} onOpenChange={(open) => !open && closeForm()}>
         <DialogContent className="max-w-lg max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingTeam ? "Edit Team" : "Create New Team"}</DialogTitle>
+            <DialogTitle>{editingTeam ? t("form.editTitle") : t("form.createTitle")}</DialogTitle>
             <DialogDescription>
-              {editingTeam
-                ? "Membership changes take effect immediately on record visibility."
-                : "Members of a team can see all customer records routed to it."}
+              {editingTeam ? t("form.editDesc") : t("form.createDesc")}
             </DialogDescription>
           </DialogHeader>
 
@@ -801,20 +806,20 @@ export function TeamsPage() {
 
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                Team Name *
+                {t("form.teamName")}
               </label>
-              <Input placeholder="EMEA Sales" disabled={isSaving} {...form.register("name")} />
+              <Input placeholder={t("form.teamNamePlaceholder")} disabled={isSaving} {...form.register("name")} />
               <FieldError message={form.formState.errors.name?.message} />
             </div>
 
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                Description
+                {t("form.description")}
               </label>
               <textarea
                 rows={2}
                 disabled={isSaving}
-                placeholder="What this team is responsible for..."
+                placeholder={t("form.descriptionPlaceholder")}
                 className={cn(inputClasses, "resize-none")}
                 {...form.register("description")}
               />
@@ -823,25 +828,25 @@ export function TeamsPage() {
 
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                Territory Regions
+                {t("form.territoryRegions")}
               </label>
               <Input
-                placeholder="EMEA, Germany, Berlin"
+                placeholder={t("form.regionsPlaceholder")}
                 disabled={isSaving}
                 {...form.register("regionsText")}
               />
               <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">
-                Comma-separated region tags used to route new records to this team.
+                {t("form.regionsHint")}
               </p>
               <FieldError message={form.formState.errors.regionsText?.message} />
             </div>
 
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                Members ({selectedMemberIds.length})
+                {t("form.membersCount", { count: selectedMemberIds.length })}
               </label>
               <Input
-                placeholder="Filter staff..."
+                placeholder={t("form.filterStaff")}
                 value={memberSearch}
                 onChange={(e) => setMemberSearch(e.target.value)}
                 disabled={isSaving}
@@ -850,10 +855,10 @@ export function TeamsPage() {
               <div className="border border-gray-200 dark:border-slate-700 rounded-lg max-h-44 overflow-y-auto divide-y divide-gray-50 dark:divide-slate-800">
                 {staffQuery.isLoading ? (
                   <div className="flex items-center gap-2 p-3 text-sm text-gray-400 dark:text-slate-500">
-                    <Loader2 size={14} className="animate-spin" /> Loading staff...
+                    <Loader2 size={14} className="animate-spin" /> {t("form.loadingStaff")}
                   </div>
                 ) : filteredStaff.length === 0 ? (
-                  <p className="p-3 text-sm text-gray-400 dark:text-slate-500">No staff users found.</p>
+                  <p className="p-3 text-sm text-gray-400 dark:text-slate-500">{t("form.noStaffFound")}</p>
                 ) : (
                   filteredStaff.map((s) => (
                     <label
@@ -886,7 +891,7 @@ export function TeamsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Team Lead
+                  {t("form.teamLead")}
                 </label>
                 <select
                   disabled={isSaving || selectedMembers.length === 0}
@@ -894,7 +899,7 @@ export function TeamsPage() {
                   value={selectedLeaderId ?? ""}
                   onChange={(e) => form.setValue("leaderId", e.target.value, { shouldValidate: true })}
                 >
-                  <option value="">No lead</option>
+                  <option value="">{t("form.noLead")}</option>
                   {selectedMembers.map((m) => (
                     <option key={m.keycloakId} value={m.keycloakId}>
                       {staffDisplayName(m)}
@@ -905,25 +910,25 @@ export function TeamsPage() {
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Status
+                  {t("form.status")}
                 </label>
                 <select disabled={isSaving} className={inputClasses} {...form.register("isActive")}>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
+                  <option value="active">{t("form.active")}</option>
+                  <option value="inactive">{t("form.inactive")}</option>
                 </select>
                 <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">
-                  Inactive teams stop granting visibility and receiving new records.
+                  {t("form.inactiveHint")}
                 </p>
               </div>
             </div>
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeForm} disabled={isSaving}>
-                Cancel
+                {tc("cancel")}
               </Button>
               <Button type="submit" disabled={isSaving} className="bg-[#3F51B5] hover:bg-[#303F9F] text-white">
                 {isSaving && <Loader2 size={15} className="animate-spin" />}
-                {editingTeam ? "Update Team" : "Create Team"}
+                {editingTeam ? t("form.updateTeam") : t("form.createTeam")}
               </Button>
             </DialogFooter>
           </form>
@@ -936,19 +941,11 @@ export function TeamsPage() {
           {deletingTeam && (
             <>
               <DialogHeader>
-                <DialogTitle>Delete team?</DialogTitle>
+                <DialogTitle>{t("deleteDialog.title")}</DialogTitle>
                 <DialogDescription>
-                  This permanently removes{" "}
-                  <span className="font-semibold text-gray-700 dark:text-slate-200">{deletingTeam.name}</span>.{" "}
-                  {deletingTeam.customerCount > 0 ? (
-                    <>
-                      Its <span className="font-semibold text-gray-700 dark:text-slate-200">{deletingTeam.customerCount}</span>{" "}
-                      routed customer(s) will return to the unassigned pool (visible to admins only).
-                    </>
-                  ) : (
-                    "No customers are currently routed to this team."
-                  )}{" "}
-                  This action cannot be undone.
+                  {deletingTeam.customerCount > 0
+                    ? t("deleteDialog.descWithCustomers", { name: deletingTeam.name, count: deletingTeam.customerCount })
+                    : t("deleteDialog.descNoCustomers", { name: deletingTeam.name })}
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
@@ -957,7 +954,7 @@ export function TeamsPage() {
                   onClick={() => setDeletingTeam(null)}
                   disabled={deleteTeamMutation.isPending}
                 >
-                  Cancel
+                  {tc("cancel")}
                 </Button>
                 <Button
                   variant="destructive"
@@ -965,7 +962,7 @@ export function TeamsPage() {
                   disabled={deleteTeamMutation.isPending}
                 >
                   {deleteTeamMutation.isPending && <Loader2 size={15} className="animate-spin" />}
-                  Delete Team
+                  {t("deleteDialog.deleteTeam")}
                 </Button>
               </DialogFooter>
             </>

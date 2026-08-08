@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { z } from "zod";
@@ -85,6 +86,8 @@ function parseOptions(text?: string): string[] {
 }
 
 export function CustomFieldsPage() {
+  const t = useTranslations("customFields");
+  const tc = useTranslations("common");
   const { user } = useAuth();
   const isAdmin = user?.role === "Admin" || user?.role === "Administrator";
 
@@ -156,7 +159,7 @@ export function CustomFieldsPage() {
             helpText: values.helpText?.trim() || undefined,
           },
         });
-        setSuccessMsg(`Custom field "${values.label}" updated.`);
+        setSuccessMsg(t("toasts.updated", { label: values.label }));
       } else {
         await createMutation.mutateAsync({
           entityType: values.entityType,
@@ -167,12 +170,12 @@ export function CustomFieldsPage() {
           required: values.required,
           helpText: values.helpText?.trim() || undefined,
         });
-        setSuccessMsg(`Custom field "${values.label}" added.`);
+        setSuccessMsg(t("toasts.added", { label: values.label }));
       }
       setFormOpen(false);
       setEditing(null);
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : "Failed to save custom field");
+      setFormError(err instanceof Error ? err.message : t("toasts.saveFailed"));
     }
   };
 
@@ -183,7 +186,7 @@ export function CustomFieldsPage() {
   const confirmDelete = async () => {
     if (!deleteTarget) return;
     await deleteMutation.mutateAsync(deleteTarget.id);
-    setSuccessMsg(`Custom field "${deleteTarget.label}" removed.`);
+    setSuccessMsg(t("toasts.removed", { label: deleteTarget.label }));
     setDeleteTarget(null);
   };
 
@@ -192,9 +195,9 @@ export function CustomFieldsPage() {
       <div className="p-6">
         <Card className="p-10 text-center">
           <ShieldAlert size={28} className="mx-auto mb-3 text-gray-400 dark:text-slate-500" />
-          <p className="font-semibold text-gray-700 dark:text-slate-200">Admin access required</p>
+          <p className="font-semibold text-gray-700 dark:text-slate-200">{t("adminRequired")}</p>
           <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
-            Custom field configuration is visible to Admins and Administrators only.
+            {t("adminRequiredDesc")}
           </p>
         </Card>
       </div>
@@ -209,15 +212,15 @@ export function CustomFieldsPage() {
             <ListPlus size={20} />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">Custom Fields</h1>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">{t("title")}</h1>
             <p className="text-sm text-gray-500 dark:text-slate-400">
-              Add your own fields to leads, contacts, accounts, opportunities, customers, and tickets.
+              {t("subtitle")}
             </p>
           </div>
         </div>
         <Button onClick={openCreate} className="bg-[#3F51B5] hover:bg-[#3646a0]">
           <Plus size={16} className="mr-1.5" />
-          Add field
+          {t("addField")}
         </Button>
       </div>
 
@@ -246,12 +249,12 @@ export function CustomFieldsPage() {
                     {ENTITY_TYPE_LABELS[entityType]}
                   </h3>
                   <span className="text-xs text-gray-400 dark:text-slate-500">
-                    {defs.length} field{defs.length === 1 ? "" : "s"}
+                    {t("fieldCount", { count: defs.length })}
                   </span>
                 </div>
                 {defs.length === 0 ? (
                   <p className="px-4 py-4 text-sm text-gray-400 dark:text-slate-500">
-                    No custom fields defined yet.
+                    {t("noFieldsYet")}
                   </p>
                 ) : (
                   <ul className="divide-y divide-gray-100 dark:divide-slate-800">
@@ -277,7 +280,7 @@ export function CustomFieldsPage() {
                           )}
                           onClick={() => toggleActive(def)}
                         >
-                          {def.isActive ? "active" : "inactive"}
+                          {def.isActive ? t("active") : t("inactive")}
                         </Badge>
                         <Button variant="ghost" size="icon" onClick={() => openEdit(def)}>
                           <Pencil size={15} />
@@ -299,11 +302,9 @@ export function CustomFieldsPage() {
       <Dialog open={formOpen} onOpenChange={(open) => !open && closeForm()}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{editing ? "Edit custom field" : "Add custom field"}</DialogTitle>
+            <DialogTitle>{editing ? t("editDialogTitle") : t("addDialogTitle")}</DialogTitle>
             <DialogDescription>
-              {editing
-                ? "Existing stored values are preserved when you change label, type, or options."
-                : "This field becomes available on every record's form immediately."}
+              {editing ? t("editDialogDesc") : t("addDialogDesc")}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -315,7 +316,7 @@ export function CustomFieldsPage() {
             )}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
-                Applies to
+                {t("appliesTo")}
               </label>
               <select className={inputClasses} disabled={!!editing} {...form.register("entityType")}>
                 {CUSTOM_FIELD_ENTITY_TYPES.map((entityType) => (
@@ -327,21 +328,21 @@ export function CustomFieldsPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
-                Label
+                {t("label")}
               </label>
-              <Input {...form.register("label")} placeholder="e.g. Renewal date" />
+              <Input {...form.register("label")} placeholder={t("labelPlaceholder")} />
               {form.formState.errors.label && (
                 <p className="text-xs text-red-500 mt-1">{form.formState.errors.label.message}</p>
               )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
-                Key
+                {t("key")}
               </label>
               <Input
                 {...form.register("key")}
                 disabled={!!editing}
-                placeholder="e.g. renewal_date"
+                placeholder={t("keyPlaceholder")}
                 onChange={(e) =>
                   form.setValue("key", e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))
                 }
@@ -352,7 +353,7 @@ export function CustomFieldsPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
-                Field type
+                {t("fieldType")}
               </label>
               <select className={inputClasses} {...form.register("type")}>
                 {CUSTOM_FIELD_TYPES.map((type) => (
@@ -365,9 +366,9 @@ export function CustomFieldsPage() {
             {isChoiceType && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
-                  Options (comma-separated)
+                  {t("optionsLabel")}
                 </label>
-                <Input {...form.register("optionsText")} placeholder="e.g. Bronze, Silver, Gold" />
+                <Input {...form.register("optionsText")} placeholder={t("optionsPlaceholder")} />
                 {form.formState.errors.optionsText && (
                   <p className="text-xs text-red-500 mt-1">{form.formState.errors.optionsText.message}</p>
                 )}
@@ -375,17 +376,17 @@ export function CustomFieldsPage() {
             )}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
-                Help text (optional)
+                {t("helpText")}
               </label>
-              <Input {...form.register("helpText")} placeholder="Shown under the field on the form" />
+              <Input {...form.register("helpText")} placeholder={t("helpTextPlaceholder")} />
             </div>
             <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-slate-300">
               <input type="checkbox" className="w-4 h-4 accent-[#3F51B5]" {...form.register("required")} />
-              Required
+              {t("required")}
             </label>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeForm}>
-                Cancel
+                {tc("cancel")}
               </Button>
               <Button
                 type="submit"
@@ -395,9 +396,9 @@ export function CustomFieldsPage() {
                 {createMutation.isPending || updateMutation.isPending ? (
                   <Loader2 size={16} className="animate-spin" />
                 ) : editing ? (
-                  "Save changes"
+                  t("saveChanges")
                 ) : (
-                  "Add field"
+                  t("addField")
                 )}
               </Button>
             </DialogFooter>
@@ -409,26 +410,25 @@ export function CustomFieldsPage() {
       <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Remove custom field?</DialogTitle>
+            <DialogTitle>{t("deleteTitle")}</DialogTitle>
             <DialogDescription>
-              {deleteTarget && (
-                <>
-                  &quot;{deleteTarget.label}&quot; will no longer appear on {ENTITY_TYPE_LABELS[deleteTarget.entityType].toLowerCase()} forms.
-                  Values already stored on existing records are kept but become inaccessible.
-                </>
-              )}
+              {deleteTarget &&
+                t("deleteDesc", {
+                  label: deleteTarget.label,
+                  entity: ENTITY_TYPE_LABELS[deleteTarget.entityType].toLowerCase(),
+                })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteTarget(null)}>
-              Cancel
+              {tc("cancel")}
             </Button>
             <Button
               variant="destructive"
               onClick={confirmDelete}
               disabled={deleteMutation.isPending}
             >
-              {deleteMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : "Remove"}
+              {deleteMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : tc("remove")}
             </Button>
           </DialogFooter>
         </DialogContent>

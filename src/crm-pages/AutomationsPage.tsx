@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   AlertCircle,
   Check,
@@ -152,6 +153,8 @@ const inputClasses =
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export function AutomationsPage() {
+  const t = useTranslations("automations");
+  const tc = useTranslations("common");
   const { user } = useAuth();
   const isStaffAdmin = user?.role === "Admin" || user?.role === "Administrator";
 
@@ -263,15 +266,15 @@ export function AutomationsPage() {
   const handleSubmit = async () => {
     setFormError(null);
     if (!form.name.trim()) {
-      setFormError("Give the rule a name.");
+      setFormError(t("toasts.giveRuleName"));
       return;
     }
     if (form.actions.length === 0) {
-      setFormError("Add at least one action.");
+      setFormError(t("toasts.addAtLeastOneAction"));
       return;
     }
     if (form.conditions.some((c) => !c.field.trim() || !c.value.trim())) {
-      setFormError("Every condition needs a field and a value (or remove the empty row).");
+      setFormError(t("toasts.conditionNeedsFieldValue"));
       return;
     }
 
@@ -299,15 +302,19 @@ export function AutomationsPage() {
     try {
       if (editingRule) {
         await updateRuleMutation.mutateAsync({ id: editingRule.id, data: payload });
-        notifySuccess(`Rule "${form.name}" updated.`);
+        notifySuccess(t("toasts.updated", { name: form.name }));
       } else {
         await createRuleMutation.mutateAsync({ ...payload, kind: form.kind });
-        notifySuccess(`Rule "${form.name}" created and ${form.isActive ? "active" : "created as inactive"}.`);
+        notifySuccess(
+          form.isActive
+            ? t("toasts.createdActive", { name: form.name })
+            : t("toasts.createdInactive", { name: form.name }),
+        );
       }
       setFormOpen(false);
       setEditingRule(null);
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : "Failed to save rule");
+      setFormError(err instanceof Error ? err.message : t("toasts.saveFailed"));
     }
   };
 
@@ -317,9 +324,11 @@ export function AutomationsPage() {
         id: rule.id,
         data: { isActive: !rule.isActive },
       });
-      notifySuccess(`Rule "${rule.name}" ${rule.isActive ? "paused" : "activated"}.`);
+      notifySuccess(
+        rule.isActive ? t("toasts.paused", { name: rule.name }) : t("toasts.activated", { name: rule.name }),
+      );
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Failed to toggle rule");
+      setErrorMsg(err instanceof Error ? err.message : t("toasts.toggleFailed"));
     }
   };
 
@@ -327,10 +336,10 @@ export function AutomationsPage() {
     if (!deletingRule) return;
     try {
       await deleteRuleMutation.mutateAsync(deletingRule.id);
-      notifySuccess(`Rule "${deletingRule.name}" deleted.`);
+      notifySuccess(t("toasts.deleted", { name: deletingRule.name }));
       setDeletingRule(null);
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Failed to delete rule");
+      setErrorMsg(err instanceof Error ? err.message : t("toasts.deleteFailed"));
       setDeletingRule(null);
     }
   };
@@ -343,10 +352,9 @@ export function AutomationsPage() {
         <Card className="max-w-md">
           <CardContent className="p-8 flex flex-col items-center text-center gap-3">
             <ShieldAlert size={40} className="text-gray-300 dark:text-slate-600" />
-            <h2 className="text-lg font-bold text-gray-800 dark:text-white">Admins only</h2>
+            <h2 className="text-lg font-bold text-gray-800 dark:text-white">{t("adminsOnly")}</h2>
             <p className="text-sm text-gray-500 dark:text-slate-400">
-              Automation rules change data and send emails automatically, so configuring them is
-              restricted to administrators.
+              {t("adminsOnlyDesc")}
             </p>
           </CardContent>
         </Card>
@@ -360,25 +368,25 @@ export function AutomationsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Automation & Workflows</h1>
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t("title")}</h1>
             <p className="text-sm text-gray-500 dark:text-slate-400">
-              Trigger-based actions and SLA escalations — less manual busywork.
+              {t("subtitle")}
             </p>
           </div>
           <Button onClick={openCreate} className="bg-[#3F51B5] hover:bg-[#303F9F] text-white gap-2">
             <Plus size={18} />
-            New Rule
+            {t("newRule")}
           </Button>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <StatCard label="Rules" value={stats?.totalRules} icon={Zap} accent="bg-[#3F51B5]/10 text-[#3F51B5] dark:bg-indigo-500/15 dark:text-indigo-300" />
-          <StatCard label="Active" value={stats?.activeRules} icon={Play} accent="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400" />
-          <StatCard label="Triggers" value={stats?.triggerRules} icon={Zap} accent="bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400" />
-          <StatCard label="SLA Rules" value={stats?.slaRules} icon={Timer} accent="bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400" />
-          <StatCard label="Runs (24h)" value={stats?.runsLast24h} icon={Clock} accent="bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400" />
-          <StatCard label="Failed (24h)" value={stats?.failedRunsLast24h} icon={AlertCircle} accent="bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-400" />
+          <StatCard label={t("stats.rules")} value={stats?.totalRules} icon={Zap} accent="bg-[#3F51B5]/10 text-[#3F51B5] dark:bg-indigo-500/15 dark:text-indigo-300" />
+          <StatCard label={t("stats.active")} value={stats?.activeRules} icon={Play} accent="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400" />
+          <StatCard label={t("stats.triggers")} value={stats?.triggerRules} icon={Zap} accent="bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400" />
+          <StatCard label={t("stats.slaRules")} value={stats?.slaRules} icon={Timer} accent="bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400" />
+          <StatCard label={t("stats.runs24h")} value={stats?.runsLast24h} icon={Clock} accent="bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400" />
+          <StatCard label={t("stats.failed24h")} value={stats?.failedRunsLast24h} icon={AlertCircle} accent="bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-400" />
         </div>
 
         {/* Notifications */}
@@ -400,7 +408,7 @@ export function AutomationsPage() {
               <AlertCircle className="text-red-600 dark:text-red-400 shrink-0" size={20} />
               <span className="text-sm font-medium">
                 {errorMsg ??
-                  (rulesQuery.error instanceof Error ? rulesQuery.error.message : "Failed to load rules")}
+                  (rulesQuery.error instanceof Error ? rulesQuery.error.message : t("loadFailed"))}
               </span>
             </div>
             <button
@@ -421,9 +429,17 @@ export function AutomationsPage() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-50/75 hover:bg-gray-50/75 dark:bg-slate-800/50 dark:hover:bg-slate-800">
-                  {["Rule", "When", "Then", "Runs", "Last Run", "Status", ""].map((h) => (
+                  {[
+                    t("table.rule"),
+                    t("table.when"),
+                    t("table.then"),
+                    t("table.runs"),
+                    t("table.lastRun"),
+                    t("table.status"),
+                    "",
+                  ].map((h, i) => (
                     <TableHead
-                      key={h}
+                      key={i}
                       className={cn(
                         "px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400",
                         h === "" && "text-right",
@@ -440,7 +456,7 @@ export function AutomationsPage() {
                     <TableCell colSpan={7} className="px-6 py-12 text-center text-gray-400 dark:text-slate-500">
                       <div className="flex justify-center items-center gap-2">
                         <Loader2 size={18} className="animate-spin" />
-                        <span>Fetching rules...</span>
+                        <span>{t("fetchingRules")}</span>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -449,10 +465,9 @@ export function AutomationsPage() {
                     <TableCell colSpan={7} className="px-6 py-16 text-center">
                       <div className="flex flex-col items-center gap-2 text-gray-500 dark:text-slate-400">
                         <Zap size={32} className="text-gray-300 dark:text-slate-600" />
-                        <p className="font-medium">No automation rules yet</p>
+                        <p className="font-medium">{t("noRulesYet")}</p>
                         <p className="text-sm text-gray-400 dark:text-slate-500 max-w-md">
-                          Try: &quot;When a lead status changes to qualified → create a follow-up task and
-                          send a welcome email&quot;, or an SLA rule escalating leads idle for 48 hours.
+                          {t("noRulesExample")}
                         </p>
                       </div>
                     </TableCell>
@@ -482,7 +497,7 @@ export function AutomationsPage() {
                         )}
                         {rule.conditions.length > 0 && (
                           <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">
-                            +{rule.conditions.length} condition{rule.conditions.length > 1 ? "s" : ""}
+                            {t("conditionCount", { count: rule.conditions.length })}
                           </p>
                         )}
                       </TableCell>
@@ -499,7 +514,7 @@ export function AutomationsPage() {
                         {rule.runCount}
                       </TableCell>
                       <TableCell className="px-6 py-4 text-sm text-gray-500 dark:text-slate-400">
-                        {rule.lastRunAt ? new Date(rule.lastRunAt).toLocaleString() : "Never"}
+                        {rule.lastRunAt ? new Date(rule.lastRunAt).toLocaleString() : t("never")}
                       </TableCell>
                       <TableCell className="px-6 py-4">
                         <button
@@ -510,7 +525,7 @@ export function AutomationsPage() {
                             "relative inline-flex h-5 w-9 items-center rounded-full transition-colors",
                             rule.isActive ? "bg-emerald-500" : "bg-gray-300 dark:bg-slate-700",
                           )}
-                          title={rule.isActive ? "Active — click to pause" : "Paused — click to activate"}
+                          title={rule.isActive ? t("activeToggleOn") : t("activeToggleOff")}
                         >
                           <span
                             className={cn(
@@ -525,12 +540,12 @@ export function AutomationsPage() {
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-700 dark:text-slate-500 dark:hover:text-slate-200">
                               <MoreHorizontal size={18} />
-                              <span className="sr-only">Open actions</span>
+                              <span className="sr-only">{t("openActions")}</span>
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => openEdit(rule)}>
-                              <Pencil size={15} /> Edit rule
+                              <Pencil size={15} /> {t("editRule")}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => {
@@ -538,11 +553,11 @@ export function AutomationsPage() {
                                 setRunsPage(1);
                               }}
                             >
-                              <Info size={15} /> Show its runs
+                              <Info size={15} /> {t("showRuns")}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem variant="destructive" onClick={() => setDeletingRule(rule)}>
-                              <Trash2 size={15} /> Delete rule
+                              <Trash2 size={15} /> {t("deleteRule")}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -559,7 +574,7 @@ export function AutomationsPage() {
         <Card className="py-0 overflow-hidden">
           <div className="p-4 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <h2 className="font-bold text-gray-800 dark:text-white">Execution Log</h2>
+              <h2 className="font-bold text-gray-800 dark:text-white">{t("executionLog")}</h2>
               {runsQuery.isFetching && <Loader2 size={14} className="animate-spin text-gray-400 dark:text-slate-500" />}
             </div>
             {runsRuleId && (
@@ -571,14 +586,14 @@ export function AutomationsPage() {
                   setRunsPage(1);
                 }}
               >
-                <X size={14} /> Clear rule filter
+                <X size={14} /> {t("clearRuleFilter")}
               </Button>
             )}
           </div>
 
           {runs.length === 0 ? (
             <p className="p-8 text-center text-sm text-gray-400 dark:text-slate-500">
-              No runs yet — the log fills up as rules fire.
+              {t("noRunsYet")}
             </p>
           ) : (
             <ul className="divide-y divide-gray-100 dark:divide-slate-800">
@@ -626,8 +641,11 @@ export function AutomationsPage() {
           {runsMeta && runsMeta.total > 0 && (
             <div className="p-4 border-t border-gray-100 dark:border-slate-800 flex items-center justify-between text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
               <span>
-                {(runsMeta.page - 1) * runsMeta.limit + 1}–
-                {Math.min(runsMeta.page * runsMeta.limit, runsMeta.total)} of {runsMeta.total} runs
+                {t("runsRange", {
+                  from: (runsMeta.page - 1) * runsMeta.limit + 1,
+                  to: Math.min(runsMeta.page * runsMeta.limit, runsMeta.total),
+                  total: runsMeta.total,
+                })}
               </span>
               <div className="flex items-center gap-1">
                 <Button
@@ -639,7 +657,7 @@ export function AutomationsPage() {
                   <ChevronLeft size={16} />
                 </Button>
                 <span className="px-3 text-sm font-bold text-gray-700 dark:text-slate-200">
-                  {runsMeta.page} / {runsMeta.totalPages}
+                  {t("pageOf", { page: runsMeta.page, totalPages: runsMeta.totalPages })}
                 </span>
                 <Button
                   variant="outline"
@@ -659,11 +677,9 @@ export function AutomationsPage() {
       <Dialog open={formOpen} onOpenChange={(open) => !open && closeForm()}>
         <DialogContent className="max-w-2xl max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingRule ? "Edit Rule" : "New Automation Rule"}</DialogTitle>
+            <DialogTitle>{editingRule ? t("form.editTitle") : t("form.createTitle")}</DialogTitle>
             <DialogDescription>
-              {form.kind === "trigger"
-                ? "When the selected event happens and all conditions match, the actions run."
-                : "Records idle longer than the threshold are escalated with the actions below (checked every few minutes)."}
+              {form.kind === "trigger" ? t("form.triggerDesc") : t("form.slaDesc")}
             </DialogDescription>
           </DialogHeader>
 
@@ -678,10 +694,10 @@ export function AutomationsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Rule Name *
+                  {t("form.ruleName")}
                 </label>
                 <Input
-                  placeholder="Qualified lead welcome"
+                  placeholder={t("form.ruleNamePlaceholder")}
                   disabled={isSaving}
                   value={form.name}
                   onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
@@ -689,7 +705,7 @@ export function AutomationsPage() {
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Kind
+                  {t("form.kind")}
                 </label>
                 <select
                   className={inputClasses}
@@ -697,18 +713,18 @@ export function AutomationsPage() {
                   value={form.kind}
                   onChange={(e) => setForm((f) => ({ ...f, kind: e.target.value as RuleKind }))}
                 >
-                  <option value="trigger">Trigger (react to an event)</option>
-                  <option value="sla">SLA (escalate idle records)</option>
+                  <option value="trigger">{t("form.kindTrigger")}</option>
+                  <option value="sla">{t("form.kindSla")}</option>
                 </select>
               </div>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                Description
+                {t("form.description")}
               </label>
               <Input
-                placeholder="What is this rule for?"
+                placeholder={t("form.descriptionPlaceholder")}
                 disabled={isSaving}
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
@@ -717,7 +733,7 @@ export function AutomationsPage() {
 
             {/* When */}
             <div className="border border-gray-100 dark:border-slate-800 rounded-xl p-4 bg-gray-50/50 dark:bg-slate-800/50 space-y-3">
-              <p className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">When</p>
+              <p className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">{t("form.when")}</p>
               {form.kind === "trigger" ? (
                 <select
                   className={inputClasses}
@@ -739,9 +755,9 @@ export function AutomationsPage() {
                     value={form.slaEntity}
                     onChange={(e) => setForm((f) => ({ ...f, slaEntity: e.target.value as SlaEntity }))}
                   >
-                    <option value="lead">Open leads</option>
-                    <option value="opportunity">Open deals</option>
-                    <option value="ticket">Active tickets (response-time SLA)</option>
+                    <option value="lead">{t("form.openLeads")}</option>
+                    <option value="opportunity">{t("form.openDeals")}</option>
+                    <option value="ticket">{t("form.activeTicketsSla")}</option>
                   </select>
                   <div className="flex items-center gap-2">
                     <Input
@@ -751,7 +767,7 @@ export function AutomationsPage() {
                       value={form.slaIdleHours}
                       onChange={(e) => setForm((f) => ({ ...f, slaIdleHours: e.target.value }))}
                     />
-                    <span className="text-sm text-gray-500 dark:text-slate-400 whitespace-nowrap">hours idle</span>
+                    <span className="text-sm text-gray-500 dark:text-slate-400 whitespace-nowrap">{t("form.hoursIdle")}</span>
                   </div>
                 </div>
               )}
@@ -762,7 +778,7 @@ export function AutomationsPage() {
                   <div key={i} className="flex gap-2 items-center">
                     <Input
                       className="flex-1"
-                      placeholder="field (e.g. newStatus)"
+                      placeholder={t("form.fieldPlaceholder")}
                       disabled={isSaving}
                       value={condition.field}
                       onChange={(e) => patchCondition(i, { field: e.target.value })}
@@ -783,7 +799,7 @@ export function AutomationsPage() {
                     </select>
                     <Input
                       className="flex-1"
-                      placeholder="value"
+                      placeholder={t("form.valuePlaceholder")}
                       disabled={isSaving}
                       value={condition.value}
                       onChange={(e) => patchCondition(i, { value: e.target.value })}
@@ -816,10 +832,10 @@ export function AutomationsPage() {
                       }))
                     }
                   >
-                    <Plus size={14} /> Add condition
+                    <Plus size={14} /> {t("form.addCondition")}
                   </Button>
                   <p className="text-[11px] text-gray-400 dark:text-slate-500">
-                    Fields: {fieldHints.join(", ")}
+                    {t("form.fieldsHint", { fields: fieldHints.join(", ") })}
                   </p>
                 </div>
               </div>
@@ -827,7 +843,7 @@ export function AutomationsPage() {
 
             {/* Then */}
             <div className="border border-gray-100 dark:border-slate-800 rounded-xl p-4 bg-gray-50/50 dark:bg-slate-800/50 space-y-3">
-              <p className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Then</p>
+              <p className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">{t("form.then")}</p>
               {form.actions.map((action, i) => (
                 <div key={i} className="bg-white border border-gray-100 dark:bg-slate-900 dark:border-slate-800 rounded-lg p-3 space-y-3">
                   <div className="flex items-center gap-2">
@@ -867,7 +883,7 @@ export function AutomationsPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <Input
                         className="sm:col-span-3"
-                        placeholder="Task subject * — supports {{firstName}}, {{name}}, ..."
+                        placeholder={t("form.taskSubjectPlaceholder")}
                         disabled={isSaving}
                         value={action.taskSubject ?? ""}
                         onChange={(e) => patchAction(i, { taskSubject: e.target.value })}
@@ -883,7 +899,7 @@ export function AutomationsPage() {
                             patchAction(i, { taskDueInDays: Number(e.target.value) })
                           }
                         />
-                        <span className="text-xs text-gray-500 dark:text-slate-400 whitespace-nowrap">days due</span>
+                        <span className="text-xs text-gray-500 dark:text-slate-400 whitespace-nowrap">{t("form.daysDue")}</span>
                       </div>
                       <select
                         className={inputClasses}
@@ -895,12 +911,12 @@ export function AutomationsPage() {
                           })
                         }
                       >
-                        <option value="low">Low priority</option>
-                        <option value="normal">Normal priority</option>
-                        <option value="high">High priority</option>
+                        <option value="low">{t("form.lowPriority")}</option>
+                        <option value="normal">{t("form.normalPriority")}</option>
+                        <option value="high">{t("form.highPriority")}</option>
                       </select>
                       <p className="text-[11px] text-gray-400 dark:text-slate-500 self-center">
-                        Assigned to the record&apos;s owner automatically.
+                        {t("form.autoAssignHint")}
                       </p>
                     </div>
                   )}
@@ -916,14 +932,14 @@ export function AutomationsPage() {
                             patchAction(i, { emailTo: e.target.value as "record" | "owner" | "custom" })
                           }
                         >
-                          <option value="record">To the record&apos;s email</option>
-                          <option value="owner">To the record owner (staff)</option>
-                          <option value="custom">To a custom address</option>
+                          <option value="record">{t("form.toRecordEmail")}</option>
+                          <option value="owner">{t("form.toOwner")}</option>
+                          <option value="custom">{t("form.toCustom")}</option>
                         </select>
                         {action.emailTo === "custom" && (
                           <Input
                             type="email"
-                            placeholder="someone@example.com"
+                            placeholder={t("form.customEmailPlaceholder")}
                             disabled={isSaving}
                             value={action.emailAddress ?? ""}
                             onChange={(e) => patchAction(i, { emailAddress: e.target.value })}
@@ -931,7 +947,7 @@ export function AutomationsPage() {
                         )}
                       </div>
                       <Input
-                        placeholder="Email subject * — e.g. Welcome, {{firstName}}!"
+                        placeholder={t("form.emailSubjectPlaceholder")}
                         disabled={isSaving}
                         value={action.emailSubject ?? ""}
                         onChange={(e) => patchAction(i, { emailSubject: e.target.value })}
@@ -939,7 +955,7 @@ export function AutomationsPage() {
                       <textarea
                         rows={3}
                         className={cn(inputClasses, "resize-none")}
-                        placeholder={"Email body * — placeholders like {{firstName}}, {{company}}, {{status}} are filled from the record."}
+                        placeholder={t("form.emailBodyPlaceholder")}
                         disabled={isSaving}
                         value={action.emailBody ?? ""}
                         onChange={(e) => patchAction(i, { emailBody: e.target.value })}
@@ -955,7 +971,7 @@ export function AutomationsPage() {
                         value={action.assignToId ?? ""}
                         onChange={(e) => patchAction(i, { assignToId: e.target.value })}
                       >
-                        <option value="">Owner unchanged</option>
+                        <option value="">{t("form.ownerUnchanged")}</option>
                         {(staffQuery.data ?? []).map((s) => (
                           <option key={s.keycloakId} value={s.keycloakId}>
                             {staffDisplayName(s)} ({s.role})
@@ -968,10 +984,10 @@ export function AutomationsPage() {
                         value={action.assignTeamId ?? ""}
                         onChange={(e) => patchAction(i, { assignTeamId: e.target.value })}
                       >
-                        <option value="">Team unchanged</option>
-                        {(teamsQuery.data?.data ?? []).map((t) => (
-                          <option key={t.id} value={t.id}>
-                            {t.name}
+                        <option value="">{t("form.teamUnchanged")}</option>
+                        {(teamsQuery.data?.data ?? []).map((team) => (
+                          <option key={team.id} value={team.id}>
+                            {team.name}
                           </option>
                         ))}
                       </select>
@@ -980,7 +996,7 @@ export function AutomationsPage() {
 
                   {action.type === "call_webhook" && (
                     <Input
-                      placeholder="https://example.com/hooks/crm — receives a JSON POST"
+                      placeholder={t("form.webhookPlaceholder")}
                       disabled={isSaving}
                       value={action.webhookUrl ?? ""}
                       onChange={(e) => patchAction(i, { webhookUrl: e.target.value })}
@@ -997,7 +1013,7 @@ export function AutomationsPage() {
                   setForm((f) => ({ ...f, actions: [...f.actions, defaultAction("create_task")] }))
                 }
               >
-                <Plus size={14} /> Add action
+                <Plus size={14} /> {t("form.addAction")}
               </Button>
             </div>
 
@@ -1009,17 +1025,17 @@ export function AutomationsPage() {
                 checked={form.isActive}
                 onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))}
               />
-              Rule is active
+              {t("form.ruleIsActive")}
             </label>
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={closeForm} disabled={isSaving}>
-              Cancel
+              {tc("cancel")}
             </Button>
             <Button onClick={handleSubmit} disabled={isSaving} className="bg-[#3F51B5] hover:bg-[#303F9F] text-white">
               {isSaving && <Loader2 size={15} className="animate-spin" />}
-              {editingRule ? "Update Rule" : "Create Rule"}
+              {editingRule ? t("form.updateRule") : t("form.createRule")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1031,11 +1047,9 @@ export function AutomationsPage() {
           {deletingRule && (
             <>
               <DialogHeader>
-                <DialogTitle>Delete rule?</DialogTitle>
+                <DialogTitle>{t("deleteDialog.title")}</DialogTitle>
                 <DialogDescription>
-                  This permanently removes{" "}
-                  <span className="font-semibold text-gray-700 dark:text-slate-200">{deletingRule.name}</span>. Its past
-                  runs stay in the execution log. Consider pausing instead if you might need it again.
+                  {t("deleteDialog.desc", { name: deletingRule.name })}
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
@@ -1044,11 +1058,11 @@ export function AutomationsPage() {
                   onClick={() => setDeletingRule(null)}
                   disabled={deleteRuleMutation.isPending}
                 >
-                  Cancel
+                  {tc("cancel")}
                 </Button>
                 <Button variant="destructive" onClick={handleDelete} disabled={deleteRuleMutation.isPending}>
                   {deleteRuleMutation.isPending && <Loader2 size={15} className="animate-spin" />}
-                  Delete Rule
+                  {t("deleteDialog.deleteRule")}
                 </Button>
               </DialogFooter>
             </>

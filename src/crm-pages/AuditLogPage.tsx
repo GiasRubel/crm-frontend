@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   ChevronDown,
   ChevronLeft,
@@ -56,20 +57,21 @@ const actionStyles: Record<AuditAction, string> = {
     "bg-gray-100 text-gray-600 border-gray-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700",
 };
 
-function formatValue(value: unknown): string {
+function formatValue(value: unknown, yes: string, no: string): string {
   if (value === null || value === undefined || value === "") return "—";
-  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (typeof value === "boolean") return value ? yes : no;
   return String(value);
 }
 
 function ExpandedEntry({ entry }: { entry: AuditLogEntry }) {
+  const t = useTranslations("auditLog");
   const hasChanges = entry.changes.length > 0;
   const metadataEntries = entry.metadata ? Object.entries(entry.metadata) : [];
 
   if (!hasChanges && metadataEntries.length === 0) {
     return (
       <p className="text-xs text-gray-400 dark:text-slate-500">
-        No field-level detail was recorded for this entry.
+        {t("noFieldDetail")}
       </p>
     );
   }
@@ -80,9 +82,9 @@ function ExpandedEntry({ entry }: { entry: AuditLogEntry }) {
         <table className="w-full text-xs">
           <thead>
             <tr className="text-gray-400 dark:text-slate-500 uppercase tracking-wider">
-              <th className="text-left font-semibold pb-1 pr-3">Field</th>
-              <th className="text-left font-semibold pb-1 pr-3">From</th>
-              <th className="text-left font-semibold pb-1">To</th>
+              <th className="text-left font-semibold pb-1 pr-3">{t("field")}</th>
+              <th className="text-left font-semibold pb-1 pr-3">{t("from")}</th>
+              <th className="text-left font-semibold pb-1">{t("to")}</th>
             </tr>
           </thead>
           <tbody>
@@ -92,10 +94,10 @@ function ExpandedEntry({ entry }: { entry: AuditLogEntry }) {
                   {change.field}
                 </td>
                 <td className="py-1.5 pr-3 text-gray-500 dark:text-slate-400 break-all">
-                  {formatValue(change.from)}
+                  {formatValue(change.from, t("yes"), t("no"))}
                 </td>
                 <td className="py-1.5 text-gray-700 dark:text-slate-200 break-all">
-                  {formatValue(change.to)}
+                  {formatValue(change.to, t("yes"), t("no"))}
                 </td>
               </tr>
             ))}
@@ -104,7 +106,7 @@ function ExpandedEntry({ entry }: { entry: AuditLogEntry }) {
       )}
       {metadataEntries.length > 0 && (
         <p className="text-xs text-gray-500 dark:text-slate-400">
-          {metadataEntries.map(([key, value]) => `${key}: ${formatValue(value)}`).join(" · ")}
+          {metadataEntries.map(([key, value]) => `${key}: ${formatValue(value, t("yes"), t("no"))}`).join(" · ")}
         </p>
       )}
     </div>
@@ -112,6 +114,7 @@ function ExpandedEntry({ entry }: { entry: AuditLogEntry }) {
 }
 
 export function AuditLogPage() {
+  const t = useTranslations("auditLog");
   const { user } = useAuth();
   const isAdmin = user?.role === "Admin" || user?.role === "Administrator";
 
@@ -137,9 +140,9 @@ export function AuditLogPage() {
       <div className="p-6">
         <Card className="p-10 text-center">
           <ShieldAlert size={28} className="mx-auto mb-3 text-gray-400 dark:text-slate-500" />
-          <p className="font-semibold text-gray-700 dark:text-slate-200">Admin access required</p>
+          <p className="font-semibold text-gray-700 dark:text-slate-200">{t("adminRequired")}</p>
           <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
-            The audit trail is visible to Admins and Administrators only.
+            {t("adminRequiredDesc")}
           </p>
         </Card>
       </div>
@@ -153,9 +156,9 @@ export function AuditLogPage() {
           <History size={20} />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">Audit Log</h1>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">{t("title")}</h1>
           <p className="text-sm text-gray-500 dark:text-slate-400">
-            Who changed what, and when — across every module.
+            {t("subtitle")}
           </p>
         </div>
       </div>
@@ -169,7 +172,7 @@ export function AuditLogPage() {
             />
             <Input
               className="pl-9"
-              placeholder="Search by record, person, or description..."
+              placeholder={t("searchPlaceholder")}
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -185,7 +188,7 @@ export function AuditLogPage() {
               setPage(1);
             }}
           >
-            <option value="">All modules</option>
+            <option value="">{t("allModules")}</option>
             {Object.entries(ENTITY_TYPE_LABELS).map(([value, label]) => (
               <option key={value} value={value}>
                 {label}
@@ -200,7 +203,7 @@ export function AuditLogPage() {
               setPage(1);
             }}
           >
-            <option value="">All actions</option>
+            <option value="">{t("allActions")}</option>
             {Object.entries(ACTION_LABELS).map(([value, label]) => (
               <option key={value} value={value}>
                 {label}
@@ -214,7 +217,7 @@ export function AuditLogPage() {
 
         {entries.length === 0 ? (
           <p className="p-10 text-center text-sm text-gray-400 dark:text-slate-500">
-            {listQuery.isLoading ? "Loading…" : "No audit entries match these filters."}
+            {listQuery.isLoading ? t("loading") : t("noEntries")}
           </p>
         ) : (
           <ul className="divide-y divide-gray-100 dark:divide-slate-800">
@@ -236,7 +239,7 @@ export function AuditLogPage() {
                       {entry.summary}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-slate-400 truncate">
-                      {ENTITY_TYPE_LABELS[entry.entityType]} · {entry.actorName ?? "System"} ·{" "}
+                      {ENTITY_TYPE_LABELS[entry.entityType]} · {entry.actorName ?? t("systemActor")} ·{" "}
                       {new Date(entry.createdAt).toLocaleString()}
                     </p>
                   </div>
@@ -259,8 +262,11 @@ export function AuditLogPage() {
         {meta && meta.total > 0 && (
           <div className="p-4 border-t border-gray-100 dark:border-slate-800 flex items-center justify-between text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
             <span>
-              {(meta.page - 1) * meta.limit + 1}–{Math.min(meta.page * meta.limit, meta.total)} of{" "}
-              {meta.total} entries
+              {t("entriesRange", {
+                from: (meta.page - 1) * meta.limit + 1,
+                to: Math.min(meta.page * meta.limit, meta.total),
+                total: meta.total,
+              })}
             </span>
             <div className="flex items-center gap-1">
               <Button
@@ -272,7 +278,7 @@ export function AuditLogPage() {
                 <ChevronLeft size={16} />
               </Button>
               <span className="px-3 text-sm font-bold text-gray-700 dark:text-slate-200">
-                {meta.page} / {meta.totalPages}
+                {t("pageOf", { page: meta.page, totalPages: meta.totalPages })}
               </span>
               <Button
                 variant="outline"

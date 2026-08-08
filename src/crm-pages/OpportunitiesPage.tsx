@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { z } from "zod";
@@ -166,6 +167,8 @@ function FieldError({ message }: { message?: string }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export function OpportunitiesPage() {
+  const t = useTranslations("opportunities");
+  const tc = useTranslations("common");
   const { user } = useAuth();
   const isStaffAdmin = user?.role === "Admin" || user?.role === "Administrator";
 
@@ -279,7 +282,7 @@ export function OpportunitiesPage() {
             customFields: customFieldValues,
           },
         });
-        notifySuccess(`Deal "${values.name}" updated successfully.`);
+        notifySuccess(t("toasts.updated", { name: values.name }));
       } else {
         await createOpportunityMutation.mutateAsync({
           name: values.name,
@@ -291,12 +294,12 @@ export function OpportunitiesPage() {
           notes: values.notes?.trim() || undefined,
           customFields: customFieldValues,
         });
-        notifySuccess(`Deal "${values.name}" added to the pipeline.`);
+        notifySuccess(t("toasts.created", { name: values.name }));
       }
       setFormOpen(false);
       setEditingOpportunity(null);
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : "Failed to save opportunity");
+      setFormError(err instanceof Error ? err.message : t("toasts.saveFailed"));
     }
   };
 
@@ -313,16 +316,16 @@ export function OpportunitiesPage() {
         id: opportunity.id,
         data: { stage, lostReason: reason },
       });
-      notifySuccess(`"${opportunity.name}" moved to ${STAGE_LABELS[stage]}.`);
+      notifySuccess(t("toasts.moved", { name: opportunity.name, stage: STAGE_LABELS[stage] }));
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Failed to move deal");
+      setErrorMsg(err instanceof Error ? err.message : t("toasts.moveFailed"));
     }
   };
 
   const confirmLostMove = async () => {
     if (!pendingLostMove) return;
     if (!lostReason.trim()) {
-      setLostError("Please provide a reason — it feeds win/loss reporting.");
+      setLostError(t("lostDialog.reasonRequired"));
       return;
     }
     try {
@@ -330,10 +333,10 @@ export function OpportunitiesPage() {
         id: pendingLostMove.id,
         data: { stage: "closed_lost", lostReason: lostReason.trim() },
       });
-      notifySuccess(`"${pendingLostMove.name}" marked as lost.`);
+      notifySuccess(t("toasts.markedLost", { name: pendingLostMove.name }));
       setPendingLostMove(null);
     } catch (err) {
-      setLostError(err instanceof Error ? err.message : "Failed to move deal");
+      setLostError(err instanceof Error ? err.message : t("toasts.moveFailed"));
     }
   };
 
@@ -341,10 +344,10 @@ export function OpportunitiesPage() {
     if (!deletingOpportunity) return;
     try {
       await deleteOpportunityMutation.mutateAsync(deletingOpportunity.id);
-      notifySuccess(`Deal "${deletingOpportunity.name}" was deleted.`);
+      notifySuccess(t("toasts.deleted", { name: deletingOpportunity.name }));
       setDeletingOpportunity(null);
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Failed to delete deal");
+      setErrorMsg(err instanceof Error ? err.message : t("toasts.deleteFailed"));
       setDeletingOpportunity(null);
     }
   };
@@ -380,43 +383,43 @@ export function OpportunitiesPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Opportunities</h1>
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t("title")}</h1>
             <p className="text-sm text-gray-500 dark:text-slate-400">
-              Track deals through the pipeline — drag cards between stages.
+              {t("subtitle")}
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <ImportExportBar onExport={() => opportunityApi.exportCsv()} exportFilename="opportunities.csv" />
             <Button onClick={openCreate} className="bg-[#3F51B5] hover:bg-[#303F9F] text-white gap-2">
               <Plus size={18} />
-              Add Opportunity
+              {t("addOpportunity")}
             </Button>
           </div>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <StatCard label="Open Deals" value={stats?.openCount} icon={Target} accent="bg-[#3F51B5]/10 text-[#3F51B5] dark:bg-indigo-500/15 dark:text-indigo-300" />
+          <StatCard label={t("stats.openDeals")} value={stats?.openCount} icon={Target} accent="bg-[#3F51B5]/10 text-[#3F51B5] dark:bg-indigo-500/15 dark:text-indigo-300" />
           <StatCard
-            label="Pipeline Value"
+            label={t("stats.pipelineValue")}
             value={stats ? currency.format(stats.openValue) : undefined}
             icon={BadgeDollarSign}
             accent="bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400"
           />
           <StatCard
-            label="Weighted Forecast"
+            label={t("stats.weightedForecast")}
             value={stats ? currency.format(stats.weightedValue) : undefined}
             icon={Scale}
             accent="bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400"
           />
           <StatCard
-            label="Won This Month"
-            value={stats ? `${stats.wonThisMonthCount} · ${currency.format(stats.wonThisMonthValue)}` : undefined}
+            label={t("stats.wonThisMonth")}
+            value={stats ? t("stats.wonThisMonthValue", { count: stats.wonThisMonthCount, value: currency.format(stats.wonThisMonthValue) }) : undefined}
             icon={Award}
             accent="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400"
           />
           <StatCard
-            label="Win Rate"
+            label={t("stats.winRate")}
             value={stats ? `${stats.winRate}%` : undefined}
             icon={TrendingUp}
             accent="bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400"
@@ -442,7 +445,7 @@ export function OpportunitiesPage() {
               <AlertCircle className="text-red-600 dark:text-red-400 shrink-0" size={20} />
               <span className="text-sm font-medium">
                 {errorMsg ??
-                  (boardQuery.error instanceof Error ? boardQuery.error.message : "Failed to load pipeline")}
+                  (boardQuery.error instanceof Error ? boardQuery.error.message : t("loadFailed"))}
               </span>
             </div>
             <button
@@ -461,7 +464,7 @@ export function OpportunitiesPage() {
         {boardQuery.isLoading ? (
           <div className="flex items-center justify-center gap-2 text-gray-400 dark:text-slate-500 py-24">
             <Loader2 size={20} className="animate-spin" />
-            <span>Loading pipeline...</span>
+            <span>{t("loadingPipeline")}</span>
           </div>
         ) : (
           <div className="overflow-x-auto pb-4 -mx-1 px-1">
@@ -506,7 +509,7 @@ export function OpportunitiesPage() {
                     <div className="p-2 space-y-2 min-h-[120px] max-h-[65dvh] overflow-y-auto">
                       {column.opportunities.length === 0 ? (
                         <p className="text-xs text-gray-300 dark:text-slate-600 text-center py-8 select-none">
-                          Drop deals here
+                          {t("dropDealsHere")}
                         </p>
                       ) : (
                         column.opportunities.map((opportunity) => (
@@ -541,19 +544,19 @@ export function OpportunitiesPage() {
                                       className="h-6 w-6 text-gray-300 hover:text-gray-600 dark:text-slate-600 dark:hover:text-slate-300"
                                     >
                                       <MoreHorizontal size={14} />
-                                      <span className="sr-only">Deal actions</span>
+                                      <span className="sr-only">{t("dealActions")}</span>
                                     </Button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
                                     <DropdownMenuItem onClick={() => setViewingOpportunity(opportunity)}>
-                                      <Info size={15} /> View details
+                                      <Info size={15} /> {t("viewDetails")}
                                     </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => openEdit(opportunity)}>
-                                      <Pencil size={15} /> Edit deal
+                                      <Pencil size={15} /> {t("editDeal")}
                                     </DropdownMenuItem>
                                     <DropdownMenuSub>
                                       <DropdownMenuSubTrigger>
-                                        <Target size={15} /> Move to stage
+                                        <Target size={15} /> {t("moveToStage")}
                                       </DropdownMenuSubTrigger>
                                       <DropdownMenuSubContent>
                                         {columns
@@ -576,7 +579,7 @@ export function OpportunitiesPage() {
                                           variant="destructive"
                                           onClick={() => setDeletingOpportunity(opportunity)}
                                         >
-                                          <Trash2 size={15} /> Delete deal
+                                          <Trash2 size={15} /> {t("deleteDeal")}
                                         </DropdownMenuItem>
                                       </>
                                     )}
@@ -607,7 +610,7 @@ export function OpportunitiesPage() {
                                 <Calendar size={11} />
                                 {opportunity.expectedCloseDate
                                   ? new Date(opportunity.expectedCloseDate).toLocaleDateString()
-                                  : "No close date"}
+                                  : t("noCloseDate")}
                               </span>
                               {opportunity.assignedToName && (
                                 <span className="truncate max-w-[90px]" title={opportunity.assignedToName}>
@@ -633,8 +636,8 @@ export function OpportunitiesPage() {
           {viewingOpportunity && (
             <>
               <DialogHeader>
-                <DialogTitle>Deal Details</DialogTitle>
-                <DialogDescription>Value, stage progress, and history.</DialogDescription>
+                <DialogTitle>{t("details.title")}</DialogTitle>
+                <DialogDescription>{t("details.subtitle")}</DialogDescription>
               </DialogHeader>
 
               <div className="space-y-6">
@@ -654,42 +657,42 @@ export function OpportunitiesPage() {
                   {[
                     {
                       icon: Building,
-                      label: "Account",
-                      value: viewingOpportunity.accountName || "No account",
+                      label: t("details.account"),
+                      value: viewingOpportunity.accountName || t("details.noAccount"),
                     },
                     {
                       icon: BadgeDollarSign,
-                      label: "Amount",
+                      label: t("details.amount"),
                       value: currency.format(viewingOpportunity.amount),
                     },
                     {
                       icon: Scale,
-                      label: "Weighted",
-                      value: `${currency.format(viewingOpportunity.weightedAmount)} (${viewingOpportunity.probability}%)`,
+                      label: t("details.weighted"),
+                      value: t("details.weightedValue", { value: currency.format(viewingOpportunity.weightedAmount), probability: viewingOpportunity.probability }),
                     },
                     {
                       icon: Calendar,
-                      label: "Expected Close",
+                      label: t("details.expectedClose"),
                       value: viewingOpportunity.expectedCloseDate
                         ? new Date(viewingOpportunity.expectedCloseDate).toLocaleDateString()
                         : "—",
                     },
                     {
                       icon: Calendar,
-                      label: viewingOpportunity.stage === "closed_lost" ? "Closed (Lost)" : "Closed",
+                      label: viewingOpportunity.stage === "closed_lost" ? t("details.closedLostLabel") : t("details.closed"),
                       value: viewingOpportunity.closedAt
                         ? new Date(viewingOpportunity.closedAt).toLocaleDateString()
                         : "—",
                     },
                     {
                       icon: Target,
-                      label: "Record Owner",
-                      value: viewingOpportunity.assignedToName || "Unassigned",
+                      label: t("details.recordOwner"),
+                      value: viewingOpportunity.assignedToName || t("details.unassigned"),
                     },
                     {
                       icon: UsersRound,
-                      label: "Team",
-                      value: viewingOpportunity.assignedTeamName || "Unassigned",
+                      label: t("details.team"),
+                      value: viewingOpportunity.assignedTeamName || t("details.unassigned"),
                     },
                   ].map(({ icon: Icon, label, value }) => (
                     <div key={label} className="flex items-center gap-3 text-sm text-gray-600 dark:text-slate-300">
@@ -704,40 +707,40 @@ export function OpportunitiesPage() {
 
                 {viewingOpportunity.lostReason && (
                   <div className="bg-red-50 border border-red-200 dark:bg-red-500/10 dark:border-red-500/30 rounded-xl p-4 space-y-1">
-                    <p className="text-xs text-red-400 dark:text-red-400 uppercase tracking-wider font-semibold">Lost Reason</p>
+                    <p className="text-xs text-red-400 dark:text-red-400 uppercase tracking-wider font-semibold">{t("details.lostReason")}</p>
                     <p className="text-sm text-red-800 dark:text-red-300 whitespace-pre-wrap">{viewingOpportunity.lostReason}</p>
                   </div>
                 )}
 
                 <div className="bg-gray-50/75 dark:bg-slate-800/50 p-4 rounded-xl border border-gray-100 dark:border-slate-800 space-y-1">
-                  <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold">Notes</p>
+                  <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold">{t("details.notes")}</p>
                   <p className="text-sm text-gray-700 dark:text-slate-200 whitespace-pre-wrap">
-                    {viewingOpportunity.notes || "No notes for this deal."}
+                    {viewingOpportunity.notes || t("details.noNotes")}
                   </p>
                 </div>
 
                 {/* Stage history */}
                 <div className="space-y-2">
                   <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold">
-                    Stage History ({viewingOpportunity.stageHistory.length})
+                    {t("details.stageHistory", { count: viewingOpportunity.stageHistory.length })}
                   </p>
                   {viewingOpportunity.stageHistory.length === 0 ? (
-                    <p className="text-sm text-gray-400 dark:text-slate-500">No stage moves yet.</p>
+                    <p className="text-sm text-gray-400 dark:text-slate-500">{t("details.noStageMoves")}</p>
                   ) : (
                     <ul className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                      {viewingOpportunity.stageHistory.map((t, i) => (
+                      {viewingOpportunity.stageHistory.map((h, i) => (
                         <li
                           key={i}
                           className="flex items-center gap-3 text-sm bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-lg p-3"
                         >
-                          <span className={cn("w-2 h-2 rounded-full shrink-0", stageAccents[t.to].dot)} />
+                          <span className={cn("w-2 h-2 rounded-full shrink-0", stageAccents[h.to].dot)} />
                           <div className="min-w-0 flex-1">
                             <p className="font-medium text-gray-800 dark:text-slate-200">
-                              {STAGE_LABELS[t.from]} → {STAGE_LABELS[t.to]}
+                              {STAGE_LABELS[h.from]} → {STAGE_LABELS[h.to]}
                             </p>
                             <p className="text-[11px] text-gray-400 dark:text-slate-500">
-                              {new Date(t.movedAt).toLocaleString()}
-                              {t.movedByName ? ` · by ${t.movedByName}` : ""}
+                              {new Date(h.movedAt).toLocaleString()}
+                              {h.movedByName ? t("details.movedBy", { name: h.movedByName }) : ""}
                             </p>
                           </div>
                         </li>
@@ -756,10 +759,10 @@ export function OpportunitiesPage() {
                     openEdit(target);
                   }}
                 >
-                  <Pencil size={15} /> Edit
+                  <Pencil size={15} /> {t("details.edit")}
                 </Button>
                 <Button variant="secondary" onClick={() => setViewingOpportunity(null)}>
-                  Close
+                  {t("details.close")}
                 </Button>
               </DialogFooter>
             </>
@@ -771,11 +774,9 @@ export function OpportunitiesPage() {
       <Dialog open={formOpen} onOpenChange={(open) => !open && closeForm()}>
         <DialogContent className="max-w-lg max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingOpportunity ? "Edit Deal" : "Add New Opportunity"}</DialogTitle>
+            <DialogTitle>{editingOpportunity ? t("form.editTitle") : t("form.addTitle")}</DialogTitle>
             <DialogDescription>
-              {editingOpportunity
-                ? "Update the deal's value, timing, or notes. Use the board to change its stage."
-                : "Add a deal to the pipeline for an existing customer."}
+              {editingOpportunity ? t("form.editDesc") : t("form.addDesc")}
             </DialogDescription>
           </DialogHeader>
 
@@ -789,16 +790,16 @@ export function OpportunitiesPage() {
 
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                Deal Name *
+                {t("form.dealName")}
               </label>
-              <Input placeholder="Acme Corp — annual license" disabled={isSaving} {...form.register("name")} />
+              <Input placeholder={t("form.dealNamePlaceholder")} disabled={isSaving} {...form.register("name")} />
               <FieldError message={form.formState.errors.name?.message} />
             </div>
 
             {!editingOpportunity && (
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Customer *
+                  {t("form.customer")}
                 </label>
                 <select
                   className={inputClasses}
@@ -806,7 +807,7 @@ export function OpportunitiesPage() {
                   {...form.register("customerId")}
                 >
                   <option value="">
-                    {customersQuery.isLoading ? "Loading customers..." : "Select a customer"}
+                    {customersQuery.isLoading ? t("form.loadingCustomers") : t("form.selectCustomer")}
                   </option>
                   {customerOptions.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -817,14 +818,14 @@ export function OpportunitiesPage() {
                 </select>
                 <FieldError message={form.formState.errors.customerId?.message} />
                 <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">
-                  Deals belong to customers. Convert a lead first if the contact isn&apos;t a customer yet.
+                  {t("form.customerHint")}
                 </p>
               </div>
             )}
 
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                Account (Company)
+                {t("form.account")}
               </label>
               <select
                 className={inputClasses}
@@ -832,7 +833,7 @@ export function OpportunitiesPage() {
                 {...form.register("accountId")}
               >
                 <option value="">
-                  {accountsPickerQuery.isLoading ? "Loading accounts..." : "No account (B2C deal)"}
+                  {accountsPickerQuery.isLoading ? t("form.loadingAccounts") : t("form.noAccountOption")}
                 </option>
                 {accountOptions.map((a) => (
                   <option key={a.id} value={a.id}>
@@ -841,14 +842,14 @@ export function OpportunitiesPage() {
                 ))}
               </select>
               <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">
-                Linking a company makes this deal appear in the account&apos;s 360° view.
+                {t("form.accountHint")}
               </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Amount (USD) *
+                  {t("form.amountUsd")}
                 </label>
                 <Input
                   type="number"
@@ -861,7 +862,7 @@ export function OpportunitiesPage() {
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Expected Close Date
+                  {t("form.expectedCloseDate")}
                 </label>
                 <Input type="date" disabled={isSaving} {...form.register("expectedCloseDate")} />
               </div>
@@ -870,24 +871,24 @@ export function OpportunitiesPage() {
             {!editingOpportunity && (
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Starting Stage
+                  {t("form.startingStage")}
                 </label>
                 <select disabled={isSaving} className={inputClasses} {...form.register("stage")}>
-                  <option value="discovery">Discovery</option>
-                  <option value="proposal">Proposal</option>
-                  <option value="negotiation">Negotiation</option>
+                  <option value="discovery">{t("form.discovery")}</option>
+                  <option value="proposal">{t("form.proposal")}</option>
+                  <option value="negotiation">{t("form.negotiation")}</option>
                 </select>
               </div>
             )}
 
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                Notes
+                {t("form.notes")}
               </label>
               <textarea
                 rows={2}
                 disabled={isSaving}
-                placeholder="Deal context, blockers, decision makers..."
+                placeholder={t("form.notesPlaceholder")}
                 className={cn(inputClasses, "resize-none")}
                 {...form.register("notes")}
               />
@@ -904,11 +905,11 @@ export function OpportunitiesPage() {
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeForm} disabled={isSaving}>
-                Cancel
+                {tc("cancel")}
               </Button>
               <Button type="submit" disabled={isSaving} className="bg-[#3F51B5] hover:bg-[#303F9F] text-white">
                 {isSaving && <Loader2 size={15} className="animate-spin" />}
-                {editingOpportunity ? "Update Deal" : "Create Deal"}
+                {editingOpportunity ? t("form.updateDeal") : t("form.createDeal")}
               </Button>
             </DialogFooter>
           </form>
@@ -921,10 +922,9 @@ export function OpportunitiesPage() {
           {pendingLostMove && (
             <>
               <DialogHeader>
-                <DialogTitle>Mark deal as lost</DialogTitle>
+                <DialogTitle>{t("lostDialog.title")}</DialogTitle>
                 <DialogDescription>
-                  Why was <span className="font-semibold text-gray-700 dark:text-slate-200">{pendingLostMove.name}</span> lost?
-                  The reason is stored on the deal and feeds win/loss reporting.
+                  {t("lostDialog.desc", { name: pendingLostMove.name })}
                 </DialogDescription>
               </DialogHeader>
 
@@ -941,7 +941,7 @@ export function OpportunitiesPage() {
                   value={lostReason}
                   onChange={(e) => setLostReason(e.target.value)}
                   maxLength={500}
-                  placeholder="e.g. Chose a competitor on price; budget cut for this quarter..."
+                  placeholder={t("lostDialog.placeholder")}
                   className={cn(inputClasses, "resize-none")}
                   disabled={moveStageMutation.isPending}
                 />
@@ -953,7 +953,7 @@ export function OpportunitiesPage() {
                   onClick={() => setPendingLostMove(null)}
                   disabled={moveStageMutation.isPending}
                 >
-                  Cancel
+                  {tc("cancel")}
                 </Button>
                 <Button
                   variant="destructive"
@@ -961,7 +961,7 @@ export function OpportunitiesPage() {
                   disabled={moveStageMutation.isPending}
                 >
                   {moveStageMutation.isPending && <Loader2 size={15} className="animate-spin" />}
-                  Mark as Lost
+                  {t("lostDialog.markAsLost")}
                 </Button>
               </DialogFooter>
             </>
@@ -975,12 +975,9 @@ export function OpportunitiesPage() {
           {deletingOpportunity && (
             <>
               <DialogHeader>
-                <DialogTitle>Delete deal?</DialogTitle>
+                <DialogTitle>{t("deleteDialog.title")}</DialogTitle>
                 <DialogDescription>
-                  This permanently removes{" "}
-                  <span className="font-semibold text-gray-700 dark:text-slate-200">{deletingOpportunity.name}</span> (
-                  {currency.format(deletingOpportunity.amount)}) and its stage history. This action cannot be
-                  undone.
+                  {t("deleteDialog.desc", { name: deletingOpportunity.name, amount: currency.format(deletingOpportunity.amount) })}
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
@@ -989,7 +986,7 @@ export function OpportunitiesPage() {
                   onClick={() => setDeletingOpportunity(null)}
                   disabled={deleteOpportunityMutation.isPending}
                 >
-                  Cancel
+                  {tc("cancel")}
                 </Button>
                 <Button
                   variant="destructive"
@@ -997,7 +994,7 @@ export function OpportunitiesPage() {
                   disabled={deleteOpportunityMutation.isPending}
                 >
                   {deleteOpportunityMutation.isPending && <Loader2 size={15} className="animate-spin" />}
-                  Delete Deal
+                  {t("deleteDialog.deleteDeal")}
                 </Button>
               </DialogFooter>
             </>

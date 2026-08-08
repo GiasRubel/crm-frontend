@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { z } from "zod";
@@ -114,9 +115,10 @@ const statusStyles: Record<CustomerStatus, string> = {
 };
 
 function StatusBadge({ status }: { status: CustomerStatus }) {
+  const t = useTranslations("customers");
   return (
     <Badge variant="outline" className={cn("capitalize font-semibold", statusStyles[status])}>
-      {status}
+      {t(status)}
     </Badge>
   );
 }
@@ -196,6 +198,8 @@ function FieldError({ message }: { message?: string }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export function CustomersPage() {
+  const t = useTranslations("customers");
+  const tc = useTranslations("common");
   const { user } = useAuth();
   const isStaffAdmin = user?.role === "Admin" || user?.role === "Administrator";
 
@@ -342,18 +346,18 @@ export function CustomersPage() {
     try {
       if (editingCustomer) {
         await updateCustomerMutation.mutateAsync({ id: editingCustomer.id, data: payload });
-        notifySuccess(`Customer "${values.firstName} ${values.lastName}" updated successfully.`);
+        notifySuccess(t("toasts.updated", { name: `${values.firstName} ${values.lastName}` }));
       } else {
         await createCustomerMutation.mutateAsync(payload);
         notifySuccess(
-          `Customer "${values.firstName} ${values.lastName}" created — a password setup invitation was emailed to ${values.email}.`,
+          t("toasts.created", { name: `${values.firstName} ${values.lastName}`, email: values.email }),
         );
         resetToFirstPage();
       }
       setFormOpen(false);
       setEditingCustomer(null);
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : "Failed to save customer");
+      setFormError(err instanceof Error ? err.message : t("toasts.saveFailed"));
     }
   };
 
@@ -362,11 +366,11 @@ export function CustomersPage() {
     try {
       await deleteCustomerMutation.mutateAsync(deletingCustomer.id);
       notifySuccess(
-        `Customer "${deletingCustomer.firstName} ${deletingCustomer.lastName}" and their sign-in account were deleted.`,
+        t("toasts.deleted", { name: `${deletingCustomer.firstName} ${deletingCustomer.lastName}` }),
       );
       setDeletingCustomer(null);
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Failed to delete customer");
+      setErrorMsg(err instanceof Error ? err.message : t("toasts.deleteFailed"));
       setDeletingCustomer(null);
     }
   };
@@ -390,20 +394,20 @@ export function CustomersPage() {
         },
       });
       notifySuccess(
-        `Routing updated for "${assigningCustomer.firstName} ${assigningCustomer.lastName}".`,
+        t("toasts.assignmentUpdated", { name: `${assigningCustomer.firstName} ${assigningCustomer.lastName}` }),
       );
       setAssigningCustomer(null);
     } catch (err) {
-      setAssignError(err instanceof Error ? err.message : "Failed to update assignment");
+      setAssignError(err instanceof Error ? err.message : t("toasts.assignmentFailed"));
     }
   };
 
   const handleResendInvite = async (customer: Customer) => {
     try {
       await resendInvitationMutation.mutateAsync(customer.id);
-      notifySuccess(`Invitation email resent to ${customer.email}.`);
+      notifySuccess(t("toasts.inviteResent", { email: customer.email }));
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Failed to resend invitation email");
+      setErrorMsg(err instanceof Error ? err.message : t("toasts.inviteResendFailed"));
     }
   };
 
@@ -417,9 +421,9 @@ export function CustomersPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Customers</h1>
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t("title")}</h1>
             <p className="text-sm text-gray-500 dark:text-slate-400">
-              Manage client profiles, sign-in access, and lifecycle status.
+              {t("subtitle")}
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
@@ -433,7 +437,7 @@ export function CustomersPage() {
                 className="bg-[#3F51B5] hover:bg-[#303F9F] text-white gap-2"
               >
                 <Plus size={18} />
-                Add Customer
+                {t("addCustomer")}
               </Button>
             )}
           </div>
@@ -441,11 +445,11 @@ export function CustomersPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <StatCard label="Total" value={stats?.total} icon={Users} accent="bg-[#3F51B5]/10 text-[#3F51B5] dark:bg-indigo-500/15 dark:text-indigo-300" />
-          <StatCard label="Active" value={stats?.active} icon={Check} accent="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400" />
-          <StatCard label="Prospects" value={stats?.prospect} icon={Search} accent="bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400" />
-          <StatCard label="Inactive" value={stats?.inactive} icon={X} accent="bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400" />
-          <StatCard label="New this month" value={stats?.newThisMonth} icon={UserPlus} accent="bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400" />
+          <StatCard label={t("stats.total")} value={stats?.total} icon={Users} accent="bg-[#3F51B5]/10 text-[#3F51B5] dark:bg-indigo-500/15 dark:text-indigo-300" />
+          <StatCard label={t("stats.active")} value={stats?.active} icon={Check} accent="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400" />
+          <StatCard label={t("stats.prospects")} value={stats?.prospect} icon={Search} accent="bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400" />
+          <StatCard label={t("stats.inactive")} value={stats?.inactive} icon={X} accent="bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400" />
+          <StatCard label={t("stats.newThisMonth")} value={stats?.newThisMonth} icon={UserPlus} accent="bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400" />
         </div>
 
         {/* Notifications */}
@@ -469,7 +473,7 @@ export function CustomersPage() {
                 {errorMsg ??
                   (customersQuery.error instanceof Error
                     ? customersQuery.error.message
-                    : "Failed to load customers")}
+                    : t("loadFailed"))}
               </span>
             </div>
             <button
@@ -491,7 +495,7 @@ export function CustomersPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" size={18} />
               <Input
                 type="text"
-                placeholder="Search by name, email, company, or phone..."
+                placeholder={t("searchPlaceholder")}
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
@@ -505,7 +509,7 @@ export function CustomersPage() {
               {customersQuery.isFetching && !customersQuery.isLoading && (
                 <Loader2 size={16} className="animate-spin text-gray-400 dark:text-slate-500" />
               )}
-              <label className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Status:</label>
+              <label className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">{t("status")}</label>
               <select
                 value={statusFilter}
                 onChange={(e) => {
@@ -514,10 +518,10 @@ export function CustomersPage() {
                 }}
                 className={cn(inputClasses, "w-auto py-1.5")}
               >
-                <option value="">All Statuses</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="prospect">Prospect</option>
+                <option value="">{t("allStatuses")}</option>
+                <option value="active">{t("active")}</option>
+                <option value="inactive">{t("inactive")}</option>
+                <option value="prospect">{t("prospect")}</option>
               </select>
             </div>
           </div>
@@ -526,18 +530,18 @@ export function CustomersPage() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-50/75 dark:bg-slate-800/50 hover:bg-gray-50/75 dark:hover:bg-slate-800/50">
-                  <SortableHead field="lastName" className="px-6" {...sortProps}>Customer</SortableHead>
+                  <SortableHead field="lastName" className="px-6" {...sortProps}>{t("table.customer")}</SortableHead>
                   <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
-                    Phone
+                    {t("table.phone")}
                   </TableHead>
-                  <SortableHead field="company" className="px-6" {...sortProps}>Company</SortableHead>
+                  <SortableHead field="company" className="px-6" {...sortProps}>{t("table.company")}</SortableHead>
                   <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
-                    Assigned To
+                    {t("table.assignedTo")}
                   </TableHead>
-                  <SortableHead field="status" className="px-6" {...sortProps}>Status</SortableHead>
-                  <SortableHead field="createdAt" className="px-6" {...sortProps}>Created</SortableHead>
+                  <SortableHead field="status" className="px-6" {...sortProps}>{t("table.status")}</SortableHead>
+                  <SortableHead field="createdAt" className="px-6" {...sortProps}>{t("table.created")}</SortableHead>
                   <TableHead className="px-6 text-right text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
-                    Actions
+                    {t("table.actions")}
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -547,7 +551,7 @@ export function CustomersPage() {
                     <TableCell colSpan={7} className="px-6 py-12 text-center text-gray-400 dark:text-slate-500">
                       <div className="flex justify-center items-center gap-2">
                         <Loader2 size={18} className="animate-spin" />
-                        <span>Fetching customers...</span>
+                        <span>{t("fetchingCustomers")}</span>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -556,13 +560,13 @@ export function CustomersPage() {
                     <TableCell colSpan={7} className="px-6 py-16 text-center">
                       <div className="flex flex-col items-center gap-2 text-gray-500 dark:text-slate-400">
                         <Users size={32} className="text-gray-300 dark:text-slate-600" />
-                        <p className="font-medium">No customers found</p>
+                        <p className="font-medium">{t("noCustomersFound")}</p>
                         <p className="text-sm text-gray-400 dark:text-slate-500">
                           {debouncedSearch || statusFilter
-                            ? "Try adjusting your search or filters."
+                            ? t("adjustFilters")
                             : isStaffAdmin
-                              ? "Add your first customer to get started."
-                              : "Customers will appear here once added."}
+                              ? t("addFirstCustomer")
+                              : t("customersAppearHere")}
                         </p>
                       </div>
                     </TableCell>
@@ -611,7 +615,7 @@ export function CustomersPage() {
                             )}
                           </div>
                         ) : (
-                          <span className="text-gray-300 dark:text-slate-600">Unassigned</span>
+                          <span className="text-gray-300 dark:text-slate-600">{t("unassigned")}</span>
                         )}
                       </TableCell>
                       <TableCell className="px-6 py-4">
@@ -625,33 +629,33 @@ export function CustomersPage() {
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="text-gray-400 dark:text-slate-500 hover:text-gray-700 dark:hover:text-slate-200">
                               <MoreHorizontal size={18} />
-                              <span className="sr-only">Open actions</span>
+                              <span className="sr-only">{t("openActions")}</span>
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => setViewingCustomer(customer)}>
-                              <Info size={15} /> View details
+                              <Info size={15} /> {t("viewDetails")}
                             </DropdownMenuItem>
                             {isStaffAdmin && (
                               <>
                                 <DropdownMenuItem onClick={() => openEdit(customer)}>
-                                  <Pencil size={15} /> Edit profile
+                                  <Pencil size={15} /> {t("editProfile")}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => openAssign(customer)}>
-                                  <UsersRound size={15} /> Assign owner / team
+                                  <UsersRound size={15} /> {t("assignOwnerTeam")}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleResendInvite(customer)}
                                   disabled={resendInvitationMutation.isPending}
                                 >
-                                  <Mail size={15} /> Resend invitation
+                                  <Mail size={15} /> {t("resendInvitation")}
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                   variant="destructive"
                                   onClick={() => setDeletingCustomer(customer)}
                                 >
-                                  <Trash2 size={15} /> Delete customer
+                                  <Trash2 size={15} /> {t("deleteCustomer")}
                                 </DropdownMenuItem>
                               </>
                             )}
@@ -670,8 +674,11 @@ export function CustomersPage() {
             <div className="p-4 border-t border-gray-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
               <div className="flex items-center gap-3">
                 <span>
-                  {(meta.page - 1) * meta.limit + 1}–{Math.min(meta.page * meta.limit, meta.total)} of{" "}
-                  {meta.total} customers
+                  {t("range", {
+                    from: (meta.page - 1) * meta.limit + 1,
+                    to: Math.min(meta.page * meta.limit, meta.total),
+                    total: meta.total,
+                  })}
                 </span>
                 <select
                   value={limit}
@@ -681,9 +688,9 @@ export function CustomersPage() {
                   }}
                   className={cn(inputClasses, "w-auto py-1 text-xs")}
                 >
-                  <option value={10}>10 / page</option>
-                  <option value={25}>25 / page</option>
-                  <option value={50}>50 / page</option>
+                  <option value={10}>{t("perPage", { count: 10 })}</option>
+                  <option value={25}>{t("perPage", { count: 25 })}</option>
+                  <option value={50}>{t("perPage", { count: 50 })}</option>
                 </select>
               </div>
               <div className="flex items-center gap-1">
@@ -696,7 +703,7 @@ export function CustomersPage() {
                   <ChevronLeft size={16} />
                 </Button>
                 <span className="px-3 text-sm font-bold text-gray-700 dark:text-slate-200">
-                  {meta.page} / {meta.totalPages}
+                  {t("pageOf", { page: meta.page, totalPages: meta.totalPages })}
                 </span>
                 <Button
                   variant="outline"
@@ -718,8 +725,8 @@ export function CustomersPage() {
           {viewingCustomer && (
             <>
               <DialogHeader>
-                <DialogTitle>Customer Details</DialogTitle>
-                <DialogDescription>Profile, contact, and account information.</DialogDescription>
+                <DialogTitle>{t("details.title")}</DialogTitle>
+                <DialogDescription>{t("details.subtitle")}</DialogDescription>
               </DialogHeader>
 
               <div className="space-y-6">
@@ -741,25 +748,25 @@ export function CustomersPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {[
-                    { icon: Phone, label: "Phone", value: viewingCustomer.phone },
-                    { icon: Building, label: "Company", value: viewingCustomer.company || "—" },
-                    { icon: MapPin, label: "Address", value: viewingCustomer.address || "—" },
+                    { icon: Phone, label: t("details.phone"), value: viewingCustomer.phone },
+                    { icon: Building, label: t("details.company"), value: viewingCustomer.company || "—" },
+                    { icon: MapPin, label: t("details.address"), value: viewingCustomer.address || "—" },
                     {
                       icon: Calendar,
-                      label: "Registered",
+                      label: t("details.registered"),
                       value: viewingCustomer.createdAt
                         ? new Date(viewingCustomer.createdAt).toLocaleString()
                         : "—",
                     },
                     {
                       icon: UserPlus,
-                      label: "Record Owner",
-                      value: viewingCustomer.assignedToName || "Unassigned",
+                      label: t("details.recordOwner"),
+                      value: viewingCustomer.assignedToName || t("unassigned"),
                     },
                     {
                       icon: UsersRound,
-                      label: "Team",
-                      value: viewingCustomer.assignedTeamName || "Unassigned",
+                      label: t("details.team"),
+                      value: viewingCustomer.assignedTeamName || t("unassigned"),
                     },
                   ].map(({ icon: Icon, label, value }) => (
                     <div key={label} className="flex items-center gap-3 text-sm text-gray-600 dark:text-slate-300">
@@ -773,18 +780,18 @@ export function CustomersPage() {
                 </div>
 
                 <div className="bg-gray-50/75 dark:bg-slate-800/50 p-4 rounded-xl border border-gray-100 dark:border-slate-800 space-y-1">
-                  <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold">Staff Notes</p>
+                  <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold">{t("details.staffNotes")}</p>
                   <p className="text-sm text-gray-700 dark:text-slate-200 whitespace-pre-wrap">
-                    {viewingCustomer.notes || "No notes available for this customer."}
+                    {viewingCustomer.notes || t("details.noNotes")}
                   </p>
                 </div>
 
                 <div className="text-[11px] text-gray-400 dark:text-slate-500 space-y-1 border-t border-gray-100 dark:border-slate-800 pt-4">
                   <p>
-                    <span className="font-bold">Keycloak ID:</span> {viewingCustomer.keycloakId}
+                    <span className="font-bold">{t("details.keycloakId")}</span> {viewingCustomer.keycloakId}
                   </p>
                   <p>
-                    <span className="font-bold">Last updated:</span>{" "}
+                    <span className="font-bold">{t("details.lastUpdated")}</span>{" "}
                     {viewingCustomer.updatedAt ? new Date(viewingCustomer.updatedAt).toLocaleString() : "—"}
                   </p>
                 </div>
@@ -800,11 +807,11 @@ export function CustomersPage() {
                       openEdit(target);
                     }}
                   >
-                    <Pencil size={15} /> Edit
+                    <Pencil size={15} /> {t("details.edit")}
                   </Button>
                 )}
                 <Button variant="secondary" onClick={() => setViewingCustomer(null)}>
-                  Close
+                  {t("details.close")}
                 </Button>
               </DialogFooter>
             </>
@@ -816,11 +823,9 @@ export function CustomersPage() {
       <Dialog open={formOpen} onOpenChange={(open) => !open && closeForm()}>
         <DialogContent className="max-w-lg max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingCustomer ? "Edit Customer Profile" : "Add New Customer"}</DialogTitle>
+            <DialogTitle>{editingCustomer ? t("form.editTitle") : t("form.addTitle")}</DialogTitle>
             <DialogDescription>
-              {editingCustomer
-                ? "Changes to name and email are synced to the customer's Keycloak sign-in account."
-                : "The customer is registered in Keycloak and receives a password setup email."}
+              {editingCustomer ? t("form.editDesc") : t("form.addDesc")}
             </DialogDescription>
           </DialogHeader>
 
@@ -835,14 +840,14 @@ export function CustomersPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  First Name *
+                  {t("form.firstName")}
                 </label>
                 <Input disabled={isSaving} {...form.register("firstName")} />
                 <FieldError message={form.formState.errors.firstName?.message} />
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Last Name *
+                  {t("form.lastName")}
                 </label>
                 <Input disabled={isSaving} {...form.register("lastName")} />
                 <FieldError message={form.formState.errors.lastName?.message} />
@@ -851,13 +856,13 @@ export function CustomersPage() {
 
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                Email Address *
+                {t("form.email")}
               </label>
               <Input type="email" placeholder="name@example.com" disabled={isSaving} {...form.register("email")} />
               <FieldError message={form.formState.errors.email?.message} />
               {!editingCustomer && (
                 <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">
-                  An invitation containing a password setup link will be emailed immediately.
+                  {t("form.emailHint")}
                 </p>
               )}
             </div>
@@ -865,28 +870,28 @@ export function CustomersPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Phone Number *
+                  {t("form.phone")}
                 </label>
                 <Input type="tel" placeholder="+1 234 567 890" disabled={isSaving} {...form.register("phone")} />
                 <FieldError message={form.formState.errors.phone?.message} />
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Company Name
+                  {t("form.company")}
                 </label>
-                <Input placeholder="Acme Corp" disabled={isSaving} {...form.register("company")} />
+                <Input placeholder={t("form.companyPlaceholder")} disabled={isSaving} {...form.register("company")} />
                 <FieldError message={form.formState.errors.company?.message} />
               </div>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                Mailing Address
+                {t("form.address")}
               </label>
               <textarea
                 rows={2}
                 disabled={isSaving}
-                placeholder="Street, City, State, ZIP"
+                placeholder={t("form.addressPlaceholder")}
                 className={cn(inputClasses, "resize-none")}
                 {...form.register("address")}
               />
@@ -895,12 +900,12 @@ export function CustomersPage() {
 
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                Notes / Description
+                {t("form.notes")}
               </label>
               <textarea
                 rows={2}
                 disabled={isSaving}
-                placeholder="Additional context or requirements..."
+                placeholder={t("form.notesPlaceholder")}
                 className={cn(inputClasses, "resize-none")}
                 {...form.register("notes")}
               />
@@ -910,15 +915,15 @@ export function CustomersPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Lifecycle Status
+                  {t("form.lifecycleStatus")}
                 </label>
                 <select disabled={isSaving} className={inputClasses} {...form.register("status")}>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                  <option value="prospect">Prospect</option>
+                  <option value="active">{t("active")}</option>
+                  <option value="inactive">{t("inactive")}</option>
+                  <option value="prospect">{t("prospect")}</option>
                 </select>
                 <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">
-                  Inactive customers cannot sign in to the portal.
+                  {t("form.inactiveHint")}
                 </p>
               </div>
             </div>
@@ -933,11 +938,11 @@ export function CustomersPage() {
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeForm} disabled={isSaving}>
-                Cancel
+                {tc("cancel")}
               </Button>
               <Button type="submit" disabled={isSaving} className="bg-[#3F51B5] hover:bg-[#303F9F] text-white">
                 {isSaving && <Loader2 size={15} className="animate-spin" />}
-                {editingCustomer ? "Update Customer" : "Create Customer"}
+                {editingCustomer ? t("form.updateCustomer") : t("form.createCustomer")}
               </Button>
             </DialogFooter>
           </form>
@@ -950,13 +955,9 @@ export function CustomersPage() {
           {assigningCustomer && (
             <>
               <DialogHeader>
-                <DialogTitle>Assign Customer</DialogTitle>
+                <DialogTitle>{t("assignDialog.title")}</DialogTitle>
                 <DialogDescription>
-                  Route{" "}
-                  <span className="font-semibold text-gray-700 dark:text-slate-200">
-                    {assigningCustomer.firstName} {assigningCustomer.lastName}
-                  </span>{" "}
-                  to a team and/or a record owner. Team members gain visibility of this record.
+                  {t("assignDialog.desc", { name: `${assigningCustomer.firstName} ${assigningCustomer.lastName}` })}
                 </DialogDescription>
               </DialogHeader>
 
@@ -970,7 +971,7 @@ export function CustomersPage() {
 
                 <div>
                   <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                    Team
+                    {t("assignDialog.team")}
                   </label>
                   <select
                     className={inputClasses}
@@ -991,7 +992,7 @@ export function CustomersPage() {
                       }
                     }}
                   >
-                    <option value="">Unassigned (no team)</option>
+                    <option value="">{t("assignDialog.noTeam")}</option>
                     {assignTeams.map((team) => (
                       <option key={team.id} value={team.id}>
                         {team.name}
@@ -1000,13 +1001,13 @@ export function CustomersPage() {
                     ))}
                   </select>
                   {assignTeamsQuery.isLoading && (
-                    <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">Loading teams...</p>
+                    <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">{t("assignDialog.loadingTeams")}</p>
                   )}
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                    Record Owner
+                    {t("assignDialog.recordOwner")}
                   </label>
                   <select
                     className={inputClasses}
@@ -1014,7 +1015,7 @@ export function CustomersPage() {
                     disabled={assignCustomerMutation.isPending || assignStaffQuery.isLoading}
                     onChange={(e) => setAssignOwnerId(e.target.value)}
                   >
-                    <option value="">Unassigned (no owner)</option>
+                    <option value="">{t("assignDialog.noOwner")}</option>
                     {assignOwnerOptions.map((s) => (
                       <option key={s.keycloakId} value={s.keycloakId}>
                         {staffDisplayName(s)} ({s.role})
@@ -1023,8 +1024,8 @@ export function CustomersPage() {
                   </select>
                   <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">
                     {assignTeamId
-                      ? "Only members of the selected team can own this record."
-                      : "Pick a team first to narrow the list to its members."}
+                      ? t("assignDialog.onlyTeamMembers")
+                      : t("assignDialog.pickTeamFirst")}
                   </p>
                 </div>
               </div>
@@ -1035,7 +1036,7 @@ export function CustomersPage() {
                   onClick={() => setAssigningCustomer(null)}
                   disabled={assignCustomerMutation.isPending}
                 >
-                  Cancel
+                  {tc("cancel")}
                 </Button>
                 <Button
                   onClick={handleAssign}
@@ -1043,7 +1044,7 @@ export function CustomersPage() {
                   className="bg-[#3F51B5] hover:bg-[#303F9F] text-white"
                 >
                   {assignCustomerMutation.isPending && <Loader2 size={15} className="animate-spin" />}
-                  Save Assignment
+                  {t("assignDialog.saveAssignment")}
                 </Button>
               </DialogFooter>
             </>
@@ -1057,14 +1058,12 @@ export function CustomersPage() {
           {deletingCustomer && (
             <>
               <DialogHeader>
-                <DialogTitle>Delete customer?</DialogTitle>
+                <DialogTitle>{t("deleteDialog.title")}</DialogTitle>
                 <DialogDescription>
-                  This permanently removes{" "}
-                  <span className="font-semibold text-gray-700 dark:text-slate-200">
-                    {deletingCustomer.firstName} {deletingCustomer.lastName}
-                  </span>{" "}
-                  ({deletingCustomer.email}), including their Keycloak sign-in account. This action cannot
-                  be undone.
+                  {t("deleteDialog.desc", {
+                    name: `${deletingCustomer.firstName} ${deletingCustomer.lastName}`,
+                    email: deletingCustomer.email,
+                  })}
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
@@ -1073,7 +1072,7 @@ export function CustomersPage() {
                   onClick={() => setDeletingCustomer(null)}
                   disabled={deleteCustomerMutation.isPending}
                 >
-                  Cancel
+                  {tc("cancel")}
                 </Button>
                 <Button
                   variant="destructive"
@@ -1081,7 +1080,7 @@ export function CustomersPage() {
                   disabled={deleteCustomerMutation.isPending}
                 >
                   {deleteCustomerMutation.isPending && <Loader2 size={15} className="animate-spin" />}
-                  Delete Customer
+                  {t("deleteDialog.deleteCustomer")}
                 </Button>
               </DialogFooter>
             </>

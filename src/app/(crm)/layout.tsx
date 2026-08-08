@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/providers/keycloak-provider";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Header } from "@/components/Header";
 import { Sidebar } from "@/components/Sidebar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -15,6 +16,7 @@ export default function CrmLayout({
 }) {
   // middleware.ts already gates every (crm) route on a valid session cookie
   // before this ever renders — no client-side redirect-to-login needed here.
+  const t = useTranslations("layout");
   const { authenticated, isLoading, subscriptionStatus, deploymentMode, user } = useAuth();
   const [isRedirecting, setIsRedirecting] = useState(false);
 
@@ -42,8 +44,8 @@ export default function CrmLayout({
             <span className="text-xl font-black text-indigo-400">C</span>
           </div>
           <div className="flex flex-col items-center gap-1.5 text-center">
-            <h3 className="font-semibold text-lg tracking-tight bg-gradient-to-r from-indigo-200 to-slate-200 bg-clip-text text-transparent">Securing Session</h3>
-            <p className="text-xs text-slate-400/80">Loading your profile...</p>
+            <h3 className="font-semibold text-lg tracking-tight bg-gradient-to-r from-indigo-200 to-slate-200 bg-clip-text text-transparent">{t("securingSession")}</h3>
+            <p className="text-xs text-slate-400/80">{t("loadingProfile")}</p>
           </div>
         </div>
       </div>
@@ -70,7 +72,7 @@ export default function CrmLayout({
             <div className="flex items-center gap-2.5">
               <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
               <AlertDescription className="text-sm font-medium">
-                Your organization&apos;s subscription is inactive or past due. Access is restricted to read-only mode until payment resolves.
+                {t("subscriptionInactive")}
               </AlertDescription>
             </div>
             {user?.role === "Admin" && (
@@ -81,7 +83,7 @@ export default function CrmLayout({
                 onClick={handleManageBilling}
                 disabled={isRedirecting}
               >
-                {isRedirecting ? "Redirecting..." : "Manage Billing"}
+                {isRedirecting ? t("redirecting") : t("manageBilling")}
               </Button>
             )}
           </Alert>

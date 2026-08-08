@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { z } from "zod";
@@ -158,9 +159,10 @@ const statusStyles: Record<AccountStatus, string> = {
 };
 
 function StatusBadge({ status }: { status: AccountStatus }) {
+  const t = useTranslations("accounts");
   return (
     <Badge variant="outline" className={cn("capitalize font-semibold", statusStyles[status])}>
-      {status}
+      {t(status)}
     </Badge>
   );
 }
@@ -249,6 +251,8 @@ function FieldError({ message }: { message?: string }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export function AccountsPage() {
+  const t = useTranslations("accounts");
+  const tc = useTranslations("common");
   const { user } = useAuth();
   const isStaffAdmin = user?.role === "Admin" || user?.role === "Administrator";
 
@@ -411,16 +415,16 @@ export function AccountsPage() {
     try {
       if (editingAccount) {
         await updateAccountMutation.mutateAsync({ id: editingAccount.id, data: payload });
-        notifySuccess(`Account "${values.name}" updated successfully.`);
+        notifySuccess(t("toasts.updated", { name: values.name }));
       } else {
         await createAccountMutation.mutateAsync(payload);
-        notifySuccess(`Account "${values.name}" created.`);
+        notifySuccess(t("toasts.created", { name: values.name }));
         resetToFirstPage();
       }
       setFormOpen(false);
       setEditingAccount(null);
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : "Failed to save account");
+      setFormError(err instanceof Error ? err.message : t("toasts.saveFailed"));
     }
   };
 
@@ -428,12 +432,10 @@ export function AccountsPage() {
     if (!deletingAccount) return;
     try {
       await deleteAccountMutation.mutateAsync(deletingAccount.id);
-      notifySuccess(
-        `Account "${deletingAccount.name}" was deleted — its contacts and deals were kept and unlinked.`,
-      );
+      notifySuccess(t("toasts.deleted", { name: deletingAccount.name }));
       setDeletingAccount(null);
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Failed to delete account");
+      setErrorMsg(err instanceof Error ? err.message : t("toasts.deleteFailed"));
       setDeletingAccount(null);
     }
   };
@@ -456,10 +458,10 @@ export function AccountsPage() {
           assignedToId: assignOwnerId || null,
         },
       });
-      notifySuccess(`Routing updated for "${assigningAccount.name}".`);
+      notifySuccess(t("toasts.assignmentUpdated", { name: assigningAccount.name }));
       setAssigningAccount(null);
     } catch (err) {
-      setAssignError(err instanceof Error ? err.message : "Failed to update assignment");
+      setAssignError(err instanceof Error ? err.message : t("toasts.assignmentFailed"));
     }
   };
 
@@ -473,9 +475,9 @@ export function AccountsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Accounts</h1>
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t("title")}</h1>
             <p className="text-sm text-gray-500 dark:text-slate-400">
-              B2B company profiles — firmographics, linked contacts, and deals.
+              {t("subtitle")}
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
@@ -487,18 +489,18 @@ export function AccountsPage() {
             />
             <Button onClick={openCreate} className="bg-[#3F51B5] hover:bg-[#303F9F] text-white gap-2">
               <Plus size={18} />
-              Add Account
+              {t("addAccount")}
             </Button>
           </div>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <StatCard label="Total" value={stats?.total} icon={Building2} accent="bg-[#3F51B5]/10 dark:bg-indigo-500/15 text-[#3F51B5] dark:text-indigo-300" />
-          <StatCard label="Prospects" value={stats?.prospect} icon={Search} accent="bg-amber-50 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400" />
-          <StatCard label="Active" value={stats?.active} icon={Check} accent="bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" />
-          <StatCard label="Inactive" value={stats?.inactive} icon={X} accent="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400" />
-          <StatCard label="New this month" value={stats?.newThisMonth} icon={TrendingUp} accent="bg-sky-50 dark:bg-sky-500/15 text-sky-600 dark:text-sky-400" />
+          <StatCard label={t("stats.total")} value={stats?.total} icon={Building2} accent="bg-[#3F51B5]/10 dark:bg-indigo-500/15 text-[#3F51B5] dark:text-indigo-300" />
+          <StatCard label={t("stats.prospects")} value={stats?.prospect} icon={Search} accent="bg-amber-50 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400" />
+          <StatCard label={t("stats.active")} value={stats?.active} icon={Check} accent="bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" />
+          <StatCard label={t("stats.inactive")} value={stats?.inactive} icon={X} accent="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400" />
+          <StatCard label={t("stats.newThisMonth")} value={stats?.newThisMonth} icon={TrendingUp} accent="bg-sky-50 dark:bg-sky-500/15 text-sky-600 dark:text-sky-400" />
         </div>
 
         {/* Notifications */}
@@ -522,7 +524,7 @@ export function AccountsPage() {
                 {errorMsg ??
                   (accountsQuery.error instanceof Error
                     ? accountsQuery.error.message
-                    : "Failed to load accounts")}
+                    : t("loadFailed"))}
               </span>
             </div>
             <button
@@ -544,7 +546,7 @@ export function AccountsPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" size={18} />
               <Input
                 type="text"
-                placeholder="Search by name, website, email, or address..."
+                placeholder={t("searchPlaceholder")}
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
@@ -566,7 +568,7 @@ export function AccountsPage() {
                 }}
                 className={cn(inputClasses, "w-auto py-1.5")}
               >
-                <option value="">All Industries</option>
+                <option value="">{t("allIndustries")}</option>
                 {Object.entries(ACCOUNT_INDUSTRY_LABELS).map(([value, label]) => (
                   <option key={value} value={value}>
                     {label}
@@ -581,10 +583,10 @@ export function AccountsPage() {
                 }}
                 className={cn(inputClasses, "w-auto py-1.5")}
               >
-                <option value="">All Statuses</option>
-                <option value="prospect">Prospect</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
+                <option value="">{t("allStatuses")}</option>
+                <option value="prospect">{t("prospect")}</option>
+                <option value="active">{t("active")}</option>
+                <option value="inactive">{t("inactive")}</option>
               </select>
             </div>
           </div>
@@ -593,21 +595,21 @@ export function AccountsPage() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-50/75 dark:bg-slate-800/50 hover:bg-gray-50/75 dark:hover:bg-slate-800/50">
-                  <SortableHead field="name" className="px-6" {...sortProps}>Account</SortableHead>
-                  <SortableHead field="industry" className="px-6" {...sortProps}>Industry</SortableHead>
+                  <SortableHead field="name" className="px-6" {...sortProps}>{t("table.account")}</SortableHead>
+                  <SortableHead field="industry" className="px-6" {...sortProps}>{t("table.industry")}</SortableHead>
                   <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
-                    Size
+                    {t("table.size")}
                   </TableHead>
-                  <SortableHead field="annualRevenue" className="px-6" {...sortProps}>Revenue</SortableHead>
+                  <SortableHead field="annualRevenue" className="px-6" {...sortProps}>{t("table.revenue")}</SortableHead>
                   <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
-                    Links
+                    {t("table.links")}
                   </TableHead>
                   <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
-                    Assigned To
+                    {t("table.assignedTo")}
                   </TableHead>
-                  <SortableHead field="status" className="px-6" {...sortProps}>Status</SortableHead>
+                  <SortableHead field="status" className="px-6" {...sortProps}>{t("table.status")}</SortableHead>
                   <TableHead className="px-6 text-right text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
-                    Actions
+                    {t("table.actions")}
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -617,7 +619,7 @@ export function AccountsPage() {
                     <TableCell colSpan={8} className="px-6 py-12 text-center text-gray-400 dark:text-slate-500">
                       <div className="flex justify-center items-center gap-2">
                         <Loader2 size={18} className="animate-spin" />
-                        <span>Fetching accounts...</span>
+                        <span>{t("fetchingAccounts")}</span>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -626,11 +628,11 @@ export function AccountsPage() {
                     <TableCell colSpan={8} className="px-6 py-16 text-center">
                       <div className="flex flex-col items-center gap-2 text-gray-500 dark:text-slate-400">
                         <Building2 size={32} className="text-gray-300 dark:text-slate-600" />
-                        <p className="font-medium">No accounts found</p>
+                        <p className="font-medium">{t("noAccountsFound")}</p>
                         <p className="text-sm text-gray-400 dark:text-slate-500">
                           {debouncedSearch || statusFilter || industryFilter
-                            ? "Try adjusting your search or filters."
-                            : "Add your first company profile to get started."}
+                            ? t("adjustFilters")
+                            : t("addFirstAccount")}
                         </p>
                       </div>
                     </TableCell>
@@ -694,7 +696,7 @@ export function AccountsPage() {
                             )}
                           </div>
                         ) : (
-                          <span className="text-gray-300 dark:text-slate-600">Unassigned</span>
+                          <span className="text-gray-300 dark:text-slate-600">{t("unassigned")}</span>
                         )}
                       </TableCell>
                       <TableCell className="px-6 py-4">
@@ -705,27 +707,27 @@ export function AccountsPage() {
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="text-gray-400 dark:text-slate-500 hover:text-gray-700 dark:hover:text-slate-200">
                               <MoreHorizontal size={18} />
-                              <span className="sr-only">Open actions</span>
+                              <span className="sr-only">{t("openActions")}</span>
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => setSummaryAccountId(account.id)}>
-                              <Info size={15} /> 360° view
+                              <Info size={15} /> {t("view360")}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => openEdit(account)}>
-                              <Pencil size={15} /> Edit account
+                              <Pencil size={15} /> {t("editAccount")}
                             </DropdownMenuItem>
                             {isStaffAdmin && (
                               <>
                                 <DropdownMenuItem onClick={() => openAssign(account)}>
-                                  <UsersRound size={15} /> Assign owner / team
+                                  <UsersRound size={15} /> {t("assignOwnerTeam")}
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                   variant="destructive"
                                   onClick={() => setDeletingAccount(account)}
                                 >
-                                  <Trash2 size={15} /> Delete account
+                                  <Trash2 size={15} /> {t("deleteAccount")}
                                 </DropdownMenuItem>
                               </>
                             )}
@@ -744,8 +746,11 @@ export function AccountsPage() {
             <div className="p-4 border-t border-gray-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
               <div className="flex items-center gap-3">
                 <span>
-                  {(meta.page - 1) * meta.limit + 1}–{Math.min(meta.page * meta.limit, meta.total)} of{" "}
-                  {meta.total} accounts
+                  {t("range", {
+                    from: (meta.page - 1) * meta.limit + 1,
+                    to: Math.min(meta.page * meta.limit, meta.total),
+                    total: meta.total,
+                  })}
                 </span>
                 <select
                   value={limit}
@@ -755,9 +760,9 @@ export function AccountsPage() {
                   }}
                   className={cn(inputClasses, "w-auto py-1 text-xs")}
                 >
-                  <option value={10}>10 / page</option>
-                  <option value={25}>25 / page</option>
-                  <option value={50}>50 / page</option>
+                  <option value={10}>{t("perPage", { count: 10 })}</option>
+                  <option value={25}>{t("perPage", { count: 25 })}</option>
+                  <option value={50}>{t("perPage", { count: 50 })}</option>
                 </select>
               </div>
               <div className="flex items-center gap-1">
@@ -770,7 +775,7 @@ export function AccountsPage() {
                   <ChevronLeft size={16} />
                 </Button>
                 <span className="px-3 text-sm font-bold text-gray-700 dark:text-slate-200">
-                  {meta.page} / {meta.totalPages}
+                  {t("pageOf", { page: meta.page, totalPages: meta.totalPages })}
                 </span>
                 <Button
                   variant="outline"
@@ -790,23 +795,23 @@ export function AccountsPage() {
       <Dialog open={!!summaryAccountId} onOpenChange={(open) => !open && setSummaryAccountId(null)}>
         <DialogContent className="max-w-2xl max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Account 360° View</DialogTitle>
+            <DialogTitle>{t("summary.title")}</DialogTitle>
             <DialogDescription>
-              Company profile with all linked contacts and deals.
+              {t("summary.subtitle")}
             </DialogDescription>
           </DialogHeader>
 
           {summaryQuery.isLoading ? (
             <div className="flex items-center justify-center gap-2 text-gray-400 dark:text-slate-500 py-16">
               <Loader2 size={18} className="animate-spin" />
-              <span>Loading account summary...</span>
+              <span>{t("summary.loading")}</span>
             </div>
           ) : summaryQuery.isError ? (
             <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300 rounded-lg p-3 text-sm flex items-center gap-2">
               <AlertCircle size={16} className="shrink-0" />
               {summaryQuery.error instanceof Error
                 ? summaryQuery.error.message
-                : "Failed to load account summary"}
+                : t("summary.loadFailed")}
             </div>
           ) : summary ? (
             <div className="space-y-6">
@@ -820,8 +825,8 @@ export function AccountsPage() {
                   <span className="text-sm text-gray-500 dark:text-slate-400">
                     {summary.account.industry
                       ? ACCOUNT_INDUSTRY_LABELS[summary.account.industry]
-                      : "Industry unknown"}
-                    {summary.account.size ? ` · ${summary.account.size} employees` : ""}
+                      : t("summary.industryUnknown")}
+                    {summary.account.size ? ` · ${t("employees", { size: summary.account.size })}` : ""}
                   </span>
                 </div>
                 <div className="ml-auto shrink-0">
@@ -832,25 +837,25 @@ export function AccountsPage() {
               {/* Firmographics */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {[
-                  { icon: Globe, label: "Website", value: summary.account.website || "—" },
-                  { icon: Mail, label: "Email", value: summary.account.email || "—" },
-                  { icon: Phone, label: "Phone", value: summary.account.phone || "—" },
+                  { icon: Globe, label: t("summary.website"), value: summary.account.website || "—" },
+                  { icon: Mail, label: t("summary.email"), value: summary.account.email || "—" },
+                  { icon: Phone, label: t("summary.phone"), value: summary.account.phone || "—" },
                   {
                     icon: Landmark,
-                    label: "Annual Revenue",
+                    label: t("summary.annualRevenue"),
                     value:
                       summary.account.annualRevenue !== null
                         ? currency.format(summary.account.annualRevenue)
                         : "—",
                   },
-                  { icon: MapPin, label: "Address", value: summary.account.address || "—" },
+                  { icon: MapPin, label: t("summary.address"), value: summary.account.address || "—" },
                   {
                     icon: UsersRound,
-                    label: "Owner / Team",
+                    label: t("summary.ownerTeam"),
                     value:
                       [summary.account.assignedToName, summary.account.assignedTeamName]
                         .filter(Boolean)
-                        .join(" · ") || "Unassigned",
+                        .join(" · ") || t("unassigned"),
                   },
                 ].map(({ icon: Icon, label, value }) => (
                   <div key={label} className="flex items-center gap-3 text-sm text-gray-600 dark:text-slate-300">
@@ -866,10 +871,10 @@ export function AccountsPage() {
               {/* Metrics */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
-                  { label: "Contacts", value: String(summary.metrics.contactCount) },
-                  { label: "Open Deals", value: String(summary.metrics.openDealCount) },
-                  { label: "Open Value", value: currency.format(summary.metrics.openValue) },
-                  { label: "Won Value", value: currency.format(summary.metrics.wonValue) },
+                  { label: t("summary.contacts"), value: String(summary.metrics.contactCount) },
+                  { label: t("summary.openDeals"), value: String(summary.metrics.openDealCount) },
+                  { label: t("summary.openValue"), value: currency.format(summary.metrics.openValue) },
+                  { label: t("summary.wonValue"), value: currency.format(summary.metrics.wonValue) },
                 ].map(({ label, value }) => (
                   <div key={label} className="bg-gray-50/75 dark:bg-slate-800/50 border border-gray-100 dark:border-slate-800 rounded-xl p-3 text-center">
                     <p className="text-lg font-bold text-gray-900 dark:text-white">{value}</p>
@@ -880,7 +885,7 @@ export function AccountsPage() {
 
               {summary.account.description && (
                 <div className="bg-gray-50/75 dark:bg-slate-800/50 p-4 rounded-xl border border-gray-100 dark:border-slate-800 space-y-1">
-                  <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold">About</p>
+                  <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold">{t("summary.about")}</p>
                   <p className="text-sm text-gray-700 dark:text-slate-200 whitespace-pre-wrap">{summary.account.description}</p>
                 </div>
               )}
@@ -888,11 +893,11 @@ export function AccountsPage() {
               {/* Linked contacts */}
               <div className="space-y-2">
                 <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold">
-                  Contacts ({summary.metrics.contactCount})
+                  {t("summary.contactsCount", { count: summary.metrics.contactCount })}
                 </p>
                 {summary.contacts.length === 0 ? (
                   <p className="text-sm text-gray-400 dark:text-slate-500">
-                    No contacts linked yet — link people from the Contacts page.
+                    {t("summary.noContactsYet")}
                   </p>
                 ) : (
                   <ul className="space-y-2 max-h-48 overflow-y-auto pr-1">
@@ -909,7 +914,7 @@ export function AccountsPage() {
                           <p className="font-medium text-gray-800 dark:text-white truncate flex items-center gap-1.5">
                             {c.firstName} {c.lastName}
                             {c.isPrimary && (
-                              <span title="Primary contact">
+                              <span title={t("summary.primaryContact")}>
                                 <Star size={12} className="text-amber-500 fill-amber-400 shrink-0" />
                               </span>
                             )}
@@ -920,7 +925,7 @@ export function AccountsPage() {
                         </div>
                         {c.doNotContact && (
                           <Badge variant="outline" className="bg-red-50 dark:bg-red-500/15 text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/30 text-[10px] shrink-0">
-                            Do not contact
+                            {t("summary.doNotContact")}
                           </Badge>
                         )}
                       </li>
@@ -932,11 +937,11 @@ export function AccountsPage() {
               {/* Linked deals */}
               <div className="space-y-2">
                 <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold">
-                  Deals ({summary.opportunities.length})
+                  {t("summary.dealsCount", { count: summary.opportunities.length })}
                 </p>
                 {summary.opportunities.length === 0 ? (
                   <p className="text-sm text-gray-400 dark:text-slate-500">
-                    No deals linked yet — link deals from the Opportunities page.
+                    {t("summary.noDealsYet")}
                   </p>
                 ) : (
                   <ul className="space-y-2 max-h-48 overflow-y-auto pr-1">
@@ -952,7 +957,7 @@ export function AccountsPage() {
                             <Calendar size={11} />
                             {o.expectedCloseDate
                               ? new Date(o.expectedCloseDate).toLocaleDateString()
-                              : "No close date"}
+                              : t("summary.noCloseDate")}
                           </p>
                         </div>
                         <span className="font-bold text-gray-900 dark:text-white shrink-0">{currency.format(o.amount)}</span>
@@ -980,11 +985,11 @@ export function AccountsPage() {
                   openEdit(target);
                 }}
               >
-                <Pencil size={15} /> Edit
+                <Pencil size={15} /> {t("summary.edit")}
               </Button>
             )}
             <Button variant="secondary" onClick={() => setSummaryAccountId(null)}>
-              Close
+              {t("summary.close")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -994,11 +999,9 @@ export function AccountsPage() {
       <Dialog open={formOpen} onOpenChange={(open) => !open && closeForm()}>
         <DialogContent className="max-w-lg max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingAccount ? "Edit Account" : "Add New Account"}</DialogTitle>
+            <DialogTitle>{editingAccount ? t("form.editTitle") : t("form.addTitle")}</DialogTitle>
             <DialogDescription>
-              {editingAccount
-                ? "Update the company's firmographic profile."
-                : "Create a company profile to link contacts and deals against."}
+              {editingAccount ? t("form.editDesc") : t("form.addDesc")}
             </DialogDescription>
           </DialogHeader>
 
@@ -1012,19 +1015,19 @@ export function AccountsPage() {
 
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                Company Name *
+                {t("form.companyName")}
               </label>
-              <Input placeholder="Acme Corporation" disabled={isSaving} {...form.register("name")} />
+              <Input placeholder={t("form.companyNamePlaceholder")} disabled={isSaving} {...form.register("name")} />
               <FieldError message={form.formState.errors.name?.message} />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Industry
+                  {t("form.industry")}
                 </label>
                 <select disabled={isSaving} className={inputClasses} {...form.register("industry")}>
-                  <option value="">Not specified</option>
+                  <option value="">{t("notSpecified")}</option>
                   {Object.entries(ACCOUNT_INDUSTRY_LABELS).map(([value, label]) => (
                     <option key={value} value={value}>
                       {label}
@@ -1034,13 +1037,13 @@ export function AccountsPage() {
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Company Size
+                  {t("form.companySize")}
                 </label>
                 <select disabled={isSaving} className={inputClasses} {...form.register("size")}>
-                  <option value="">Not specified</option>
+                  <option value="">{t("notSpecified")}</option>
                   {ACCOUNT_SIZES.map((size) => (
                     <option key={size} value={size}>
-                      {size} employees
+                      {t("employees", { size })}
                     </option>
                   ))}
                 </select>
@@ -1050,14 +1053,14 @@ export function AccountsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Website
+                  {t("form.website")}
                 </label>
                 <Input placeholder="acme.com" disabled={isSaving} {...form.register("website")} />
                 <FieldError message={form.formState.errors.website?.message} />
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Annual Revenue (USD)
+                  {t("form.annualRevenue")}
                 </label>
                 <Input
                   type="number"
@@ -1076,14 +1079,14 @@ export function AccountsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Company Email
+                  {t("form.companyEmail")}
                 </label>
                 <Input type="email" placeholder="info@acme.com" disabled={isSaving} {...form.register("email")} />
                 <FieldError message={form.formState.errors.email?.message} />
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Phone
+                  {t("form.phone")}
                 </label>
                 <Input type="tel" placeholder="+1 234 567 890" disabled={isSaving} {...form.register("phone")} />
                 <FieldError message={form.formState.errors.phone?.message} />
@@ -1092,12 +1095,12 @@ export function AccountsPage() {
 
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                Address
+                {t("form.address")}
               </label>
               <textarea
                 rows={2}
                 disabled={isSaving}
-                placeholder="Street, City, State, ZIP"
+                placeholder={t("form.addressPlaceholder")}
                 className={cn(inputClasses, "resize-none")}
                 {...form.register("address")}
               />
@@ -1106,12 +1109,12 @@ export function AccountsPage() {
 
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                Description
+                {t("form.description")}
               </label>
               <textarea
                 rows={2}
                 disabled={isSaving}
-                placeholder="What does this company do? Relationship context..."
+                placeholder={t("form.descriptionPlaceholder")}
                 className={cn(inputClasses, "resize-none")}
                 {...form.register("description")}
               />
@@ -1121,12 +1124,12 @@ export function AccountsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Status
+                  {t("form.status")}
                 </label>
                 <select disabled={isSaving} className={inputClasses} {...form.register("status")}>
-                  <option value="prospect">Prospect</option>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
+                  <option value="prospect">{t("prospect")}</option>
+                  <option value="active">{t("active")}</option>
+                  <option value="inactive">{t("inactive")}</option>
                 </select>
               </div>
             </div>
@@ -1141,11 +1144,11 @@ export function AccountsPage() {
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeForm} disabled={isSaving}>
-                Cancel
+                {tc("cancel")}
               </Button>
               <Button type="submit" disabled={isSaving} className="bg-[#3F51B5] hover:bg-[#303F9F] text-white">
                 {isSaving && <Loader2 size={15} className="animate-spin" />}
-                {editingAccount ? "Update Account" : "Create Account"}
+                {editingAccount ? t("form.updateAccount") : t("form.createAccount")}
               </Button>
             </DialogFooter>
           </form>
@@ -1158,10 +1161,9 @@ export function AccountsPage() {
           {assigningAccount && (
             <>
               <DialogHeader>
-                <DialogTitle>Assign Account</DialogTitle>
+                <DialogTitle>{t("assignDialog.title")}</DialogTitle>
                 <DialogDescription>
-                  Route <span className="font-semibold text-gray-700 dark:text-slate-200">{assigningAccount.name}</span> to a
-                  team and/or a record owner. Team members gain visibility of this record.
+                  {t("assignDialog.desc", { name: assigningAccount.name })}
                 </DialogDescription>
               </DialogHeader>
 
@@ -1175,7 +1177,7 @@ export function AccountsPage() {
 
                 <div>
                   <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                    Team
+                    {t("assignDialog.team")}
                   </label>
                   <select
                     className={inputClasses}
@@ -1196,7 +1198,7 @@ export function AccountsPage() {
                       }
                     }}
                   >
-                    <option value="">Unassigned (no team)</option>
+                    <option value="">{t("assignDialog.noTeam")}</option>
                     {assignTeams.map((team) => (
                       <option key={team.id} value={team.id}>
                         {team.name}
@@ -1205,13 +1207,13 @@ export function AccountsPage() {
                     ))}
                   </select>
                   {assignTeamsQuery.isLoading && (
-                    <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">Loading teams...</p>
+                    <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">{t("assignDialog.loadingTeams")}</p>
                   )}
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                    Record Owner
+                    {t("assignDialog.recordOwner")}
                   </label>
                   <select
                     className={inputClasses}
@@ -1219,7 +1221,7 @@ export function AccountsPage() {
                     disabled={assignAccountMutation.isPending || assignStaffQuery.isLoading}
                     onChange={(e) => setAssignOwnerId(e.target.value)}
                   >
-                    <option value="">Unassigned (no owner)</option>
+                    <option value="">{t("assignDialog.noOwner")}</option>
                     {assignOwnerOptions.map((s) => (
                       <option key={s.keycloakId} value={s.keycloakId}>
                         {staffDisplayName(s)} ({s.role})
@@ -1228,8 +1230,8 @@ export function AccountsPage() {
                   </select>
                   <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">
                     {assignTeamId
-                      ? "Only members of the selected team can own this record."
-                      : "Pick a team first to narrow the list to its members."}
+                      ? t("assignDialog.onlyTeamMembers")
+                      : t("assignDialog.pickTeamFirst")}
                   </p>
                 </div>
               </div>
@@ -1240,7 +1242,7 @@ export function AccountsPage() {
                   onClick={() => setAssigningAccount(null)}
                   disabled={assignAccountMutation.isPending}
                 >
-                  Cancel
+                  {tc("cancel")}
                 </Button>
                 <Button
                   onClick={handleAssign}
@@ -1248,7 +1250,7 @@ export function AccountsPage() {
                   className="bg-[#3F51B5] hover:bg-[#303F9F] text-white"
                 >
                   {assignAccountMutation.isPending && <Loader2 size={15} className="animate-spin" />}
-                  Save Assignment
+                  {t("assignDialog.saveAssignment")}
                 </Button>
               </DialogFooter>
             </>
@@ -1262,12 +1264,9 @@ export function AccountsPage() {
           {deletingAccount && (
             <>
               <DialogHeader>
-                <DialogTitle>Delete account?</DialogTitle>
+                <DialogTitle>{t("deleteDialog.title")}</DialogTitle>
                 <DialogDescription>
-                  This permanently removes{" "}
-                  <span className="font-semibold text-gray-700 dark:text-slate-200">{deletingAccount.name}</span>. Its{" "}
-                  {deletingAccount.contactCount} linked contact(s) and deals are <strong>kept</strong> but
-                  unlinked from the company. This action cannot be undone.
+                  {t("deleteDialog.desc", { name: deletingAccount.name, count: deletingAccount.contactCount })}
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
@@ -1276,11 +1275,11 @@ export function AccountsPage() {
                   onClick={() => setDeletingAccount(null)}
                   disabled={deleteAccountMutation.isPending}
                 >
-                  Cancel
+                  {tc("cancel")}
                 </Button>
                 <Button variant="destructive" onClick={handleDelete} disabled={deleteAccountMutation.isPending}>
                   {deleteAccountMutation.isPending && <Loader2 size={15} className="animate-spin" />}
-                  Delete Account
+                  {t("deleteDialog.deleteAccount")}
                 </Button>
               </DialogFooter>
             </>

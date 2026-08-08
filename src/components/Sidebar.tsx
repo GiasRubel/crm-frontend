@@ -23,6 +23,7 @@ import {
   History,
   ListPlus,
   KeyRound,
+  Mail,
   LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -92,6 +93,7 @@ export function Sidebar() {
                   { icon: KeyRound, label: t("items.roles"), href: "/roles" },
                   { icon: Shield, label: t("items.users"), href: "/users" },
                   { icon: History, label: t("items.auditLog"), href: "/audit-log" },
+                  { icon: Mail, label: t("items.emailSettings"), href: "/mail-settings" },
                 ],
               } satisfies NavSection,
             ]

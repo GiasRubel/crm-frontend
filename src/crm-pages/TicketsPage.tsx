@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { z } from "zod";
@@ -128,9 +129,10 @@ function StatusBadge({ status }: { status: TicketStatus }) {
 }
 
 function PriorityBadge({ priority }: { priority: TicketPriority }) {
+  const t = useTranslations("tickets.staff");
   return (
     <Badge variant="outline" className={cn("capitalize font-semibold", priorityStyles[priority])}>
-      {priority}
+      {t(priority)}
     </Badge>
   );
 }
@@ -209,13 +211,14 @@ function FieldError({ message }: { message?: string }) {
 
 /** Conversation thread — shared by staff and portal views. */
 function CommentThread({ ticket }: { ticket: Ticket }) {
+  const t = useTranslations("tickets");
   return (
     <div className="space-y-2">
       <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold">
-        Conversation ({ticket.comments.length})
+        {t("conversation", { count: ticket.comments.length })}
       </p>
       {ticket.comments.length === 0 ? (
-        <p className="text-sm text-gray-400 dark:text-slate-500">No replies yet.</p>
+        <p className="text-sm text-gray-400 dark:text-slate-500">{t("noRepliesYet")}</p>
       ) : (
         <ul className="space-y-2 max-h-64 overflow-y-auto pr-1">
           {ticket.comments.map((c, i) => (
@@ -232,14 +235,14 @@ function CommentThread({ ticket }: { ticket: Ticket }) {
             >
               <div className="flex items-center gap-2 mb-1">
                 <span className="font-semibold text-gray-800 dark:text-slate-200">
-                  {c.authorName ?? (c.authorRole === "customer" ? "Customer" : "Staff")}
+                  {c.authorName ?? (c.authorRole === "customer" ? t("customerLabel") : t("staffLabel"))}
                 </span>
                 <span className="text-[11px] text-gray-400 dark:text-slate-500">
                   {new Date(c.postedAt).toLocaleString()}
                 </span>
                 {c.isInternal && (
                   <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/30 text-[10px] gap-1">
-                    <EyeOff size={10} /> Internal note
+                    <EyeOff size={10} /> {t("internalNote")}
                   </Badge>
                 )}
               </div>
@@ -255,6 +258,8 @@ function CommentThread({ ticket }: { ticket: Ticket }) {
 // ── Customer portal view ──────────────────────────────────────────────────────
 
 function CustomerTicketsView() {
+  const t = useTranslations("tickets.customer");
+  const tc = useTranslations("common");
   const { myTicketsQuery, createMyTicketMutation, addMyCommentMutation } = useMyTickets(true);
   const tickets = myTicketsQuery.data ?? [];
 
@@ -270,16 +275,16 @@ function CustomerTicketsView() {
   });
 
   // Keep the open dialog in sync after mutations refresh the list
-  const viewingFresh = viewing ? (tickets.find((t) => t.id === viewing.id) ?? viewing) : null;
+  const viewingFresh = viewing ? (tickets.find((tk) => tk.id === viewing.id) ?? viewing) : null;
 
   const onSubmit = async (values: MyTicketFormValues) => {
     try {
       await createMyTicketMutation.mutateAsync(values);
-      setMessage("Ticket submitted — our team will get back to you.");
+      setMessage(t("submitted"));
       setFormOpen(false);
       form.reset();
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Failed to submit ticket");
+      setErrorMsg(err instanceof Error ? err.message : t("submitFailed"));
     }
   };
 
@@ -289,7 +294,7 @@ function CustomerTicketsView() {
       await addMyCommentMutation.mutateAsync({ id: viewingFresh.id, body: reply.trim() });
       setReply("");
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Failed to send reply");
+      setErrorMsg(err instanceof Error ? err.message : t("replyFailed"));
     }
   };
 
@@ -298,8 +303,8 @@ function CustomerTicketsView() {
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Support</h1>
-            <p className="text-sm text-gray-500 dark:text-slate-400">Your support tickets and their status.</p>
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t("title")}</h1>
+            <p className="text-sm text-gray-500 dark:text-slate-400">{t("subtitle")}</p>
           </div>
           <Button
             onClick={() => {
@@ -308,7 +313,7 @@ function CustomerTicketsView() {
             }}
             className="bg-[#3F51B5] hover:bg-[#303F9F] text-white gap-2"
           >
-            <Plus size={18} /> New Ticket
+            <Plus size={18} /> {t("newTicket")}
           </Button>
         </div>
 
@@ -336,31 +341,31 @@ function CustomerTicketsView() {
         <Card className="py-0 overflow-hidden">
           {myTicketsQuery.isLoading ? (
             <div className="flex items-center justify-center gap-2 text-gray-400 dark:text-slate-500 py-16">
-              <Loader2 size={18} className="animate-spin" /> Loading your tickets...
+              <Loader2 size={18} className="animate-spin" /> {t("loading")}
             </div>
           ) : tickets.length === 0 ? (
             <div className="flex flex-col items-center gap-2 text-gray-500 dark:text-slate-400 py-16">
               <Inbox size={32} className="text-gray-300 dark:text-slate-600" />
-              <p className="font-medium">No tickets yet</p>
-              <p className="text-sm text-gray-400 dark:text-slate-500">Raise a ticket and we&apos;ll help you out.</p>
+              <p className="font-medium">{t("noTicketsYet")}</p>
+              <p className="text-sm text-gray-400 dark:text-slate-500">{t("raiseTicket")}</p>
             </div>
           ) : (
             <ul className="divide-y divide-gray-100 dark:divide-slate-800">
-              {tickets.map((t) => (
-                <li key={t.id}>
+              {tickets.map((tk) => (
+                <li key={tk.id}>
                   <button
                     type="button"
-                    onClick={() => setViewing(t)}
+                    onClick={() => setViewing(tk)}
                     className="w-full px-6 py-4 flex items-center gap-4 text-left hover:bg-gray-50/50 dark:hover:bg-slate-800 transition-colors"
                   >
-                    <span className="text-xs font-mono font-bold text-gray-400 dark:text-slate-500 shrink-0">{t.number}</span>
+                    <span className="text-xs font-mono font-bold text-gray-400 dark:text-slate-500 shrink-0">{tk.number}</span>
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-gray-900 dark:text-white truncate">{t.subject}</p>
+                      <p className="font-semibold text-gray-900 dark:text-white truncate">{tk.subject}</p>
                       <p className="text-xs text-gray-500 dark:text-slate-400">
-                        {TICKET_TYPE_LABELS[t.type]} · updated {new Date(t.updatedAt).toLocaleDateString()}
+                        {t("updated", { type: TICKET_TYPE_LABELS[tk.type], date: new Date(tk.updatedAt).toLocaleDateString() })}
                       </p>
                     </div>
-                    <StatusBadge status={t.status} />
+                    <StatusBadge status={tk.status} />
                   </button>
                 </li>
               ))}
@@ -373,20 +378,20 @@ function CustomerTicketsView() {
       <Dialog open={formOpen} onOpenChange={(open) => !open && setFormOpen(false)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>New Support Ticket</DialogTitle>
-            <DialogDescription>Tell us what&apos;s wrong and we&apos;ll get back to you.</DialogDescription>
+            <DialogTitle>{t("newDialogTitle")}</DialogTitle>
+            <DialogDescription>{t("newDialogDesc")}</DialogDescription>
           </DialogHeader>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                Subject *
+                {t("subject")}
               </label>
               <Input disabled={createMyTicketMutation.isPending} {...form.register("subject")} />
               <FieldError message={form.formState.errors.subject?.message} />
             </div>
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                Category
+                {t("category")}
               </label>
               <select className={inputClasses} disabled={createMyTicketMutation.isPending} {...form.register("type")}>
                 {Object.entries(TICKET_TYPE_LABELS).map(([value, label]) => (
@@ -398,7 +403,7 @@ function CustomerTicketsView() {
             </div>
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                What happened? *
+                {t("whatHappened")}
               </label>
               <textarea
                 rows={4}
@@ -410,7 +415,7 @@ function CustomerTicketsView() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setFormOpen(false)}>
-                Cancel
+                {tc("cancel")}
               </Button>
               <Button
                 type="submit"
@@ -418,7 +423,7 @@ function CustomerTicketsView() {
                 className="bg-[#3F51B5] hover:bg-[#303F9F] text-white"
               >
                 {createMyTicketMutation.isPending && <Loader2 size={15} className="animate-spin" />}
-                Submit Ticket
+                {t("submitTicket")}
               </Button>
             </DialogFooter>
           </form>
@@ -449,7 +454,7 @@ function CustomerTicketsView() {
                 {viewingFresh.status !== "closed" ? (
                   <div className="flex gap-2">
                     <Input
-                      placeholder="Write a reply..."
+                      placeholder={t("replyPlaceholder")}
                       value={reply}
                       onChange={(e) => setReply(e.target.value)}
                       disabled={addMyCommentMutation.isPending}
@@ -469,7 +474,7 @@ function CustomerTicketsView() {
                   </div>
                 ) : (
                   <p className="text-xs text-gray-400 dark:text-slate-500">
-                    This ticket is closed. Open a new ticket if you need more help.
+                    {t("closedNotice")}
                   </p>
                 )}
               </div>
@@ -484,6 +489,9 @@ function CustomerTicketsView() {
 // ── Staff helpdesk view ───────────────────────────────────────────────────────
 
 function StaffTicketsView() {
+  const t = useTranslations("tickets.staff");
+  const tt = useTranslations("tickets");
+  const tc = useTranslations("common");
   const { user } = useAuth();
   const isStaffAdmin = user?.role === "Admin" || user?.role === "Administrator";
 
@@ -543,7 +551,7 @@ function StaffTicketsView() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const viewing = viewingId ? (tickets.find((t) => t.id === viewingId) ?? null) : null;
+  const viewing = viewingId ? (tickets.find((tk) => tk.id === viewingId) ?? null) : null;
   // Detail may not be on the current page after a filter change — fetch it
   const viewingDetailQuery = useQuery({
     queryKey: ["tickets", "detail", viewingId],
@@ -581,7 +589,7 @@ function StaffTicketsView() {
     enabled: assignDialogOpen,
   });
   const assignTeams = assignTeamsQuery.data?.data ?? [];
-  const selectedAssignTeam = assignTeams.find((t) => t.id === assignTeamId);
+  const selectedAssignTeam = assignTeams.find((team) => team.id === assignTeamId);
   const assignOwnerOptions = selectedAssignTeam
     ? (assignStaffQuery.data ?? []).filter((s) =>
         selectedAssignTeam.members.some((m) => m.keycloakId === s.keycloakId),
@@ -611,22 +619,22 @@ function StaffTicketsView() {
         ...values,
         customFields: customFieldValues,
       });
-      notifySuccess(`Ticket ${created.number} created.`);
+      notifySuccess(t("toasts.created", { number: created.number }));
       setFormOpen(false);
       form.reset();
       setCustomFieldValues({});
       resetToFirstPage();
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : "Failed to create ticket");
+      setFormError(err instanceof Error ? err.message : t("toasts.createFailed"));
     }
   };
 
   const changeStatus = async (ticket: Ticket, status: TicketStatus) => {
     try {
       await setStatusMutation.mutateAsync({ id: ticket.id, status });
-      notifySuccess(`${ticket.number} → ${TICKET_STATUS_LABELS[status]}.`);
+      notifySuccess(t("toasts.statusChanged", { number: ticket.number, status: TICKET_STATUS_LABELS[status] }));
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Failed to update status");
+      setErrorMsg(err instanceof Error ? err.message : t("toasts.statusFailed"));
     }
   };
 
@@ -639,7 +647,7 @@ function StaffTicketsView() {
       });
       setReply("");
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Failed to add comment");
+      setErrorMsg(err instanceof Error ? err.message : t("toasts.commentFailed"));
     }
   };
 
@@ -654,7 +662,7 @@ function StaffTicketsView() {
       });
       setArticlePick("");
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Failed to link article");
+      setErrorMsg(err instanceof Error ? err.message : t("toasts.linkFailed"));
     }
   };
 
@@ -666,10 +674,10 @@ function StaffTicketsView() {
         id: assigningTicket.id,
         data: { assignedToId: assignOwnerId || null, assignedTeamId: assignTeamId || null },
       });
-      notifySuccess(`${assigningTicket.number} reassigned.`);
+      notifySuccess(t("toasts.reassigned", { number: assigningTicket.number }));
       setAssigningTicket(null);
     } catch (err) {
-      setAssignError(err instanceof Error ? err.message : "Failed to reassign");
+      setAssignError(err instanceof Error ? err.message : t("toasts.reassignFailed"));
     }
   };
 
@@ -677,10 +685,10 @@ function StaffTicketsView() {
     if (!deletingTicket) return;
     try {
       await deleteTicketMutation.mutateAsync(deletingTicket.id);
-      notifySuccess(`Ticket ${deletingTicket.number} deleted.`);
+      notifySuccess(t("toasts.deleted", { number: deletingTicket.number }));
       setDeletingTicket(null);
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Failed to delete ticket");
+      setErrorMsg(err instanceof Error ? err.message : t("toasts.deleteFailed"));
       setDeletingTicket(null);
     }
   };
@@ -693,9 +701,9 @@ function StaffTicketsView() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Tickets</h1>
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t("title")}</h1>
             <p className="text-sm text-gray-500 dark:text-slate-400">
-              Customer issues, bugs, and inquiries — from first response to resolution.
+              {t("subtitle")}
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
@@ -709,25 +717,25 @@ function StaffTicketsView() {
               }}
               className="bg-[#3F51B5] hover:bg-[#303F9F] text-white gap-2"
             >
-              <Plus size={18} /> New Ticket
+              <Plus size={18} /> {t("newTicket")}
             </Button>
           </div>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <StatCard label="Open" value={stats?.open} icon={Inbox} accent="bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400" />
-          <StatCard label="In Progress" value={stats?.inProgress} icon={Clock} accent="bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400" />
-          <StatCard label="Unassigned" value={stats?.unassigned} icon={UserRound} accent="bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400" />
-          <StatCard label="Urgent" value={stats?.urgent} icon={AlertTriangle} accent="bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-400" />
+          <StatCard label={t("stats.open")} value={stats?.open} icon={Inbox} accent="bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400" />
+          <StatCard label={t("stats.inProgress")} value={stats?.inProgress} icon={Clock} accent="bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400" />
+          <StatCard label={t("stats.unassigned")} value={stats?.unassigned} icon={UserRound} accent="bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400" />
+          <StatCard label={t("stats.urgent")} value={stats?.urgent} icon={AlertTriangle} accent="bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-400" />
           <StatCard
-            label="No 1st Response"
+            label={t("stats.noFirstResponse")}
             value={stats?.awaitingFirstResponse}
             icon={Timer}
             accent="bg-orange-50 text-orange-600 dark:bg-orange-500/15 dark:text-orange-400"
           />
           <StatCard
-            label="Avg 1st Resp."
+            label={t("stats.avgFirstResponse")}
             value={stats?.avgFirstResponseHours !== null && stats !== undefined ? `${stats.avgFirstResponseHours}h` : "—"}
             icon={CheckCircle2}
             accent="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400"
@@ -750,7 +758,7 @@ function StaffTicketsView() {
             <span className="text-sm font-medium flex items-center gap-2">
               <AlertCircle size={18} className="text-red-600 dark:text-red-400" />
               {errorMsg ??
-                (ticketsQuery.error instanceof Error ? ticketsQuery.error.message : "Failed to load tickets")}
+                (ticketsQuery.error instanceof Error ? ticketsQuery.error.message : t("loadFailed"))}
             </span>
             <button
               onClick={() => {
@@ -771,7 +779,7 @@ function StaffTicketsView() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" size={18} />
               <Input
                 type="text"
-                placeholder="Search number, subject, description..."
+                placeholder={t("searchPlaceholder")}
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
@@ -794,7 +802,7 @@ function StaffTicketsView() {
                     resetToFirstPage();
                   }}
                 />
-                Unassigned
+                {t("unassignedFilter")}
               </label>
               <select
                 value={statusFilter}
@@ -804,7 +812,7 @@ function StaffTicketsView() {
                 }}
                 className={cn(inputClasses, "w-auto py-1.5")}
               >
-                <option value="">All Statuses</option>
+                <option value="">{t("allStatuses")}</option>
                 {Object.entries(TICKET_STATUS_LABELS).map(([value, label]) => (
                   <option key={value} value={value}>
                     {label}
@@ -819,11 +827,11 @@ function StaffTicketsView() {
                 }}
                 className={cn(inputClasses, "w-auto py-1.5")}
               >
-                <option value="">All Priorities</option>
-                <option value="urgent">Urgent</option>
-                <option value="high">High</option>
-                <option value="normal">Normal</option>
-                <option value="low">Low</option>
+                <option value="">{t("allPriorities")}</option>
+                <option value="urgent">{t("urgent")}</option>
+                <option value="high">{t("high")}</option>
+                <option value="normal">{t("normal")}</option>
+                <option value="low">{t("low")}</option>
               </select>
               <select
                 value={typeFilter}
@@ -833,7 +841,7 @@ function StaffTicketsView() {
                 }}
                 className={cn(inputClasses, "w-auto py-1.5")}
               >
-                <option value="">All Types</option>
+                <option value="">{t("allTypes")}</option>
                 {Object.entries(TICKET_TYPE_LABELS).map(([value, label]) => (
                   <option key={value} value={value}>
                     {label}
@@ -847,19 +855,19 @@ function StaffTicketsView() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-50/75 hover:bg-gray-50/75 dark:bg-slate-800/50 dark:hover:bg-slate-800/50">
-                  <SortableHead field="number" className="px-6" {...sortProps}>Ticket</SortableHead>
+                  <SortableHead field="number" className="px-6" {...sortProps}>{t("table.ticket")}</SortableHead>
                   <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
-                    Customer
+                    {t("table.customer")}
                   </TableHead>
-                  <SortableHead field="type" className="px-6" {...sortProps}>Type</SortableHead>
-                  <SortableHead field="priority" className="px-6" {...sortProps}>Priority</SortableHead>
-                  <SortableHead field="status" className="px-6" {...sortProps}>Status</SortableHead>
+                  <SortableHead field="type" className="px-6" {...sortProps}>{t("table.type")}</SortableHead>
+                  <SortableHead field="priority" className="px-6" {...sortProps}>{t("table.priority")}</SortableHead>
+                  <SortableHead field="status" className="px-6" {...sortProps}>{t("table.status")}</SortableHead>
                   <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
-                    Assigned To
+                    {t("table.assignedTo")}
                   </TableHead>
-                  <SortableHead field="updatedAt" className="px-6" {...sortProps}>Updated</SortableHead>
+                  <SortableHead field="updatedAt" className="px-6" {...sortProps}>{t("table.updated")}</SortableHead>
                   <TableHead className="px-6 text-right text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
-                    Actions
+                    {t("table.actions")}
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -868,7 +876,7 @@ function StaffTicketsView() {
                   <TableRow>
                     <TableCell colSpan={8} className="px-6 py-12 text-center text-gray-400 dark:text-slate-500">
                       <div className="flex justify-center items-center gap-2">
-                        <Loader2 size={18} className="animate-spin" /> Fetching tickets...
+                        <Loader2 size={18} className="animate-spin" /> {t("fetchingTickets")}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -877,11 +885,11 @@ function StaffTicketsView() {
                     <TableCell colSpan={8} className="px-6 py-16 text-center">
                       <div className="flex flex-col items-center gap-2 text-gray-500 dark:text-slate-400">
                         <TicketCheck size={32} className="text-gray-300 dark:text-slate-600" />
-                        <p className="font-medium">No tickets found</p>
+                        <p className="font-medium">{t("noTicketsFound")}</p>
                         <p className="text-sm text-gray-400 dark:text-slate-500">
                           {debouncedSearch || statusFilter || priorityFilter || typeFilter || unassignedOnly
-                            ? "Try adjusting your search or filters."
-                            : "Customer issues will land here — or create one on a customer's behalf."}
+                            ? t("adjustFilters")
+                            : t("issuesLandHere")}
                         </p>
                       </div>
                     </TableCell>
@@ -924,7 +932,7 @@ function StaffTicketsView() {
                             )}
                           </div>
                         ) : (
-                          <span className="text-amber-600 dark:text-amber-400 font-medium text-xs">Unassigned</span>
+                          <span className="text-amber-600 dark:text-amber-400 font-medium text-xs">{t("unassignedBadge")}</span>
                         )}
                       </TableCell>
                       <TableCell className="px-6 py-4 text-gray-500 dark:text-slate-400 text-sm">
@@ -935,26 +943,26 @@ function StaffTicketsView() {
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="text-gray-400 dark:text-slate-500 hover:text-gray-700 dark:hover:text-slate-200">
                               <MoreHorizontal size={18} />
-                              <span className="sr-only">Open actions</span>
+                              <span className="sr-only">{t("openActions")}</span>
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => setViewingId(ticket.id)}>
-                              <MessageSquare size={15} /> Open conversation
+                              <MessageSquare size={15} /> {t("openConversation")}
                             </DropdownMenuItem>
                             {ticket.status !== "resolved" && ticket.status !== "closed" && (
                               <DropdownMenuItem onClick={() => changeStatus(ticket, "resolved")}>
-                                <CheckCircle2 size={15} /> Mark resolved
+                                <CheckCircle2 size={15} /> {t("markResolved")}
                               </DropdownMenuItem>
                             )}
                             {ticket.status === "resolved" && (
                               <DropdownMenuItem onClick={() => changeStatus(ticket, "closed")}>
-                                <Check size={15} /> Close ticket
+                                <Check size={15} /> {t("closeTicket")}
                               </DropdownMenuItem>
                             )}
                             {(ticket.status === "resolved" || ticket.status === "closed") && (
                               <DropdownMenuItem onClick={() => changeStatus(ticket, "open")}>
-                                <Inbox size={15} /> Reopen
+                                <Inbox size={15} /> {t("reopen")}
                               </DropdownMenuItem>
                             )}
                             {isStaffAdmin && (
@@ -967,11 +975,11 @@ function StaffTicketsView() {
                                     setAssigningTicket(ticket);
                                   }}
                                 >
-                                  <UsersRound size={15} /> Assign owner / team
+                                  <UsersRound size={15} /> {t("assignOwnerTeam")}
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem variant="destructive" onClick={() => setDeletingTicket(ticket)}>
-                                  <Trash2 size={15} /> Delete ticket
+                                  <Trash2 size={15} /> {t("deleteTicket")}
                                 </DropdownMenuItem>
                               </>
                             )}
@@ -990,8 +998,11 @@ function StaffTicketsView() {
             <div className="p-4 border-t border-gray-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
               <div className="flex items-center gap-3">
                 <span>
-                  {(meta.page - 1) * meta.limit + 1}–{Math.min(meta.page * meta.limit, meta.total)} of{" "}
-                  {meta.total} tickets
+                  {t("range", {
+                    from: (meta.page - 1) * meta.limit + 1,
+                    to: Math.min(meta.page * meta.limit, meta.total),
+                    total: meta.total,
+                  })}
                 </span>
                 <select
                   value={limit}
@@ -1001,9 +1012,9 @@ function StaffTicketsView() {
                   }}
                   className={cn(inputClasses, "w-auto py-1 text-xs")}
                 >
-                  <option value={10}>10 / page</option>
-                  <option value={25}>25 / page</option>
-                  <option value={50}>50 / page</option>
+                  <option value={10}>{t("perPage", { count: 10 })}</option>
+                  <option value={25}>{t("perPage", { count: 25 })}</option>
+                  <option value={50}>{t("perPage", { count: 50 })}</option>
                 </select>
               </div>
               <div className="flex items-center gap-1">
@@ -1016,7 +1027,7 @@ function StaffTicketsView() {
                   <ChevronLeft size={16} />
                 </Button>
                 <span className="px-3 text-sm font-bold text-gray-700 dark:text-slate-200">
-                  {meta.page} / {meta.totalPages}
+                  {t("pageOf", { page: meta.page, totalPages: meta.totalPages })}
                 </span>
                 <Button
                   variant="outline"
@@ -1053,7 +1064,7 @@ function StaffTicketsView() {
               <div className="space-y-4">
                 {/* Status workflow */}
                 <div className="flex items-center gap-2 flex-wrap">
-                  <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Status:</label>
+                  <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">{t("statusLabel")}</label>
                   <select
                     className={cn(inputClasses, "w-auto py-1.5")}
                     value={viewingTicket.status}
@@ -1068,10 +1079,10 @@ function StaffTicketsView() {
                   </select>
                   {viewingTicket.firstResponseAt ? (
                     <span className="text-[11px] text-gray-400 dark:text-slate-500">
-                      First response: {new Date(viewingTicket.firstResponseAt).toLocaleString()}
+                      {t("firstResponse", { date: new Date(viewingTicket.firstResponseAt).toLocaleString() })}
                     </span>
                   ) : (
-                    <span className="text-[11px] text-orange-500 dark:text-orange-400 font-semibold">Awaiting first response</span>
+                    <span className="text-[11px] text-orange-500 dark:text-orange-400 font-semibold">{t("awaitingFirstResponse")}</span>
                   )}
                 </div>
 
@@ -1088,7 +1099,7 @@ function StaffTicketsView() {
                   <div className="space-y-2">
                     <textarea
                       rows={2}
-                      placeholder={replyInternal ? "Internal note (customer never sees this)..." : "Reply to the customer..."}
+                      placeholder={replyInternal ? t("internalNotePlaceholder") : t("replyPlaceholder")}
                       className={cn(inputClasses, "resize-none", replyInternal && "bg-amber-50/50 border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/30")}
                       value={reply}
                       onChange={(e) => setReply(e.target.value)}
@@ -1102,7 +1113,7 @@ function StaffTicketsView() {
                           checked={replyInternal}
                           onChange={(e) => setReplyInternal(e.target.checked)}
                         />
-                        <EyeOff size={12} /> Internal note
+                        <EyeOff size={12} /> {tt("internalNote")}
                       </label>
                       <Button
                         size="sm"
@@ -1115,7 +1126,7 @@ function StaffTicketsView() {
                         ) : (
                           <Send size={14} />
                         )}
-                        {replyInternal ? "Add note" : "Send reply"}
+                        {replyInternal ? t("addNote") : t("sendReply")}
                       </Button>
                     </div>
                   </div>
@@ -1124,7 +1135,7 @@ function StaffTicketsView() {
                 {/* Knowledge base links */}
                 <div className="border border-gray-100 dark:border-slate-800 rounded-xl p-4 bg-gray-50/50 dark:bg-slate-800/50 space-y-2">
                   <p className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <BookOpen size={13} /> Linked Knowledge Base Articles
+                    <BookOpen size={13} /> {t("linkedArticles")}
                   </p>
                   {viewingTicket.relatedArticles.length > 0 && (
                     <ul className="space-y-1">
@@ -1143,7 +1154,7 @@ function StaffTicketsView() {
                       onChange={(e) => setArticlePick(e.target.value)}
                     >
                       <option value="">
-                        {kbPickerQuery.isLoading ? "Loading articles..." : "Link an article as resolution..."}
+                        {kbPickerQuery.isLoading ? t("loadingArticles") : t("linkArticlePlaceholder")}
                       </option>
                       {(kbPickerQuery.data?.data ?? [])
                         .filter((a) => !viewingTicket.relatedArticles.some((r) => r.id === a.id))
@@ -1158,7 +1169,7 @@ function StaffTicketsView() {
                       onClick={linkArticle}
                       disabled={!articlePick || updateTicketMutation.isPending}
                     >
-                      Link
+                      {t("link")}
                     </Button>
                   </div>
                 </div>
@@ -1166,13 +1177,13 @@ function StaffTicketsView() {
 
               <DialogFooter>
                 <Button variant="secondary" onClick={() => setViewingId(null)}>
-                  Close
+                  {t("close")}
                 </Button>
               </DialogFooter>
             </>
           ) : (
             <div className="flex items-center justify-center gap-2 text-gray-400 dark:text-slate-500 py-16">
-              <Loader2 size={18} className="animate-spin" /> Loading ticket...
+              <Loader2 size={18} className="animate-spin" /> {t("loadingTicket")}
             </div>
           )}
         </DialogContent>
@@ -1182,8 +1193,8 @@ function StaffTicketsView() {
       <Dialog open={formOpen} onOpenChange={(open) => !open && setFormOpen(false)}>
         <DialogContent className="max-w-lg max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>New Ticket</DialogTitle>
-            <DialogDescription>Log an issue on behalf of a customer.</DialogDescription>
+            <DialogTitle>{t("newDialogTitle")}</DialogTitle>
+            <DialogDescription>{t("newDialogDesc")}</DialogDescription>
           </DialogHeader>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {formError && (
@@ -1193,7 +1204,7 @@ function StaffTicketsView() {
             )}
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                Customer *
+                {t("customerField")}
               </label>
               <select
                 className={inputClasses}
@@ -1201,7 +1212,7 @@ function StaffTicketsView() {
                 {...form.register("customerId")}
               >
                 <option value="">
-                  {customersPickerQuery.isLoading ? "Loading customers..." : "Select a customer"}
+                  {customersPickerQuery.isLoading ? t("loadingCustomers") : t("selectCustomer")}
                 </option>
                 {(customersPickerQuery.data?.data ?? []).map((c) => (
                   <option key={c.id} value={c.id}>
@@ -1213,7 +1224,7 @@ function StaffTicketsView() {
             </div>
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                Subject *
+                {t("subject")}
               </label>
               <Input disabled={createTicketMutation.isPending} {...form.register("subject")} />
               <FieldError message={form.formState.errors.subject?.message} />
@@ -1221,7 +1232,7 @@ function StaffTicketsView() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Type
+                  {t("type")}
                 </label>
                 <select className={inputClasses} disabled={createTicketMutation.isPending} {...form.register("type")}>
                   {Object.entries(TICKET_TYPE_LABELS).map(([value, label]) => (
@@ -1233,19 +1244,19 @@ function StaffTicketsView() {
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Priority
+                  {t("priority")}
                 </label>
                 <select className={inputClasses} disabled={createTicketMutation.isPending} {...form.register("priority")}>
-                  <option value="low">Low</option>
-                  <option value="normal">Normal</option>
-                  <option value="high">High</option>
-                  <option value="urgent">Urgent</option>
+                  <option value="low">{t("low")}</option>
+                  <option value="normal">{t("normal")}</option>
+                  <option value="high">{t("high")}</option>
+                  <option value="urgent">{t("urgent")}</option>
                 </select>
               </div>
             </div>
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                Description *
+                {t("description")}
               </label>
               <textarea
                 rows={4}
@@ -1264,7 +1275,7 @@ function StaffTicketsView() {
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setFormOpen(false)}>
-                Cancel
+                {tc("cancel")}
               </Button>
               <Button
                 type="submit"
@@ -1272,7 +1283,7 @@ function StaffTicketsView() {
                 className="bg-[#3F51B5] hover:bg-[#303F9F] text-white"
               >
                 {createTicketMutation.isPending && <Loader2 size={15} className="animate-spin" />}
-                Create Ticket
+                {t("createTicket")}
               </Button>
             </DialogFooter>
           </form>
@@ -1285,10 +1296,9 @@ function StaffTicketsView() {
           {assigningTicket && (
             <>
               <DialogHeader>
-                <DialogTitle>Assign Ticket</DialogTitle>
+                <DialogTitle>{t("assignDialog.title")}</DialogTitle>
                 <DialogDescription>
-                  Route <span className="font-semibold text-gray-700 dark:text-slate-200">{assigningTicket.number}</span> to a
-                  team and/or an owner.
+                  {t("assignDialog.desc", { number: assigningTicket.number })}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
@@ -1299,7 +1309,7 @@ function StaffTicketsView() {
                 )}
                 <div>
                   <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                    Team
+                    {t("assignDialog.team")}
                   </label>
                   <select
                     className={inputClasses}
@@ -1308,7 +1318,7 @@ function StaffTicketsView() {
                     onChange={(e) => {
                       const teamId = e.target.value;
                       setAssignTeamId(teamId);
-                      const team = assignTeams.find((t) => t.id === teamId);
+                      const team = assignTeams.find((tm) => tm.id === teamId);
                       if (
                         teamId &&
                         team &&
@@ -1319,7 +1329,7 @@ function StaffTicketsView() {
                       }
                     }}
                   >
-                    <option value="">Unassigned (no team)</option>
+                    <option value="">{t("assignDialog.noTeam")}</option>
                     {assignTeams.map((team) => (
                       <option key={team.id} value={team.id}>
                         {team.name}
@@ -1329,7 +1339,7 @@ function StaffTicketsView() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                    Owner
+                    {t("assignDialog.owner")}
                   </label>
                   <select
                     className={inputClasses}
@@ -1337,7 +1347,7 @@ function StaffTicketsView() {
                     disabled={assignTicketMutation.isPending || assignStaffQuery.isLoading}
                     onChange={(e) => setAssignOwnerId(e.target.value)}
                   >
-                    <option value="">Unassigned (triage queue)</option>
+                    <option value="">{t("assignDialog.noOwner")}</option>
                     {assignOwnerOptions.map((s) => (
                       <option key={s.keycloakId} value={s.keycloakId}>
                         {staffDisplayName(s)} ({s.role})
@@ -1352,7 +1362,7 @@ function StaffTicketsView() {
                   onClick={() => setAssigningTicket(null)}
                   disabled={assignTicketMutation.isPending}
                 >
-                  Cancel
+                  {tc("cancel")}
                 </Button>
                 <Button
                   onClick={handleAssign}
@@ -1360,7 +1370,7 @@ function StaffTicketsView() {
                   className="bg-[#3F51B5] hover:bg-[#303F9F] text-white"
                 >
                   {assignTicketMutation.isPending && <Loader2 size={15} className="animate-spin" />}
-                  Save Assignment
+                  {t("assignDialog.saveAssignment")}
                 </Button>
               </DialogFooter>
             </>
@@ -1374,11 +1384,9 @@ function StaffTicketsView() {
           {deletingTicket && (
             <>
               <DialogHeader>
-                <DialogTitle>Delete ticket?</DialogTitle>
+                <DialogTitle>{t("deleteDialog.title")}</DialogTitle>
                 <DialogDescription>
-                  This permanently removes{" "}
-                  <span className="font-semibold text-gray-700 dark:text-slate-200">{deletingTicket.number}</span> and its
-                  conversation. Consider closing instead — this cannot be undone.
+                  {t("deleteDialog.desc", { number: deletingTicket.number })}
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
@@ -1387,11 +1395,11 @@ function StaffTicketsView() {
                   onClick={() => setDeletingTicket(null)}
                   disabled={deleteTicketMutation.isPending}
                 >
-                  Cancel
+                  {tc("cancel")}
                 </Button>
                 <Button variant="destructive" onClick={handleDelete} disabled={deleteTicketMutation.isPending}>
                   {deleteTicketMutation.isPending && <Loader2 size={15} className="animate-spin" />}
-                  Delete Ticket
+                  {t("deleteDialog.deleteTicket")}
                 </Button>
               </DialogFooter>
             </>

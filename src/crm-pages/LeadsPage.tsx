@@ -34,6 +34,7 @@ import {
   X,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/providers/keycloak-provider";
 import { useDebouncedValue } from "@/features/customers/hooks/useCustomers";
 import { initialSearchTermFromUrl } from "@/lib/initial-search-term";
@@ -43,10 +44,8 @@ import { ImportExportBar } from "@/features/import-export/components/ImportExpor
 import { useLeads } from "@/features/leads/hooks/useLeads";
 import { leadApi } from "@/features/leads/services/leadApi";
 import {
-  ENGAGEMENT_TYPE_LABELS,
   EngagementType,
   Lead,
-  LEAD_SOURCE_LABELS,
   LeadQuery,
   LeadRating,
   LeadSortField,
@@ -170,9 +169,10 @@ const statusStyles: Record<LeadStatus, string> = {
 };
 
 function StatusBadge({ status }: { status: LeadStatus }) {
+  const t = useTranslations("leads");
   return (
     <Badge variant="outline" className={cn("capitalize font-semibold", statusStyles[status])}>
-      {status}
+      {t(`statuses.${status}`)}
     </Badge>
   );
 }
@@ -184,6 +184,7 @@ const ratingStyles: Record<LeadRating, string> = {
 };
 
 function ScoreCell({ score, rating }: { score: number; rating: LeadRating }) {
+  const t = useTranslations("leads");
   const barColor =
     rating === "hot" ? "bg-red-500" : rating === "warm" ? "bg-amber-500" : "bg-slate-400";
   return (
@@ -193,7 +194,7 @@ function ScoreCell({ score, rating }: { score: number; rating: LeadRating }) {
       </div>
       <span className="text-xs font-bold text-gray-600 dark:text-slate-300 w-7 text-right">{score}</span>
       <Badge variant="outline" className={cn("capitalize font-semibold text-[10px] px-1.5", ratingStyles[rating])}>
-        {rating}
+        {t(`ratings.${rating}`)}
       </Badge>
     </div>
   );
@@ -275,6 +276,8 @@ function FieldError({ message }: { message?: string }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export function LeadsPage() {
+  const t = useTranslations("leads");
+  const tc = useTranslations("common");
   const { user } = useAuth();
   const isStaffAdmin = user?.role === "Admin" || user?.role === "Administrator";
 
@@ -350,7 +353,7 @@ export function LeadsPage() {
   });
 
   const assignTeams = assignTeamsQuery.data?.data ?? [];
-  const selectedAssignTeam = assignTeams.find((t) => t.id === assignTeamId);
+  const selectedAssignTeam = assignTeams.find((tm) => tm.id === assignTeamId);
   // When a team is chosen, the owner must be one of its members
   const assignOwnerOptions = selectedAssignTeam
     ? (assignStaffQuery.data ?? []).filter((s) =>
@@ -457,25 +460,27 @@ export function LeadsPage() {
     try {
       if (editingLead) {
         await updateLeadMutation.mutateAsync({ id: editingLead.id, data: payload });
-        notifySuccess(`Lead "${values.firstName} ${values.lastName}" updated successfully.`);
+        notifySuccess(t("toasts.updated", { name: `${values.firstName} ${values.lastName}` }));
       } else {
         await createLeadMutation.mutateAsync(payload);
-        notifySuccess(`Lead "${values.firstName} ${values.lastName}" created.`);
+        notifySuccess(t("toasts.created", { name: `${values.firstName} ${values.lastName}` }));
         resetToFirstPage();
       }
       setFormOpen(false);
       setEditingLead(null);
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : "Failed to save lead");
+      setFormError(err instanceof Error ? err.message : t("toasts.saveFailed"));
     }
   };
 
   const setLeadStatus = async (lead: Lead, status: Exclude<LeadStatus, "converted">) => {
     try {
       await updateLeadMutation.mutateAsync({ id: lead.id, data: { status } });
-      notifySuccess(`Lead "${lead.firstName} ${lead.lastName}" marked as ${status}.`);
+      notifySuccess(
+        t("toasts.statusChanged", { name: `${lead.firstName} ${lead.lastName}`, status: t(`statuses.${status}`) }),
+      );
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Failed to update lead status");
+      setErrorMsg(err instanceof Error ? err.message : t("toasts.statusFailed"));
     }
   };
 
@@ -483,10 +488,10 @@ export function LeadsPage() {
     if (!deletingLead) return;
     try {
       await deleteLeadMutation.mutateAsync(deletingLead.id);
-      notifySuccess(`Lead "${deletingLead.firstName} ${deletingLead.lastName}" was deleted.`);
+      notifySuccess(t("toasts.deleted", { name: `${deletingLead.firstName} ${deletingLead.lastName}` }));
       setDeletingLead(null);
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Failed to delete lead");
+      setErrorMsg(err instanceof Error ? err.message : t("toasts.deleteFailed"));
       setDeletingLead(null);
     }
   };
@@ -509,10 +514,10 @@ export function LeadsPage() {
           assignedToId: assignOwnerId || null,
         },
       });
-      notifySuccess(`Routing updated for "${assigningLead.firstName} ${assigningLead.lastName}".`);
+      notifySuccess(t("toasts.assignmentUpdated", { name: `${assigningLead.firstName} ${assigningLead.lastName}` }));
       setAssigningLead(null);
     } catch (err) {
-      setAssignError(err instanceof Error ? err.message : "Failed to update assignment");
+      setAssignError(err instanceof Error ? err.message : t("toasts.assignmentFailed"));
     }
   };
 
@@ -531,11 +536,14 @@ export function LeadsPage() {
         data: { type: values.type, note: values.note?.trim() || undefined },
       });
       notifySuccess(
-        `${ENGAGEMENT_TYPE_LABELS[values.type]} logged for "${engagingLead.firstName} ${engagingLead.lastName}".`,
+        t("toasts.engagementLogged", {
+          type: t(`engagementTypes.${values.type}`),
+          name: `${engagingLead.firstName} ${engagingLead.lastName}`,
+        }),
       );
       setEngagingLead(null);
     } catch (err) {
-      setEngagementError(err instanceof Error ? err.message : "Failed to log engagement");
+      setEngagementError(err instanceof Error ? err.message : t("toasts.engagementFailed"));
     }
   };
 
@@ -558,7 +566,7 @@ export function LeadsPage() {
     setConvertError(null);
 
     if (!values.phone?.trim() && !convertingLead.phone) {
-      setConvertError("A phone number is required to create the customer profile.");
+      setConvertError(t("toasts.convertPhoneRequired"));
       return;
     }
 
@@ -576,11 +584,14 @@ export function LeadsPage() {
         },
       });
       notifySuccess(
-        `Lead "${convertingLead.firstName} ${convertingLead.lastName}" converted — customer profile created${values.createOpportunity ? " and deal added to the pipeline" : ""}.`,
+        t("toasts.converted", {
+          name: `${convertingLead.firstName} ${convertingLead.lastName}`,
+          opportunity: values.createOpportunity ? t("toasts.convertedWithOpportunity") : "",
+        }),
       );
       setConvertingLead(null);
     } catch (err) {
-      setConvertError(err instanceof Error ? err.message : "Failed to convert lead");
+      setConvertError(err instanceof Error ? err.message : t("toasts.convertFailed"));
     }
   };
 
@@ -594,9 +605,9 @@ export function LeadsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Leads</h1>
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t("title")}</h1>
             <p className="text-sm text-gray-500 dark:text-slate-400">
-              Capture, score, qualify, and convert potential business.
+              {t("subtitle")}
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
@@ -608,20 +619,20 @@ export function LeadsPage() {
             />
             <Button onClick={openCreate} className="bg-[#3F51B5] hover:bg-[#303F9F] text-white gap-2">
               <Plus size={18} />
-              Add Lead
+              {t("addLead")}
             </Button>
           </div>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <StatCard label="Total" value={stats?.total} icon={TrendingUp} accent="bg-[#3F51B5]/10 text-[#3F51B5] dark:bg-indigo-500/15 dark:text-indigo-300" />
-          <StatCard label="New" value={stats?.new} icon={UserPlus} accent="bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400" />
-          <StatCard label="Hot" value={stats?.hot} icon={Flame} accent="bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-400" />
-          <StatCard label="Qualified" value={stats?.qualified} icon={ThumbsUp} accent="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400" />
-          <StatCard label="Converted" value={stats?.converted} icon={Target} accent="bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400" />
+          <StatCard label={t("stats.total")} value={stats?.total} icon={TrendingUp} accent="bg-[#3F51B5]/10 text-[#3F51B5] dark:bg-indigo-500/15 dark:text-indigo-300" />
+          <StatCard label={t("stats.new")} value={stats?.new} icon={UserPlus} accent="bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400" />
+          <StatCard label={t("stats.hot")} value={stats?.hot} icon={Flame} accent="bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-400" />
+          <StatCard label={t("stats.qualified")} value={stats?.qualified} icon={ThumbsUp} accent="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400" />
+          <StatCard label={t("stats.converted")} value={stats?.converted} icon={Target} accent="bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400" />
           <StatCard
-            label="Conv. Rate"
+            label={t("stats.convRate")}
             value={stats ? `${stats.conversionRate}%` : undefined}
             icon={ArrowRightLeft}
             accent="bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400"
@@ -647,7 +658,7 @@ export function LeadsPage() {
               <AlertCircle className="text-red-600 dark:text-red-400 shrink-0" size={20} />
               <span className="text-sm font-medium">
                 {errorMsg ??
-                  (leadsQuery.error instanceof Error ? leadsQuery.error.message : "Failed to load leads")}
+                  (leadsQuery.error instanceof Error ? leadsQuery.error.message : t("loadFailed"))}
               </span>
             </div>
             <button
@@ -669,7 +680,7 @@ export function LeadsPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" size={18} />
               <Input
                 type="text"
-                placeholder="Search by name, email, company, or phone..."
+                placeholder={t("searchPlaceholder")}
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
@@ -691,12 +702,12 @@ export function LeadsPage() {
                 }}
                 className={cn(inputClasses, "w-auto py-1.5")}
               >
-                <option value="">All Statuses</option>
-                <option value="new">New</option>
-                <option value="contacted">Contacted</option>
-                <option value="qualified">Qualified</option>
-                <option value="unqualified">Unqualified</option>
-                <option value="converted">Converted</option>
+                <option value="">{t("filters.allStatuses")}</option>
+                <option value="new">{t("statuses.new")}</option>
+                <option value="contacted">{t("statuses.contacted")}</option>
+                <option value="qualified">{t("statuses.qualified")}</option>
+                <option value="unqualified">{t("statuses.unqualified")}</option>
+                <option value="converted">{t("statuses.converted")}</option>
               </select>
               <select
                 value={sourceFilter}
@@ -706,10 +717,10 @@ export function LeadsPage() {
                 }}
                 className={cn(inputClasses, "w-auto py-1.5")}
               >
-                <option value="">All Sources</option>
-                {Object.entries(LEAD_SOURCE_LABELS).map(([value, label]) => (
+                <option value="">{t("filters.allSources")}</option>
+                {(["web_form", "api", "manual", "referral", "event", "other"] as LeadSource[]).map((value) => (
                   <option key={value} value={value}>
-                    {label}
+                    {t(`sources.${value}`)}
                   </option>
                 ))}
               </select>
@@ -721,10 +732,10 @@ export function LeadsPage() {
                 }}
                 className={cn(inputClasses, "w-auto py-1.5")}
               >
-                <option value="">Any Rating</option>
-                <option value="hot">Hot</option>
-                <option value="warm">Warm</option>
-                <option value="cold">Cold</option>
+                <option value="">{t("filters.anyRating")}</option>
+                <option value="hot">{t("ratings.hot")}</option>
+                <option value="warm">{t("ratings.warm")}</option>
+                <option value="cold">{t("ratings.cold")}</option>
               </select>
             </div>
           </div>
@@ -733,19 +744,19 @@ export function LeadsPage() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-50/75 hover:bg-gray-50/75 dark:bg-slate-800/50 dark:hover:bg-slate-800/50">
-                  <SortableHead field="lastName" className="px-6" {...sortProps}>Lead</SortableHead>
-                  <SortableHead field="company" className="px-6" {...sortProps}>Company</SortableHead>
+                  <SortableHead field="lastName" className="px-6" {...sortProps}>{t("table.lead")}</SortableHead>
+                  <SortableHead field="company" className="px-6" {...sortProps}>{t("table.company")}</SortableHead>
                   <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
-                    Source
+                    {t("table.source")}
                   </TableHead>
-                  <SortableHead field="score" className="px-6" {...sortProps}>Score</SortableHead>
-                  <SortableHead field="status" className="px-6" {...sortProps}>Status</SortableHead>
+                  <SortableHead field="score" className="px-6" {...sortProps}>{t("table.score")}</SortableHead>
+                  <SortableHead field="status" className="px-6" {...sortProps}>{t("table.status")}</SortableHead>
                   <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
-                    Assigned To
+                    {t("table.assignedTo")}
                   </TableHead>
-                  <SortableHead field="createdAt" className="px-6" {...sortProps}>Created</SortableHead>
+                  <SortableHead field="createdAt" className="px-6" {...sortProps}>{t("table.created")}</SortableHead>
                   <TableHead className="px-6 text-right text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
-                    Actions
+                    {t("table.actions")}
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -755,7 +766,7 @@ export function LeadsPage() {
                     <TableCell colSpan={8} className="px-6 py-12 text-center text-gray-400 dark:text-slate-500">
                       <div className="flex justify-center items-center gap-2">
                         <Loader2 size={18} className="animate-spin" />
-                        <span>Fetching leads...</span>
+                        <span>{t("fetchingLeads")}</span>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -764,11 +775,11 @@ export function LeadsPage() {
                     <TableCell colSpan={8} className="px-6 py-16 text-center">
                       <div className="flex flex-col items-center gap-2 text-gray-500 dark:text-slate-400">
                         <TrendingUp size={32} className="text-gray-300 dark:text-slate-600" />
-                        <p className="font-medium">No leads found</p>
+                        <p className="font-medium">{t("noLeadsFound")}</p>
                         <p className="text-sm text-gray-400 dark:text-slate-500">
                           {debouncedSearch || statusFilter || sourceFilter || ratingFilter
-                            ? "Try adjusting your search or filters."
-                            : "Add a lead manually or point your website form at the capture endpoint."}
+                            ? t("adjustFilters")
+                            : t("addFirstLead")}
                         </p>
                       </div>
                     </TableCell>
@@ -801,7 +812,7 @@ export function LeadsPage() {
                         )}
                       </TableCell>
                       <TableCell className="px-6 py-4 text-gray-600 dark:text-slate-300 text-sm">
-                        {LEAD_SOURCE_LABELS[lead.source]}
+                        {t(`sources.${lead.source}`)}
                       </TableCell>
                       <TableCell className="px-6 py-4">
                         <ScoreCell score={lead.score} rating={lead.rating} />
@@ -823,7 +834,7 @@ export function LeadsPage() {
                             )}
                           </div>
                         ) : (
-                          <span className="text-gray-300 dark:text-slate-600">Unassigned</span>
+                          <span className="text-gray-300 dark:text-slate-600">{t("unassigned")}</span>
                         )}
                       </TableCell>
                       <TableCell className="px-6 py-4 text-gray-500 dark:text-slate-400">
@@ -834,45 +845,45 @@ export function LeadsPage() {
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-700 dark:text-slate-500 dark:hover:text-slate-200">
                               <MoreHorizontal size={18} />
-                              <span className="sr-only">Open actions</span>
+                              <span className="sr-only">{t("openActions")}</span>
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => setViewingLead(lead)}>
-                              <Info size={15} /> View details
+                              <Info size={15} /> {t("viewDetails")}
                             </DropdownMenuItem>
                             {lead.status !== "converted" && (
                               <>
                                 <DropdownMenuItem onClick={() => openEngagement(lead)}>
-                                  <MessageSquarePlus size={15} /> Log engagement
+                                  <MessageSquarePlus size={15} /> {t("logEngagement")}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => openEdit(lead)}>
-                                  <Pencil size={15} /> Edit lead
+                                  <Pencil size={15} /> {t("editLead")}
                                 </DropdownMenuItem>
                                 {isStaffAdmin && (
                                   <DropdownMenuItem onClick={() => openAssign(lead)}>
-                                    <UsersRound size={15} /> Assign owner / team
+                                    <UsersRound size={15} /> {t("assignOwnerTeam")}
                                   </DropdownMenuItem>
                                 )}
                                 <DropdownMenuSeparator />
                                 {lead.status !== "qualified" && lead.status !== "unqualified" && (
                                   <DropdownMenuItem onClick={() => setLeadStatus(lead, "qualified")}>
-                                    <ThumbsUp size={15} /> Mark qualified
+                                    <ThumbsUp size={15} /> {t("markQualified")}
                                   </DropdownMenuItem>
                                 )}
                                 {lead.status === "qualified" && (
                                   <DropdownMenuItem onClick={() => openConvert(lead)}>
-                                    <ArrowRightLeft size={15} /> Convert to customer
+                                    <ArrowRightLeft size={15} /> {t("convertToCustomer")}
                                   </DropdownMenuItem>
                                 )}
                                 {lead.status !== "unqualified" && (
                                   <DropdownMenuItem onClick={() => setLeadStatus(lead, "unqualified")}>
-                                    <ThumbsDown size={15} /> Mark unqualified
+                                    <ThumbsDown size={15} /> {t("markUnqualified")}
                                   </DropdownMenuItem>
                                 )}
                                 {lead.status === "unqualified" && (
                                   <DropdownMenuItem onClick={() => setLeadStatus(lead, "new")}>
-                                    <ThumbsUp size={15} /> Reopen lead
+                                    <ThumbsUp size={15} /> {t("reopenLead")}
                                   </DropdownMenuItem>
                                 )}
                               </>
@@ -881,7 +892,7 @@ export function LeadsPage() {
                               <>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem variant="destructive" onClick={() => setDeletingLead(lead)}>
-                                  <Trash2 size={15} /> Delete lead
+                                  <Trash2 size={15} /> {t("deleteLead")}
                                 </DropdownMenuItem>
                               </>
                             )}
@@ -900,8 +911,11 @@ export function LeadsPage() {
             <div className="p-4 border-t border-gray-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
               <div className="flex items-center gap-3">
                 <span>
-                  {(meta.page - 1) * meta.limit + 1}–{Math.min(meta.page * meta.limit, meta.total)} of{" "}
-                  {meta.total} leads
+                  {t("range", {
+                    from: (meta.page - 1) * meta.limit + 1,
+                    to: Math.min(meta.page * meta.limit, meta.total),
+                    total: meta.total,
+                  })}
                 </span>
                 <select
                   value={limit}
@@ -911,9 +925,9 @@ export function LeadsPage() {
                   }}
                   className={cn(inputClasses, "w-auto py-1 text-xs")}
                 >
-                  <option value={10}>10 / page</option>
-                  <option value={25}>25 / page</option>
-                  <option value={50}>50 / page</option>
+                  <option value={10}>{t("perPage", { count: 10 })}</option>
+                  <option value={25}>{t("perPage", { count: 25 })}</option>
+                  <option value={50}>{t("perPage", { count: 50 })}</option>
                 </select>
               </div>
               <div className="flex items-center gap-1">
@@ -926,7 +940,7 @@ export function LeadsPage() {
                   <ChevronLeft size={16} />
                 </Button>
                 <span className="px-3 text-sm font-bold text-gray-700 dark:text-slate-200">
-                  {meta.page} / {meta.totalPages}
+                  {t("pageOf", { page: meta.page, totalPages: meta.totalPages })}
                 </span>
                 <Button
                   variant="outline"
@@ -948,8 +962,8 @@ export function LeadsPage() {
           {viewingLead && (
             <>
               <DialogHeader>
-                <DialogTitle>Lead Details</DialogTitle>
-                <DialogDescription>Profile, scoring, and engagement history.</DialogDescription>
+                <DialogTitle>{t("details.title")}</DialogTitle>
+                <DialogDescription>{t("details.subtitle")}</DialogDescription>
               </DialogHeader>
 
               <div className="space-y-6">
@@ -970,34 +984,34 @@ export function LeadsPage() {
                       variant="outline"
                       className={cn("capitalize font-semibold", ratingStyles[viewingLead.rating])}
                     >
-                      <Flame size={11} /> {viewingLead.rating} · {viewingLead.score}
+                      <Flame size={11} /> {t(`ratings.${viewingLead.rating}`)} · {viewingLead.score}
                     </Badge>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {[
-                    { icon: Phone, label: "Phone", value: viewingLead.phone || "—" },
-                    { icon: Building, label: "Company", value: viewingLead.company || "—" },
-                    { icon: Info, label: "Job Title", value: viewingLead.jobTitle || "—" },
-                    { icon: Mail, label: "Source", value: LEAD_SOURCE_LABELS[viewingLead.source] },
+                    { icon: Phone, label: t("details.phone"), value: viewingLead.phone || tc("notAvailable") },
+                    { icon: Building, label: t("details.company"), value: viewingLead.company || tc("notAvailable") },
+                    { icon: Info, label: t("details.jobTitle"), value: viewingLead.jobTitle || tc("notAvailable") },
+                    { icon: Mail, label: t("details.source"), value: t(`sources.${viewingLead.source}`) },
                     {
                       icon: Target,
-                      label: "Est. Value",
+                      label: t("details.estValue"),
                       value:
                         viewingLead.estimatedValue !== undefined && viewingLead.estimatedValue !== null
                           ? currency.format(viewingLead.estimatedValue)
-                          : "—",
+                          : tc("notAvailable"),
                     },
                     {
                       icon: UserPlus,
-                      label: "Record Owner",
-                      value: viewingLead.assignedToName || "Unassigned",
+                      label: t("details.recordOwner"),
+                      value: viewingLead.assignedToName || t("unassigned"),
                     },
                     {
                       icon: UsersRound,
-                      label: "Team",
-                      value: viewingLead.assignedTeamName || "Unassigned",
+                      label: t("details.team"),
+                      value: viewingLead.assignedTeamName || t("unassigned"),
                     },
                   ].map(({ icon: Icon, label, value }) => (
                     <div key={label} className="flex items-center gap-3 text-sm text-gray-600 dark:text-slate-300">
@@ -1012,26 +1026,31 @@ export function LeadsPage() {
 
                 {viewingLead.status === "converted" && (
                   <div className="bg-violet-50 border border-violet-200 text-violet-800 dark:bg-violet-500/10 dark:border-violet-500/30 dark:text-violet-300 rounded-xl p-4 text-sm">
-                    Converted{viewingLead.convertedAt ? ` on ${new Date(viewingLead.convertedAt).toLocaleDateString()}` : ""} —
-                    a customer profile{viewingLead.convertedOpportunityId ? " and a pipeline deal were" : " was"} created
-                    from this lead.
+                    {t("details.convertedNotice", {
+                      date: viewingLead.convertedAt
+                        ? t("details.convertedOnDate", { date: new Date(viewingLead.convertedAt).toLocaleDateString() })
+                        : "",
+                      opportunity: viewingLead.convertedOpportunityId
+                        ? t("details.andPipelineDeal")
+                        : t("details.wasCreatedSuffix"),
+                    })}
                   </div>
                 )}
 
                 <div className="bg-gray-50/75 dark:bg-slate-800/50 p-4 rounded-xl border border-gray-100 dark:border-slate-800 space-y-1">
-                  <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold">Notes</p>
+                  <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold">{t("details.notes")}</p>
                   <p className="text-sm text-gray-700 dark:text-slate-200 whitespace-pre-wrap">
-                    {viewingLead.notes || "No notes for this lead."}
+                    {viewingLead.notes || t("details.noNotes")}
                   </p>
                 </div>
 
                 {/* Engagement timeline */}
                 <div className="space-y-2">
                   <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold">
-                    Engagement History ({viewingLead.engagements.length})
+                    {t("details.engagementHistory", { count: viewingLead.engagements.length })}
                   </p>
                   {viewingLead.engagements.length === 0 ? (
-                    <p className="text-sm text-gray-400 dark:text-slate-500">No engagements logged yet.</p>
+                    <p className="text-sm text-gray-400 dark:text-slate-500">{t("details.noEngagementsYet")}</p>
                   ) : (
                     <ul className="space-y-2 max-h-56 overflow-y-auto pr-1">
                       {viewingLead.engagements.map((e, i) => (
@@ -1048,11 +1067,11 @@ export function LeadsPage() {
                             {e.points > 0 ? `+${e.points}` : e.points}
                           </span>
                           <div className="min-w-0 flex-1">
-                            <p className="font-medium text-gray-800 dark:text-white">{ENGAGEMENT_TYPE_LABELS[e.type]}</p>
+                            <p className="font-medium text-gray-800 dark:text-white">{t(`engagementTypes.${e.type}`)}</p>
                             {e.note && <p className="text-gray-500 dark:text-slate-400 whitespace-pre-wrap break-words">{e.note}</p>}
                             <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-0.5">
                               {new Date(e.occurredAt).toLocaleString()}
-                              {e.recordedByName ? ` · by ${e.recordedByName}` : ""}
+                              {e.recordedByName ? t("details.loggedBy", { name: e.recordedByName }) : ""}
                             </p>
                           </div>
                         </li>
@@ -1072,11 +1091,11 @@ export function LeadsPage() {
                       openEngagement(target);
                     }}
                   >
-                    <MessageSquarePlus size={15} /> Log engagement
+                    <MessageSquarePlus size={15} /> {t("logEngagement")}
                   </Button>
                 )}
                 <Button variant="secondary" onClick={() => setViewingLead(null)}>
-                  Close
+                  {tc("close")}
                 </Button>
               </DialogFooter>
             </>
@@ -1088,11 +1107,11 @@ export function LeadsPage() {
       <Dialog open={formOpen} onOpenChange={(open) => !open && closeForm()}>
         <DialogContent className="max-w-lg max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingLead ? "Edit Lead" : "Add New Lead"}</DialogTitle>
+            <DialogTitle>{editingLead ? t("form.editTitle") : t("form.addTitle")}</DialogTitle>
             <DialogDescription>
               {editingLead
-                ? "Update the lead's contact details, source, or estimated value."
-                : "Manually enter a potential customer into the funnel."}
+                ? t("form.editDesc")
+                : t("form.addDesc")}
             </DialogDescription>
           </DialogHeader>
 
@@ -1107,14 +1126,14 @@ export function LeadsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  First Name *
+                  {t("form.firstName")}
                 </label>
                 <Input disabled={isSaving} {...form.register("firstName")} />
                 <FieldError message={form.formState.errors.firstName?.message} />
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Last Name *
+                  {t("form.lastName")}
                 </label>
                 <Input disabled={isSaving} {...form.register("lastName")} />
                 <FieldError message={form.formState.errors.lastName?.message} />
@@ -1123,7 +1142,7 @@ export function LeadsPage() {
 
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                Email Address *
+                {t("form.email")}
               </label>
               <Input type="email" placeholder="name@example.com" disabled={isSaving} {...form.register("email")} />
               <FieldError message={form.formState.errors.email?.message} />
@@ -1132,14 +1151,14 @@ export function LeadsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Phone Number
+                  {t("form.phone")}
                 </label>
                 <Input type="tel" placeholder="+1 234 567 890" disabled={isSaving} {...form.register("phone")} />
                 <FieldError message={form.formState.errors.phone?.message} />
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Company
+                  {t("form.company")}
                 </label>
                 <Input placeholder="Acme Corp" disabled={isSaving} {...form.register("company")} />
                 <FieldError message={form.formState.errors.company?.message} />
@@ -1149,19 +1168,19 @@ export function LeadsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Job Title
+                  {t("form.jobTitle")}
                 </label>
-                <Input placeholder="Head of Procurement" disabled={isSaving} {...form.register("jobTitle")} />
+                <Input placeholder={t("form.jobTitlePlaceholder")} disabled={isSaving} {...form.register("jobTitle")} />
                 <FieldError message={form.formState.errors.jobTitle?.message} />
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Source
+                  {t("form.source")}
                 </label>
                 <select disabled={isSaving} className={inputClasses} {...form.register("source")}>
-                  {Object.entries(LEAD_SOURCE_LABELS).map(([value, label]) => (
+                  {(["web_form", "api", "manual", "referral", "event", "other"] as LeadSource[]).map((value) => (
                     <option key={value} value={value}>
-                      {label}
+                      {t(`sources.${value}`)}
                     </option>
                   ))}
                 </select>
@@ -1170,7 +1189,7 @@ export function LeadsPage() {
 
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                Estimated Value (USD)
+                {t("form.estimatedValue")}
               </label>
               <Input
                 type="number"
@@ -1187,12 +1206,12 @@ export function LeadsPage() {
 
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                Notes
+                {t("form.notes")}
               </label>
               <textarea
                 rows={2}
                 disabled={isSaving}
-                placeholder="Context, requirements, next steps..."
+                placeholder={t("form.notesPlaceholder")}
                 className={cn(inputClasses, "resize-none")}
                 {...form.register("notes")}
               />
@@ -1209,11 +1228,11 @@ export function LeadsPage() {
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeForm} disabled={isSaving}>
-                Cancel
+                {tc("cancel")}
               </Button>
               <Button type="submit" disabled={isSaving} className="bg-[#3F51B5] hover:bg-[#303F9F] text-white">
                 {isSaving && <Loader2 size={15} className="animate-spin" />}
-                {editingLead ? "Update Lead" : "Create Lead"}
+                {editingLead ? t("form.updateLead") : t("form.createLead")}
               </Button>
             </DialogFooter>
           </form>
@@ -1226,13 +1245,9 @@ export function LeadsPage() {
           {engagingLead && (
             <>
               <DialogHeader>
-                <DialogTitle>Log Engagement</DialogTitle>
+                <DialogTitle>{t("engagementDialog.title")}</DialogTitle>
                 <DialogDescription>
-                  Record a touchpoint with{" "}
-                  <span className="font-semibold text-gray-700 dark:text-slate-200">
-                    {engagingLead.firstName} {engagingLead.lastName}
-                  </span>
-                  . The lead score updates automatically.
+                  {t("engagementDialog.desc", { name: `${engagingLead.firstName} ${engagingLead.lastName}` })}
                 </DialogDescription>
               </DialogHeader>
 
@@ -1246,34 +1261,42 @@ export function LeadsPage() {
 
                 <div>
                   <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                    Engagement Type *
+                    {t("engagementDialog.engagementType")}
                   </label>
                   <select
                     className={inputClasses}
                     disabled={addEngagementMutation.isPending}
                     {...engagementForm.register("type")}
                   >
-                    {(Object.entries(ENGAGEMENT_TYPE_LABELS) as [EngagementType, string][]).map(
-                      ([value, label]) => (
-                        <option key={value} value={value}>
-                          {label}
-                        </option>
-                      ),
-                    )}
+                    {(
+                      [
+                        "email_opened",
+                        "email_replied",
+                        "call",
+                        "meeting",
+                        "website_visit",
+                        "form_submitted",
+                        "note",
+                      ] as EngagementType[]
+                    ).map((value) => (
+                      <option key={value} value={value}>
+                        {t(`engagementTypes.${value}`)}
+                      </option>
+                    ))}
                   </select>
                   <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">
-                    Calls, meetings, and email replies move a new lead to &quot;contacted&quot; automatically.
+                    {t("engagementDialog.autoContactedHint")}
                   </p>
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                    Note
+                    {t("engagementDialog.note")}
                   </label>
                   <textarea
                     rows={3}
                     disabled={addEngagementMutation.isPending}
-                    placeholder="What happened during this touchpoint?"
+                    placeholder={t("engagementDialog.notePlaceholder")}
                     className={cn(inputClasses, "resize-none")}
                     {...engagementForm.register("note")}
                   />
@@ -1287,7 +1310,7 @@ export function LeadsPage() {
                     onClick={() => setEngagingLead(null)}
                     disabled={addEngagementMutation.isPending}
                   >
-                    Cancel
+                    {tc("cancel")}
                   </Button>
                   <Button
                     type="submit"
@@ -1295,7 +1318,7 @@ export function LeadsPage() {
                     className="bg-[#3F51B5] hover:bg-[#303F9F] text-white"
                   >
                     {addEngagementMutation.isPending && <Loader2 size={15} className="animate-spin" />}
-                    Log Engagement
+                    {t("engagementDialog.logEngagement")}
                   </Button>
                 </DialogFooter>
               </form>
@@ -1310,13 +1333,9 @@ export function LeadsPage() {
           {convertingLead && (
             <>
               <DialogHeader>
-                <DialogTitle>Convert Lead</DialogTitle>
+                <DialogTitle>{t("convertDialog.title")}</DialogTitle>
                 <DialogDescription>
-                  Convert{" "}
-                  <span className="font-semibold text-gray-700 dark:text-slate-200">
-                    {convertingLead.firstName} {convertingLead.lastName}
-                  </span>{" "}
-                  into a customer. A Keycloak sign-in account is provisioned and an invitation email is sent.
+                  {t("convertDialog.desc", { name: `${convertingLead.firstName} ${convertingLead.lastName}` })}
                 </DialogDescription>
               </DialogHeader>
 
@@ -1331,7 +1350,7 @@ export function LeadsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                      Phone {convertingLead.phone ? "" : "*"}
+                      {t("convertDialog.phone")} {convertingLead.phone ? "" : "*"}
                     </label>
                     <Input
                       type="tel"
@@ -1342,13 +1361,13 @@ export function LeadsPage() {
                     <FieldError message={convertForm.formState.errors.phone?.message} />
                     {!convertingLead.phone && (
                       <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">
-                        Required — the customer profile needs a phone number.
+                        {t("convertDialog.phoneRequiredHint")}
                       </p>
                     )}
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                      Address
+                      {t("convertDialog.address")}
                     </label>
                     <Input
                       placeholder="Street, City"
@@ -1366,14 +1385,14 @@ export function LeadsPage() {
                     disabled={convertLeadMutation.isPending}
                     {...convertForm.register("createOpportunity")}
                   />
-                  Also create a pipeline opportunity
+                  {t("convertDialog.createOpportunity")}
                 </label>
 
                 {watchCreateOpportunity && (
                   <div className="space-y-4 border border-gray-100 dark:border-slate-800 rounded-xl p-4 bg-gray-50/50 dark:bg-slate-800/50">
                     <div>
                       <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                        Deal Name
+                        {t("convertDialog.dealName")}
                       </label>
                       <Input
                         disabled={convertLeadMutation.isPending}
@@ -1384,7 +1403,7 @@ export function LeadsPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div>
                         <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                          Amount (USD)
+                          {t("convertDialog.amount")}
                         </label>
                         <Input
                           type="number"
@@ -1399,7 +1418,7 @@ export function LeadsPage() {
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                          Expected Close
+                          {t("convertDialog.expectedClose")}
                         </label>
                         <Input
                           type="date"
@@ -1409,16 +1428,16 @@ export function LeadsPage() {
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                          Stage
+                          {t("convertDialog.stage")}
                         </label>
                         <select
                           className={inputClasses}
                           disabled={convertLeadMutation.isPending}
                           {...convertForm.register("stage")}
                         >
-                          <option value="discovery">Discovery</option>
-                          <option value="proposal">Proposal</option>
-                          <option value="negotiation">Negotiation</option>
+                          <option value="discovery">{t("convertDialog.discovery")}</option>
+                          <option value="proposal">{t("convertDialog.proposal")}</option>
+                          <option value="negotiation">{t("convertDialog.negotiation")}</option>
                         </select>
                       </div>
                     </div>
@@ -1432,7 +1451,7 @@ export function LeadsPage() {
                     onClick={() => setConvertingLead(null)}
                     disabled={convertLeadMutation.isPending}
                   >
-                    Cancel
+                    {tc("cancel")}
                   </Button>
                   <Button
                     type="submit"
@@ -1440,7 +1459,7 @@ export function LeadsPage() {
                     className="bg-[#3F51B5] hover:bg-[#303F9F] text-white"
                   >
                     {convertLeadMutation.isPending && <Loader2 size={15} className="animate-spin" />}
-                    Convert Lead
+                    {t("convertDialog.convertLead")}
                   </Button>
                 </DialogFooter>
               </form>
@@ -1455,13 +1474,9 @@ export function LeadsPage() {
           {assigningLead && (
             <>
               <DialogHeader>
-                <DialogTitle>Assign Lead</DialogTitle>
+                <DialogTitle>{t("assignDialog.title")}</DialogTitle>
                 <DialogDescription>
-                  Route{" "}
-                  <span className="font-semibold text-gray-700 dark:text-slate-200">
-                    {assigningLead.firstName} {assigningLead.lastName}
-                  </span>{" "}
-                  to a team and/or a record owner. Team members gain visibility of this record.
+                  {t("assignDialog.desc", { name: `${assigningLead.firstName} ${assigningLead.lastName}` })}
                 </DialogDescription>
               </DialogHeader>
 
@@ -1475,7 +1490,7 @@ export function LeadsPage() {
 
                 <div>
                   <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                    Team
+                    {t("assignDialog.team")}
                   </label>
                   <select
                     className={inputClasses}
@@ -1485,7 +1500,7 @@ export function LeadsPage() {
                       const teamId = e.target.value;
                       setAssignTeamId(teamId);
                       // Owner must belong to the newly selected team
-                      const team = assignTeams.find((t) => t.id === teamId);
+                      const team = assignTeams.find((tm) => tm.id === teamId);
                       if (
                         teamId &&
                         team &&
@@ -1496,7 +1511,7 @@ export function LeadsPage() {
                       }
                     }}
                   >
-                    <option value="">Unassigned (no team)</option>
+                    <option value="">{t("assignDialog.noTeam")}</option>
                     {assignTeams.map((team) => (
                       <option key={team.id} value={team.id}>
                         {team.name}
@@ -1505,13 +1520,13 @@ export function LeadsPage() {
                     ))}
                   </select>
                   {assignTeamsQuery.isLoading && (
-                    <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">Loading teams...</p>
+                    <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">{t("assignDialog.loadingTeams")}</p>
                   )}
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                    Record Owner
+                    {t("assignDialog.recordOwner")}
                   </label>
                   <select
                     className={inputClasses}
@@ -1519,7 +1534,7 @@ export function LeadsPage() {
                     disabled={assignLeadMutation.isPending || assignStaffQuery.isLoading}
                     onChange={(e) => setAssignOwnerId(e.target.value)}
                   >
-                    <option value="">Unassigned (no owner)</option>
+                    <option value="">{t("assignDialog.noOwner")}</option>
                     {assignOwnerOptions.map((s) => (
                       <option key={s.keycloakId} value={s.keycloakId}>
                         {staffDisplayName(s)} ({s.role})
@@ -1528,8 +1543,8 @@ export function LeadsPage() {
                   </select>
                   <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">
                     {assignTeamId
-                      ? "Only members of the selected team can own this record."
-                      : "Pick a team first to narrow the list to its members."}
+                      ? t("assignDialog.onlyTeamMembers")
+                      : t("assignDialog.pickTeamFirst")}
                   </p>
                 </div>
               </div>
@@ -1540,7 +1555,7 @@ export function LeadsPage() {
                   onClick={() => setAssigningLead(null)}
                   disabled={assignLeadMutation.isPending}
                 >
-                  Cancel
+                  {tc("cancel")}
                 </Button>
                 <Button
                   onClick={handleAssign}
@@ -1548,7 +1563,7 @@ export function LeadsPage() {
                   className="bg-[#3F51B5] hover:bg-[#303F9F] text-white"
                 >
                   {assignLeadMutation.isPending && <Loader2 size={15} className="animate-spin" />}
-                  Save Assignment
+                  {t("assignDialog.saveAssignment")}
                 </Button>
               </DialogFooter>
             </>
@@ -1562,13 +1577,9 @@ export function LeadsPage() {
           {deletingLead && (
             <>
               <DialogHeader>
-                <DialogTitle>Delete lead?</DialogTitle>
+                <DialogTitle>{t("deleteDialog.title")}</DialogTitle>
                 <DialogDescription>
-                  This permanently removes{" "}
-                  <span className="font-semibold text-gray-700 dark:text-slate-200">
-                    {deletingLead.firstName} {deletingLead.lastName}
-                  </span>{" "}
-                  ({deletingLead.email}) and its engagement history. This action cannot be undone.
+                  {t("deleteDialog.desc", { name: `${deletingLead.firstName} ${deletingLead.lastName}`, email: deletingLead.email })}
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
@@ -1577,11 +1588,11 @@ export function LeadsPage() {
                   onClick={() => setDeletingLead(null)}
                   disabled={deleteLeadMutation.isPending}
                 >
-                  Cancel
+                  {tc("cancel")}
                 </Button>
                 <Button variant="destructive" onClick={handleDelete} disabled={deleteLeadMutation.isPending}>
                   {deleteLeadMutation.isPending && <Loader2 size={15} className="animate-spin" />}
-                  Delete Lead
+                  {t("deleteDialog.deleteLead")}
                 </Button>
               </DialogFooter>
             </>

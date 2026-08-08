@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   BookOpen,
   ChevronLeft,
@@ -24,6 +25,7 @@ import { cn } from "@/lib/utils";
  * (view-counted), and anonymous helpful/not-helpful feedback.
  */
 export function PublicFaqPage() {
+  const t = useTranslations("publicFaq");
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [category, setCategory] = useState("");
@@ -77,15 +79,15 @@ export function PublicFaqPage() {
       {/* Hero */}
       <div className="bg-[#3F51B5] text-white">
         <div className="max-w-3xl mx-auto px-6 py-12 text-center space-y-4">
-          <h1 className="text-3xl font-bold">How can we help?</h1>
+          <h1 className="text-3xl font-bold">{t("heroTitle")}</h1>
           <p className="text-white/80 text-sm">
-            Answers to common questions — search or browse by topic.
+            {t("heroSubtitle")}
           </p>
           <div className="relative max-w-xl mx-auto">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" size={18} />
             <Input
               type="text"
-              placeholder="Search the help center..."
+              placeholder={t("searchPlaceholder")}
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -103,14 +105,14 @@ export function PublicFaqPage() {
           <Card>
             <CardContent className="p-8 space-y-5">
               <Button variant="ghost" size="sm" className="text-gray-500 dark:text-slate-400 -ml-2" onClick={() => setOpenSlug(null)}>
-                <ChevronLeft size={16} /> All articles
+                <ChevronLeft size={16} /> {t("allArticles")}
               </Button>
               {articleQuery.isLoading ? (
                 <div className="flex items-center justify-center gap-2 text-gray-400 dark:text-slate-500 py-16">
-                  <Loader2 size={18} className="animate-spin" /> Loading article...
+                  <Loader2 size={18} className="animate-spin" /> {t("loadingArticle")}
                 </div>
               ) : articleQuery.isError || !article ? (
-                <p className="text-sm text-gray-500 dark:text-slate-400 py-8 text-center">This article is no longer available.</p>
+                <p className="text-sm text-gray-500 dark:text-slate-400 py-8 text-center">{t("articleUnavailable")}</p>
               ) : (
                 <>
                   <div>
@@ -124,24 +126,24 @@ export function PublicFaqPage() {
                   <p className="text-[15px] leading-7 text-gray-700 dark:text-slate-200 whitespace-pre-wrap">{article.body}</p>
                   {article.tags.length > 0 && (
                     <div className="flex gap-1.5 flex-wrap">
-                      {article.tags.map((t) => (
-                        <Badge key={t} variant="outline" className="bg-white dark:bg-slate-900 text-gray-400 dark:text-slate-500 border-gray-200 dark:border-slate-800">
-                          #{t}
+                      {article.tags.map((tag) => (
+                        <Badge key={tag} variant="outline" className="bg-white dark:bg-slate-900 text-gray-400 dark:text-slate-500 border-gray-200 dark:border-slate-800">
+                          #{tag}
                         </Badge>
                       ))}
                     </div>
                   )}
                   <div className="border-t border-gray-100 dark:border-slate-800 pt-5 flex items-center gap-3">
-                    <span className="text-sm text-gray-500 dark:text-slate-400">Was this article helpful?</span>
+                    <span className="text-sm text-gray-500 dark:text-slate-400">{t("wasHelpful")}</span>
                     {voted[article.id] ? (
-                      <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">Thanks for the feedback!</span>
+                      <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">{t("thanksForFeedback")}</span>
                     ) : (
                       <div className="flex gap-2">
                         <Button variant="outline" size="sm" className="gap-1.5" onClick={() => sendVote(article, true)}>
-                          <ThumbsUp size={14} /> Yes
+                          <ThumbsUp size={14} /> {t("yes")}
                         </Button>
                         <Button variant="outline" size="sm" className="gap-1.5" onClick={() => sendVote(article, false)}>
-                          <ThumbsDown size={14} /> No
+                          <ThumbsDown size={14} /> {t("no")}
                         </Button>
                       </div>
                     )}
@@ -165,7 +167,7 @@ export function PublicFaqPage() {
                       : "bg-white dark:bg-slate-900 text-gray-600 dark:text-slate-300 border-gray-200 dark:border-slate-800 hover:border-[#3F51B5]/40",
                   )}
                 >
-                  All topics
+                  {t("allTopics")}
                 </button>
                 {categories.map((c) => (
                   <button
@@ -187,15 +189,15 @@ export function PublicFaqPage() {
 
             {listQuery.isLoading ? (
               <div className="flex items-center justify-center gap-2 text-gray-400 dark:text-slate-500 py-20">
-                <Loader2 size={18} className="animate-spin" /> Loading help center...
+                <Loader2 size={18} className="animate-spin" /> {t("loadingHelpCenter")}
               </div>
             ) : articles.length === 0 ? (
               <Card>
                 <CardContent className="py-16 flex flex-col items-center gap-2 text-gray-500 dark:text-slate-400">
                   <BookOpen size={32} className="text-gray-300 dark:text-slate-600" />
-                  <p className="font-medium">No articles found</p>
+                  <p className="font-medium">{t("noArticlesFound")}</p>
                   <p className="text-sm text-gray-400 dark:text-slate-500">
-                    {debouncedSearch ? "Try a different search term." : "Check back soon."}
+                    {debouncedSearch ? t("tryDifferentSearch") : t("checkBackSoon")}
                   </p>
                 </CardContent>
               </Card>

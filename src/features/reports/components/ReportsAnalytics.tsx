@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useTranslations } from "next-intl";
 import {
   Bar,
   BarChart,
@@ -114,11 +115,12 @@ function ChartCard({
 }
 
 function RepLeaderboard({ reps }: { reps: RepPerformance[] }) {
+  const t = useTranslations("reports.analytics");
   const max = Math.max(1, ...reps.map((r) => r.wonValue));
   if (reps.length === 0) {
     return (
       <p className="text-sm text-gray-400 dark:text-slate-500 py-8 text-center">
-        No closed-won deals yet.
+        {t("noClosedWonDeals")}
       </p>
     );
   }
@@ -156,7 +158,7 @@ function RepLeaderboard({ reps }: { reps: RepPerformance[] }) {
               />
             </div>
             <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-0.5">
-              {rep.wonCount} won · {rep.winRate}% win rate · {rep.openCount} open
+              {t("statsLine", { won: rep.wonCount, rate: rep.winRate, open: rep.openCount })}
             </p>
           </div>
         </div>
@@ -166,6 +168,7 @@ function RepLeaderboard({ reps }: { reps: RepPerformance[] }) {
 }
 
 export function ReportsAnalytics() {
+  const t = useTranslations("reports.analytics");
   const { theme } = useTheme();
   const dark = theme === "dark";
   const gridStroke = dark ? "#1e293b" : "#eef2f7";
@@ -189,7 +192,7 @@ export function ReportsAnalytics() {
     return (
       <div className="flex items-center justify-center gap-2 text-gray-400 dark:text-slate-500 py-24">
         <Loader2 size={20} className="animate-spin" />
-        <span>Loading analytics…</span>
+        <span>{t("loading")}</span>
       </div>
     );
   }
@@ -197,9 +200,9 @@ export function ReportsAnalytics() {
   if (dashboardQuery.isError || !data) {
     return (
       <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-800 dark:text-red-300 rounded-xl p-4 text-sm">
-        Failed to load analytics.{" "}
+        {t("failedToLoad")}{" "}
         <button className="underline" onClick={() => dashboardQuery.refetch()}>
-          Retry
+          {t("retry")}
         </button>
       </div>
     );
@@ -220,10 +223,10 @@ export function ReportsAnalytics() {
   const sourceData = data.leadsBySource;
 
   const funnelSteps = [
-    { label: "New", value: data.funnel.new, color: "#38bdf8" },
-    { label: "Contacted", value: data.funnel.contacted, color: "#6366f1" },
-    { label: "Qualified", value: data.funnel.qualified, color: "#8b5cf6" },
-    { label: "Converted", value: data.funnel.converted, color: "#10b981" },
+    { label: t("funnel.new"), value: data.funnel.new, color: "#38bdf8" },
+    { label: t("funnel.contacted"), value: data.funnel.contacted, color: "#6366f1" },
+    { label: t("funnel.qualified"), value: data.funnel.qualified, color: "#8b5cf6" },
+    { label: t("funnel.converted"), value: data.funnel.converted, color: "#10b981" },
   ];
   const funnelMax = Math.max(1, ...funnelSteps.map((s) => s.value));
 
@@ -232,42 +235,42 @@ export function ReportsAnalytics() {
       {/* KPI cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <StatCard
-          label="Pipeline Value"
+          label={t("stats.pipelineValue")}
           value={compactCurrency.format(data.pipeline.openValue)}
-          sub={`${data.pipeline.openCount} open deals`}
+          sub={t("stats.openDeals", { count: data.pipeline.openCount })}
           icon={BadgeDollarSign}
           accent="bg-[#3F51B5]/10 text-[#3F51B5] dark:bg-indigo-500/15 dark:text-indigo-300"
         />
         <StatCard
-          label="Weighted Forecast"
+          label={t("stats.weightedForecast")}
           value={compactCurrency.format(data.pipeline.weightedValue)}
           icon={Scale}
           accent="bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400"
         />
         <StatCard
-          label="Won This Month"
+          label={t("stats.wonThisMonth")}
           value={compactCurrency.format(data.pipeline.wonThisMonthValue)}
-          sub={`${data.pipeline.wonThisMonthCount} deals`}
+          sub={t("stats.dealsCount", { count: data.pipeline.wonThisMonthCount })}
           icon={Award}
           accent="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400"
         />
         <StatCard
-          label="Win Rate"
+          label={t("stats.winRate")}
           value={`${data.pipeline.winRate}%`}
           icon={TrendingUp}
           accent="bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400"
         />
         <StatCard
-          label="Lead Conversion"
+          label={t("stats.leadConversion")}
           value={`${data.funnel.conversionRate}%`}
-          sub={`${data.funnel.totalLeads} leads`}
+          sub={t("stats.leadsCount", { count: data.funnel.totalLeads })}
           icon={Percent}
           accent="bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400"
         />
         <StatCard
-          label="Customers"
+          label={t("stats.customers")}
           value={data.totals.customers}
-          sub={`${data.totals.activeCustomers} active`}
+          sub={t("stats.activeCount", { count: data.totals.activeCustomers })}
           icon={Users}
           accent="bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-400"
         />
@@ -276,25 +279,25 @@ export function ReportsAnalytics() {
       {/* Secondary totals */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard
-          label="Open Tickets"
+          label={t("stats.openTickets")}
           value={data.totals.openTickets}
           icon={TicketCheck}
           accent="bg-orange-50 text-orange-600 dark:bg-orange-500/15 dark:text-orange-400"
         />
         <StatCard
-          label="Pending Tasks"
+          label={t("stats.pendingTasks")}
           value={data.totals.pendingTasks}
           icon={Activity}
           accent="bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400"
         />
         <StatCard
-          label="Overdue Tasks"
+          label={t("stats.overdueTasks")}
           value={data.totals.overdueTasks}
           icon={AlertTriangle}
           accent="bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-400"
         />
         <StatCard
-          label="Qualified Leads"
+          label={t("stats.qualifiedLeads")}
           value={data.funnel.qualified}
           icon={Target}
           accent="bg-teal-50 text-teal-600 dark:bg-teal-500/15 dark:text-teal-400"
@@ -303,8 +306,8 @@ export function ReportsAnalytics() {
 
       {/* Revenue trend */}
       <ChartCard
-        title="Revenue (Closed Won)"
-        subtitle="Trailing 12 months"
+        title={t("charts.revenue")}
+        subtitle={t("charts.revenueSub")}
         className="h-[340px]"
       >
         <ResponsiveContainer width="100%" height="100%">
@@ -323,14 +326,14 @@ export function ReportsAnalytics() {
               itemStyle={tooltipText}
               labelStyle={tooltipText}
             />
-            <Line type="monotone" dataKey="wonValue" name="Won Revenue" stroke="#3F51B5" strokeWidth={2.5} dot={{ r: 3 }} />
+            <Line type="monotone" dataKey="wonValue" name={t("charts.wonRevenue")} stroke="#3F51B5" strokeWidth={2.5} dot={{ r: 3 }} />
           </LineChart>
         </ResponsiveContainer>
       </ChartCard>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Pipeline by stage */}
-        <ChartCard title="Pipeline by Stage" subtitle="Deal value per stage" className="h-[340px] lg:col-span-2">
+        <ChartCard title={t("charts.pipelineByStage")} subtitle={t("charts.pipelineByStageSub")} className="h-[340px] lg:col-span-2">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={pipelineData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridStroke} />
@@ -358,9 +361,9 @@ export function ReportsAnalytics() {
         </ChartCard>
 
         {/* Lead source */}
-        <ChartCard title="Leads by Source" subtitle="Where leads come from" className="h-[340px]">
+        <ChartCard title={t("charts.leadsBySource")} subtitle={t("charts.leadsBySourceSub")} className="h-[340px]">
           {sourceData.length === 0 ? (
-            <p className="text-sm text-gray-400 dark:text-slate-500 py-8 text-center">No leads yet.</p>
+            <p className="text-sm text-gray-400 dark:text-slate-500 py-8 text-center">{t("charts.noLeadsYet")}</p>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -388,7 +391,7 @@ export function ReportsAnalytics() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Conversion funnel */}
-        <ChartCard title="Lead Funnel" subtitle="From capture to conversion">
+        <ChartCard title={t("charts.leadFunnel")} subtitle={t("charts.leadFunnelSub")}>
           <div className="space-y-4 py-2">
             {funnelSteps.map((step) => (
               <div key={step.label}>
@@ -408,47 +411,47 @@ export function ReportsAnalytics() {
         </ChartCard>
 
         {/* Rep leaderboard */}
-        <ChartCard title="Top Performers" subtitle="Reps by closed-won value">
+        <ChartCard title={t("charts.topPerformers")} subtitle={t("charts.topPerformersSub")}>
           <RepLeaderboard reps={data.topReps} />
         </ChartCard>
       </div>
 
       {/* Team rollup */}
-      <ChartCard title="Team Performance" subtitle="Won vs open value by team">
+      <ChartCard title={t("charts.teamPerformance")} subtitle={t("charts.teamPerformanceSub")}>
         {teamQuery.isLoading ? (
           <div className="flex items-center gap-2 text-gray-400 dark:text-slate-500 py-8 justify-center">
-            <Loader2 size={18} className="animate-spin" /> Loading teams…
+            <Loader2 size={18} className="animate-spin" /> {t("loadingTeams")}
           </div>
         ) : !team || team.teams.length === 0 ? (
           <p className="text-sm text-gray-400 dark:text-slate-500 py-8 text-center">
-            No team-assigned deals yet.
+            {t("noTeamData")}
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-gray-400 dark:text-slate-500 text-xs uppercase tracking-wider border-b border-gray-100 dark:border-slate-800">
-                  <th className="py-2 pr-4 font-semibold">Team</th>
-                  <th className="py-2 px-4 font-semibold text-right">Members</th>
-                  <th className="py-2 px-4 font-semibold text-right">Won</th>
-                  <th className="py-2 px-4 font-semibold text-right">Won Value</th>
-                  <th className="py-2 px-4 font-semibold text-right">Open Value</th>
-                  <th className="py-2 pl-4 font-semibold text-right">Win Rate</th>
+                  <th className="py-2 pr-4 font-semibold">{t("table.team")}</th>
+                  <th className="py-2 px-4 font-semibold text-right">{t("table.members")}</th>
+                  <th className="py-2 px-4 font-semibold text-right">{t("table.won")}</th>
+                  <th className="py-2 px-4 font-semibold text-right">{t("table.wonValue")}</th>
+                  <th className="py-2 px-4 font-semibold text-right">{t("table.openValue")}</th>
+                  <th className="py-2 pl-4 font-semibold text-right">{t("table.winRate")}</th>
                 </tr>
               </thead>
               <tbody>
-                {team.teams.map((t) => (
-                  <tr key={t.teamId} className="border-b border-gray-50 dark:border-slate-800/60 last:border-0">
-                    <td className="py-2.5 pr-4 font-medium text-gray-800 dark:text-slate-200">{t.teamName}</td>
-                    <td className="py-2.5 px-4 text-right text-gray-500 dark:text-slate-400">{t.memberCount}</td>
-                    <td className="py-2.5 px-4 text-right text-gray-600 dark:text-slate-300">{t.wonCount}</td>
+                {team.teams.map((row) => (
+                  <tr key={row.teamId} className="border-b border-gray-50 dark:border-slate-800/60 last:border-0">
+                    <td className="py-2.5 pr-4 font-medium text-gray-800 dark:text-slate-200">{row.teamName}</td>
+                    <td className="py-2.5 px-4 text-right text-gray-500 dark:text-slate-400">{row.memberCount}</td>
+                    <td className="py-2.5 px-4 text-right text-gray-600 dark:text-slate-300">{row.wonCount}</td>
                     <td className="py-2.5 px-4 text-right font-semibold text-emerald-600 dark:text-emerald-400">
-                      {currency.format(t.wonValue)}
+                      {currency.format(row.wonValue)}
                     </td>
                     <td className="py-2.5 px-4 text-right text-gray-600 dark:text-slate-300">
-                      {currency.format(t.openValue)}
+                      {currency.format(row.openValue)}
                     </td>
-                    <td className="py-2.5 pl-4 text-right font-semibold text-gray-800 dark:text-slate-200">{t.winRate}%</td>
+                    <td className="py-2.5 pl-4 text-right font-semibold text-gray-800 dark:text-slate-200">{row.winRate}%</td>
                   </tr>
                 ))}
               </tbody>

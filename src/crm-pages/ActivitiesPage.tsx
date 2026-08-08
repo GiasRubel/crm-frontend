@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { z } from "zod";
@@ -16,6 +18,7 @@ import {
   Calendar,
   CalendarClock,
   CalendarPlus,
+  CalendarSync,
   Check,
   CheckCircle2,
   CheckSquare,
@@ -165,16 +168,17 @@ const priorityStyles: Record<ActivityPriority, string> = {
 };
 
 function StatusBadge({ activity }: { activity: Activity }) {
+  const t = useTranslations("activities");
   if (activity.overdue) {
     return (
       <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200 dark:bg-red-500/15 dark:text-red-400 dark:border-red-500/30 font-semibold gap-1">
-        <AlertTriangle size={11} /> Overdue
+        <AlertTriangle size={11} /> {t("overdue")}
       </Badge>
     );
   }
   return (
     <Badge variant="outline" className={cn("capitalize font-semibold", statusStyles[activity.status])}>
-      {activity.status}
+      {t(activity.status)}
     </Badge>
   );
 }
@@ -267,6 +271,8 @@ function toLocalInput(iso: string | null): string {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export function ActivitiesPage() {
+  const t = useTranslations("activities");
+  const tc = useTranslations("common");
   const { user } = useAuth();
   const isStaffAdmin = user?.role === "Admin" || user?.role === "Administrator";
   const myKeycloakId = user?.keycloakId ?? "";
@@ -365,7 +371,7 @@ export function ActivitiesPage() {
         case "ticket":
           return (
             await ticketApi.getAll({ limit: 100, sortBy: "updatedAt", sortOrder: "desc" })
-          ).data.map((t) => ({ id: t.id, label: `${t.number} — ${t.subject}` }));
+          ).data.map((tk) => ({ id: tk.id, label: `${tk.number} — ${tk.subject}` }));
         default:
           return [];
       }
@@ -445,7 +451,7 @@ export function ActivitiesPage() {
     setFormError(null);
 
     if (values.relatedType && !values.relatedId) {
-      setFormError("Pick the record this activity is about, or clear the record type.");
+      setFormError(t("toasts.pickRecordOrClear"));
       return;
     }
 
@@ -467,7 +473,7 @@ export function ActivitiesPage() {
             remindAt: toIso(values.remindAt) ?? null,
           },
         });
-        notifySuccess(`Activity "${values.subject}" updated successfully.`);
+        notifySuccess(t("toasts.updated", { subject: values.subject }));
       } else {
         const isComm = COMMUNICATION_TYPES.includes(values.type);
         await createActivityMutation.mutateAsync({
@@ -486,15 +492,17 @@ export function ActivitiesPage() {
         });
         notifySuccess(
           isComm && values.alreadyHappened
-            ? `${ACTIVITY_TYPE_LABELS[values.type]} logged${values.relatedType ? " — the linked record's history was updated" : ""}.`
-            : `${ACTIVITY_TYPE_LABELS[values.type]} "${values.subject}" created.`,
+            ? values.relatedType
+              ? t("toasts.loggedWithTimeline", { type: ACTIVITY_TYPE_LABELS[values.type] })
+              : t("toasts.logged", { type: ACTIVITY_TYPE_LABELS[values.type] })
+            : t("toasts.created", { type: ACTIVITY_TYPE_LABELS[values.type], subject: values.subject }),
         );
         resetToFirstPage();
       }
       setFormOpen(false);
       setEditingActivity(null);
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : "Failed to save activity");
+      setFormError(err instanceof Error ? err.message : t("toasts.saveFailed"));
     }
   };
 
@@ -503,13 +511,13 @@ export function ActivitiesPage() {
       await setStatusMutation.mutateAsync({ id: activity.id, data: { status } });
       notifySuccess(
         status === "completed"
-          ? `"${activity.subject}" marked as done.`
+          ? t("toasts.markedDone", { subject: activity.subject })
           : status === "pending"
-            ? `"${activity.subject}" reopened.`
-            : `"${activity.subject}" cancelled.`,
+            ? t("toasts.reopened", { subject: activity.subject })
+            : t("toasts.activityCancelled", { subject: activity.subject }),
       );
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Failed to update status");
+      setErrorMsg(err instanceof Error ? err.message : t("toasts.statusFailed"));
     }
   };
 
@@ -517,10 +525,10 @@ export function ActivitiesPage() {
     if (!deletingActivity) return;
     try {
       await deleteActivityMutation.mutateAsync(deletingActivity.id);
-      notifySuccess(`Activity "${deletingActivity.subject}" was deleted.`);
+      notifySuccess(t("toasts.deleted", { subject: deletingActivity.subject }));
       setDeletingActivity(null);
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Failed to delete activity");
+      setErrorMsg(err instanceof Error ? err.message : t("toasts.deleteFailed"));
       setDeletingActivity(null);
     }
   };
@@ -535,7 +543,7 @@ export function ActivitiesPage() {
   const handleAssign = async () => {
     if (!assigningActivity) return;
     if (!assignOwnerId) {
-      setAssignError("Activities always need an assignee — pick a staff user.");
+      setAssignError(t("toasts.needsAssignee"));
       return;
     }
     setAssignError(null);
@@ -547,10 +555,10 @@ export function ActivitiesPage() {
           assignedTeamId: assignTeamId || null,
         },
       });
-      notifySuccess(`"${assigningActivity.subject}" reassigned.`);
+      notifySuccess(t("toasts.reassigned", { subject: assigningActivity.subject }));
       setAssigningActivity(null);
     } catch (err) {
-      setAssignError(err instanceof Error ? err.message : "Failed to reassign");
+      setAssignError(err instanceof Error ? err.message : t("toasts.reassignFailed"));
     }
   };
 
@@ -558,7 +566,7 @@ export function ActivitiesPage() {
     try {
       await downloadIcs(activity);
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Failed to export calendar file");
+      setErrorMsg(err instanceof Error ? err.message : t("toasts.icsFailed"));
     }
   };
 
@@ -572,25 +580,33 @@ export function ActivitiesPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Activities</h1>
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t("title")}</h1>
             <p className="text-sm text-gray-500 dark:text-slate-400">
-              Tasks, follow-ups, and every logged interaction — in one timeline.
+              {t("subtitle")}
             </p>
           </div>
-          <Button onClick={openCreate} className="bg-[#3F51B5] hover:bg-[#303F9F] text-white gap-2">
-            <Plus size={18} />
-            New Activity
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button asChild variant="outline" className="gap-2">
+              <Link href="/activities/calendar-sync">
+                <CalendarSync size={18} />
+                {t("calendarSync")}
+              </Link>
+            </Button>
+            <Button onClick={openCreate} className="bg-[#3F51B5] hover:bg-[#303F9F] text-white gap-2">
+              <Plus size={18} />
+              {t("newActivity")}
+            </Button>
+          </div>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <StatCard label="Open Tasks" value={stats?.openTasks} icon={CheckSquare} accent="bg-[#3F51B5]/10 text-[#3F51B5] dark:bg-indigo-500/15 dark:text-indigo-300" />
-          <StatCard label="Overdue" value={stats?.overdue} icon={AlertTriangle} accent="bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-400" />
-          <StatCard label="Due Today" value={stats?.dueToday} icon={CalendarClock} accent="bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400" />
-          <StatCard label="Reminders" value={stats?.remindersDue} icon={Bell} accent="bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400" />
-          <StatCard label="Meetings (7d)" value={stats?.upcomingMeetings} icon={Users} accent="bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400" />
-          <StatCard label="Done (month)" value={stats?.completedThisMonth} icon={CheckCircle2} accent="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400" />
+          <StatCard label={t("stats.openTasks")} value={stats?.openTasks} icon={CheckSquare} accent="bg-[#3F51B5]/10 text-[#3F51B5] dark:bg-indigo-500/15 dark:text-indigo-300" />
+          <StatCard label={t("stats.overdue")} value={stats?.overdue} icon={AlertTriangle} accent="bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-400" />
+          <StatCard label={t("stats.dueToday")} value={stats?.dueToday} icon={CalendarClock} accent="bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400" />
+          <StatCard label={t("stats.reminders")} value={stats?.remindersDue} icon={Bell} accent="bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400" />
+          <StatCard label={t("stats.meetings7d")} value={stats?.upcomingMeetings} icon={Users} accent="bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400" />
+          <StatCard label={t("stats.doneMonth")} value={stats?.completedThisMonth} icon={CheckCircle2} accent="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400" />
         </div>
 
         {/* Notifications */}
@@ -614,7 +630,7 @@ export function ActivitiesPage() {
                 {errorMsg ??
                   (activitiesQuery.error instanceof Error
                     ? activitiesQuery.error.message
-                    : "Failed to load activities")}
+                    : t("loadFailed"))}
               </span>
             </div>
             <button
@@ -636,7 +652,7 @@ export function ActivitiesPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" size={18} />
               <Input
                 type="text"
-                placeholder="Search subject or notes..."
+                placeholder={t("searchPlaceholder")}
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
@@ -660,7 +676,7 @@ export function ActivitiesPage() {
                     resetToFirstPage();
                   }}
                 />
-                Assigned to me
+                {t("assignedToMe")}
               </label>
               <select
                 value={typeFilter}
@@ -670,7 +686,7 @@ export function ActivitiesPage() {
                 }}
                 className={cn(inputClasses, "w-auto py-1.5")}
               >
-                <option value="">All Types</option>
+                <option value="">{t("allTypes")}</option>
                 {Object.entries(ACTIVITY_TYPE_LABELS).map(([value, label]) => (
                   <option key={value} value={value}>
                     {label}
@@ -685,10 +701,10 @@ export function ActivitiesPage() {
                 }}
                 className={cn(inputClasses, "w-auto py-1.5")}
               >
-                <option value="">All Statuses</option>
-                <option value="pending">Pending</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
+                <option value="">{t("allStatuses")}</option>
+                <option value="pending">{t("pending")}</option>
+                <option value="completed">{t("completed")}</option>
+                <option value="cancelled">{t("cancelled")}</option>
               </select>
               <select
                 value={dueFilter}
@@ -698,10 +714,10 @@ export function ActivitiesPage() {
                 }}
                 className={cn(inputClasses, "w-auto py-1.5")}
               >
-                <option value="">Any Due Date</option>
-                <option value="overdue">Overdue</option>
-                <option value="today">Due Today</option>
-                <option value="week">Due This Week</option>
+                <option value="">{t("anyDueDate")}</option>
+                <option value="overdue">{t("overdueOption")}</option>
+                <option value="today">{t("dueTodayOption")}</option>
+                <option value="week">{t("dueThisWeek")}</option>
               </select>
             </div>
           </div>
@@ -710,18 +726,18 @@ export function ActivitiesPage() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-50/75 hover:bg-gray-50/75 dark:bg-slate-800/50 dark:hover:bg-slate-800/50">
-                  <SortableHead field="subject" className="px-6" {...sortProps}>Activity</SortableHead>
+                  <SortableHead field="subject" className="px-6" {...sortProps}>{t("table.activity")}</SortableHead>
                   <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
-                    Related To
+                    {t("table.relatedTo")}
                   </TableHead>
                   <TableHead className="px-6 text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
-                    Assigned To
+                    {t("table.assignedTo")}
                   </TableHead>
-                  <SortableHead field="dueAt" className="px-6" {...sortProps}>Due / Scheduled</SortableHead>
-                  <SortableHead field="priority" className="px-6" {...sortProps}>Priority</SortableHead>
-                  <SortableHead field="status" className="px-6" {...sortProps}>Status</SortableHead>
+                  <SortableHead field="dueAt" className="px-6" {...sortProps}>{t("table.dueScheduled")}</SortableHead>
+                  <SortableHead field="priority" className="px-6" {...sortProps}>{t("table.priority")}</SortableHead>
+                  <SortableHead field="status" className="px-6" {...sortProps}>{t("table.status")}</SortableHead>
                   <TableHead className="px-6 text-right text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-slate-400">
-                    Actions
+                    {t("table.actions")}
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -731,7 +747,7 @@ export function ActivitiesPage() {
                     <TableCell colSpan={7} className="px-6 py-12 text-center text-gray-400 dark:text-slate-500">
                       <div className="flex justify-center items-center gap-2">
                         <Loader2 size={18} className="animate-spin" />
-                        <span>Fetching activities...</span>
+                        <span>{t("fetchingActivities")}</span>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -740,11 +756,11 @@ export function ActivitiesPage() {
                     <TableCell colSpan={7} className="px-6 py-16 text-center">
                       <div className="flex flex-col items-center gap-2 text-gray-500 dark:text-slate-400">
                         <CalendarClock size={32} className="text-gray-300 dark:text-slate-600" />
-                        <p className="font-medium">No activities found</p>
+                        <p className="font-medium">{t("noActivitiesFound")}</p>
                         <p className="text-sm text-gray-400 dark:text-slate-500">
                           {debouncedSearch || typeFilter || statusFilter || dueFilter || onlyMine
-                            ? "Try adjusting your search or filters."
-                            : "Create a task or log your first interaction."}
+                            ? t("adjustFilters")
+                            : t("createFirst")}
                         </p>
                       </div>
                     </TableCell>
@@ -837,7 +853,7 @@ export function ActivitiesPage() {
                         </TableCell>
                         <TableCell className="px-6 py-4">
                           <Badge variant="outline" className={cn("capitalize font-semibold", priorityStyles[activity.priority])}>
-                            {activity.priority}
+                            {t(activity.priority)}
                           </Badge>
                         </TableCell>
                         <TableCell className="px-6 py-4">
@@ -849,7 +865,7 @@ export function ActivitiesPage() {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                title="Mark as done"
+                                title={t("markAsDone")}
                                 className="text-gray-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400"
                                 onClick={() => changeStatus(activity, "completed")}
                                 disabled={setStatusMutation.isPending}
@@ -861,20 +877,20 @@ export function ActivitiesPage() {
                               <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-700 dark:text-slate-500 dark:hover:text-slate-200">
                                   <MoreHorizontal size={18} />
-                                  <span className="sr-only">Open actions</span>
+                                  <span className="sr-only">{t("openActions")}</span>
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={() => setViewingActivity(activity)}>
-                                  <Info size={15} /> View details
+                                  <Info size={15} /> {t("viewDetails")}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => openEdit(activity)}>
-                                  <Pencil size={15} /> Edit
+                                  <Pencil size={15} /> {t("edit")}
                                 </DropdownMenuItem>
                                 {(activity.startAt || activity.dueAt) && (
                                   <>
                                     <DropdownMenuItem onClick={() => handleDownloadIcs(activity)}>
-                                      <Download size={15} /> Download .ics
+                                      <Download size={15} /> {t("downloadIcs")}
                                     </DropdownMenuItem>
                                     {googleCalendarUrl(activity) && (
                                       <DropdownMenuItem
@@ -882,31 +898,31 @@ export function ActivitiesPage() {
                                           window.open(googleCalendarUrl(activity)!, "_blank", "noopener")
                                         }
                                       >
-                                        <CalendarPlus size={15} /> Add to Google Calendar
+                                        <CalendarPlus size={15} /> {t("addToGoogleCalendar")}
                                       </DropdownMenuItem>
                                     )}
                                   </>
                                 )}
                                 {activity.status !== "pending" ? (
                                   <DropdownMenuItem onClick={() => changeStatus(activity, "pending")}>
-                                    <RotateCcw size={15} /> Reopen
+                                    <RotateCcw size={15} /> {t("reopen")}
                                   </DropdownMenuItem>
                                 ) : (
                                   <DropdownMenuItem onClick={() => changeStatus(activity, "cancelled")}>
-                                    <XCircle size={15} /> Cancel activity
+                                    <XCircle size={15} /> {t("cancelActivity")}
                                   </DropdownMenuItem>
                                 )}
                                 {isStaffAdmin && (
                                   <>
                                     <DropdownMenuItem onClick={() => openAssign(activity)}>
-                                      <UsersRound size={15} /> Reassign
+                                      <UsersRound size={15} /> {t("reassign")}
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem
                                       variant="destructive"
                                       onClick={() => setDeletingActivity(activity)}
                                     >
-                                      <Trash2 size={15} /> Delete activity
+                                      <Trash2 size={15} /> {t("deleteActivity")}
                                     </DropdownMenuItem>
                                   </>
                                 )}
@@ -927,8 +943,11 @@ export function ActivitiesPage() {
             <div className="p-4 border-t border-gray-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
               <div className="flex items-center gap-3">
                 <span>
-                  {(meta.page - 1) * meta.limit + 1}–{Math.min(meta.page * meta.limit, meta.total)} of{" "}
-                  {meta.total} activities
+                  {t("range", {
+                    from: (meta.page - 1) * meta.limit + 1,
+                    to: Math.min(meta.page * meta.limit, meta.total),
+                    total: meta.total,
+                  })}
                 </span>
                 <select
                   value={limit}
@@ -938,9 +957,9 @@ export function ActivitiesPage() {
                   }}
                   className={cn(inputClasses, "w-auto py-1 text-xs")}
                 >
-                  <option value={10}>10 / page</option>
-                  <option value={25}>25 / page</option>
-                  <option value={50}>50 / page</option>
+                  <option value={10}>{t("perPage", { count: 10 })}</option>
+                  <option value={25}>{t("perPage", { count: 25 })}</option>
+                  <option value={50}>{t("perPage", { count: 50 })}</option>
                 </select>
               </div>
               <div className="flex items-center gap-1">
@@ -953,7 +972,7 @@ export function ActivitiesPage() {
                   <ChevronLeft size={16} />
                 </Button>
                 <span className="px-3 text-sm font-bold text-gray-700 dark:text-slate-200">
-                  {meta.page} / {meta.totalPages}
+                  {t("pageOf", { page: meta.page, totalPages: meta.totalPages })}
                 </span>
                 <Button
                   variant="outline"
@@ -975,7 +994,7 @@ export function ActivitiesPage() {
           {viewingActivity && (
             <>
               <DialogHeader>
-                <DialogTitle>Activity Details</DialogTitle>
+                <DialogTitle>{t("details.title")}</DialogTitle>
                 <DialogDescription>
                   {ACTIVITY_TYPE_LABELS[viewingActivity.type]}
                   {viewingActivity.direction ? ` · ${viewingActivity.direction}` : ""}
@@ -1009,41 +1028,41 @@ export function ActivitiesPage() {
                   {[
                     {
                       icon: Calendar,
-                      label: "Due",
+                      label: t("details.due"),
                       value: viewingActivity.dueAt
                         ? new Date(viewingActivity.dueAt).toLocaleString()
                         : "—",
                     },
                     {
                       icon: CalendarClock,
-                      label: "Scheduled",
+                      label: t("details.scheduled"),
                       value: viewingActivity.startAt
                         ? `${new Date(viewingActivity.startAt).toLocaleString()}${viewingActivity.endAt ? ` → ${new Date(viewingActivity.endAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : ""}`
                         : "—",
                     },
                     {
                       icon: Bell,
-                      label: "Reminder",
+                      label: t("details.reminder"),
                       value: viewingActivity.remindAt
                         ? new Date(viewingActivity.remindAt).toLocaleString()
                         : "—",
                     },
                     {
                       icon: CheckCircle2,
-                      label: "Completed",
+                      label: t("details.completed"),
                       value: viewingActivity.completedAt
                         ? new Date(viewingActivity.completedAt).toLocaleString()
                         : "—",
                     },
                     {
                       icon: Users,
-                      label: "Assigned To",
+                      label: t("details.assignedTo"),
                       value: viewingActivity.assignedToName ?? viewingActivity.assignedToId,
                     },
                     {
                       icon: UsersRound,
-                      label: "Team",
-                      value: viewingActivity.assignedTeamName ?? "Unassigned",
+                      label: t("details.team"),
+                      value: viewingActivity.assignedTeamName ?? t("details.unassigned"),
                     },
                   ].map(({ icon: Icon, label, value }) => (
                     <div key={label} className="flex items-center gap-3 text-sm text-gray-600 dark:text-slate-300">
@@ -1057,15 +1076,15 @@ export function ActivitiesPage() {
                 </div>
 
                 <div className="bg-gray-50/75 dark:bg-slate-800/50 p-4 rounded-xl border border-gray-100 dark:border-slate-800 space-y-1">
-                  <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold">Notes</p>
+                  <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider font-semibold">{t("details.notes")}</p>
                   <p className="text-sm text-gray-700 dark:text-slate-200 whitespace-pre-wrap">
-                    {viewingActivity.description || "No notes for this activity."}
+                    {viewingActivity.description || t("details.noNotes")}
                   </p>
                 </div>
 
                 <div className="text-[11px] text-gray-400 dark:text-slate-500 space-y-1 border-t border-gray-100 dark:border-slate-800 pt-4">
                   <p>
-                    <span className="font-bold">Created by:</span>{" "}
+                    <span className="font-bold">{t("details.createdBy")}</span>{" "}
                     {viewingActivity.createdByName ?? viewingActivity.createdBy} ·{" "}
                     {viewingActivity.createdAt ? new Date(viewingActivity.createdAt).toLocaleString() : "—"}
                   </p>
@@ -1075,7 +1094,7 @@ export function ActivitiesPage() {
               <DialogFooter>
                 {(viewingActivity.startAt || viewingActivity.dueAt) && (
                   <Button variant="outline" onClick={() => handleDownloadIcs(viewingActivity)}>
-                    <Download size={15} /> .ics
+                    <Download size={15} /> {t("details.ics")}
                   </Button>
                 )}
                 {viewingActivity.status === "pending" && (
@@ -1088,11 +1107,11 @@ export function ActivitiesPage() {
                       changeStatus(target, "completed");
                     }}
                   >
-                    <CheckCircle2 size={15} /> Mark done
+                    <CheckCircle2 size={15} /> {t("details.markDone")}
                   </Button>
                 )}
                 <Button variant="secondary" onClick={() => setViewingActivity(null)}>
-                  Close
+                  {t("details.close")}
                 </Button>
               </DialogFooter>
             </>
@@ -1104,11 +1123,9 @@ export function ActivitiesPage() {
       <Dialog open={formOpen} onOpenChange={(open) => !open && closeForm()}>
         <DialogContent className="max-w-xl max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingActivity ? "Edit Activity" : "New Activity"}</DialogTitle>
+            <DialogTitle>{editingActivity ? t("form.editTitle") : t("form.addTitle")}</DialogTitle>
             <DialogDescription>
-              {editingActivity
-                ? "Update the details. Type and the linked record can't change — log a new activity instead."
-                : "Create a task or log a communication. Linking a record builds its timeline."}
+              {editingActivity ? t("form.editDesc") : t("form.addDesc")}
             </DialogDescription>
           </DialogHeader>
 
@@ -1123,7 +1140,7 @@ export function ActivitiesPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Type *
+                  {t("form.type")}
                 </label>
                 <select
                   disabled={isSaving || !!editingActivity}
@@ -1139,22 +1156,22 @@ export function ActivitiesPage() {
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Priority
+                  {t("form.priority")}
                 </label>
                 <select disabled={isSaving} className={inputClasses} {...form.register("priority")}>
-                  <option value="low">Low</option>
-                  <option value="normal">Normal</option>
-                  <option value="high">High</option>
+                  <option value="low">{t("form.low")}</option>
+                  <option value="normal">{t("form.normal")}</option>
+                  <option value="high">{t("form.high")}</option>
                 </select>
               </div>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                Subject *
+                {t("form.subject")}
               </label>
               <Input
-                placeholder={watchType === "task" ? "Follow up on proposal" : "Intro call with decision maker"}
+                placeholder={watchType === "task" ? t("form.subjectPlaceholderTask") : t("form.subjectPlaceholderComm")}
                 disabled={isSaving}
                 {...form.register("subject")}
               />
@@ -1165,11 +1182,11 @@ export function ActivitiesPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
                 <div>
                   <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                    Direction
+                    {t("form.direction")}
                   </label>
                   <select disabled={isSaving || watchType === "note"} className={inputClasses} {...form.register("direction")}>
-                    <option value="outbound">Outbound (we reached out)</option>
-                    <option value="inbound">Inbound (they reached out)</option>
+                    <option value="outbound">{t("form.outbound")}</option>
+                    <option value="inbound">{t("form.inbound")}</option>
                   </select>
                 </div>
                 {!editingActivity && (
@@ -1180,7 +1197,7 @@ export function ActivitiesPage() {
                       disabled={isSaving}
                       {...form.register("alreadyHappened")}
                     />
-                    Already happened (log it as done)
+                    {t("form.alreadyHappened")}
                   </label>
                 )}
               </div>
@@ -1190,7 +1207,7 @@ export function ActivitiesPage() {
             {!editingActivity && (
               <div className="border border-gray-100 dark:border-slate-800 rounded-xl p-4 bg-gray-50/50 dark:bg-slate-800/50 space-y-3">
                 <p className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-                  Related Record (builds its timeline)
+                  {t("form.relatedRecord")}
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <select
@@ -1200,7 +1217,7 @@ export function ActivitiesPage() {
                       onChange: () => form.setValue("relatedId", ""),
                     })}
                   >
-                    <option value="">Not linked</option>
+                    <option value="">{t("form.notLinked")}</option>
                     {Object.entries(RELATED_TYPE_LABELS).map(([value, label]) => (
                       <option key={value} value={value}>
                         {label}
@@ -1214,10 +1231,10 @@ export function ActivitiesPage() {
                   >
                     <option value="">
                       {!watchRelatedType
-                        ? "Pick a type first"
+                        ? t("form.pickTypeFirst")
                         : relatedPickerQuery.isLoading
-                          ? "Loading..."
-                          : "Select a record"}
+                          ? t("form.loading")
+                          : t("form.selectRecord")}
                     </option>
                     {relatedOptions.map((o) => (
                       <option key={o.id} value={o.id}>
@@ -1227,8 +1244,7 @@ export function ActivitiesPage() {
                   </select>
                 </div>
                 <p className="text-[11px] text-gray-400 dark:text-slate-500">
-                  Unassigned activities are automatically routed to the linked record&apos;s owner.
-                  Completed calls/meetings on a lead also update its engagement score.
+                  {t("form.relatedHint")}
                 </p>
               </div>
             )}
@@ -1238,7 +1254,7 @@ export function ActivitiesPage() {
               {(watchType === "task" || !isCommunication) && (
                 <div>
                   <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                    Due Date
+                    {t("form.dueDate")}
                   </label>
                   <Input type="datetime-local" disabled={isSaving} {...form.register("dueAt")} />
                 </div>
@@ -1248,13 +1264,13 @@ export function ActivitiesPage() {
                   <>
                     <div>
                       <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                        Scheduled Start
+                        {t("form.scheduledStart")}
                       </label>
                       <Input type="datetime-local" disabled={isSaving} {...form.register("startAt")} />
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                        Scheduled End
+                        {t("form.scheduledEnd")}
                       </label>
                       <Input type="datetime-local" disabled={isSaving} {...form.register("endAt")} />
                     </div>
@@ -1262,7 +1278,7 @@ export function ActivitiesPage() {
                 )}
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Reminder
+                  {t("form.reminder")}
                 </label>
                 <Input type="datetime-local" disabled={isSaving} {...form.register("remindAt")} />
               </div>
@@ -1270,12 +1286,12 @@ export function ActivitiesPage() {
 
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                Notes
+                {t("form.notes")}
               </label>
               <textarea
                 rows={3}
                 disabled={isSaving}
-                placeholder="What is this about? What was discussed?"
+                placeholder={t("form.notesPlaceholder")}
                 className={cn(inputClasses, "resize-none")}
                 {...form.register("description")}
               />
@@ -1284,11 +1300,11 @@ export function ActivitiesPage() {
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeForm} disabled={isSaving}>
-                Cancel
+                {tc("cancel")}
               </Button>
               <Button type="submit" disabled={isSaving} className="bg-[#3F51B5] hover:bg-[#303F9F] text-white">
                 {isSaving && <Loader2 size={15} className="animate-spin" />}
-                {editingActivity ? "Update Activity" : "Create Activity"}
+                {editingActivity ? t("form.updateActivity") : t("form.createActivity")}
               </Button>
             </DialogFooter>
           </form>
@@ -1301,11 +1317,9 @@ export function ActivitiesPage() {
           {assigningActivity && (
             <>
               <DialogHeader>
-                <DialogTitle>Reassign Activity</DialogTitle>
+                <DialogTitle>{t("reassignDialog.title")}</DialogTitle>
                 <DialogDescription>
-                  Hand{" "}
-                  <span className="font-semibold text-gray-700 dark:text-slate-200">{assigningActivity.subject}</span> to
-                  another staff user and/or route it to a team.
+                  {t("reassignDialog.desc", { subject: assigningActivity.subject })}
                 </DialogDescription>
               </DialogHeader>
 
@@ -1319,7 +1333,7 @@ export function ActivitiesPage() {
 
                 <div>
                   <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                    Assignee *
+                    {t("reassignDialog.assignee")}
                   </label>
                   <select
                     className={inputClasses}
@@ -1327,7 +1341,7 @@ export function ActivitiesPage() {
                     disabled={assignActivityMutation.isPending || assignStaffQuery.isLoading}
                     onChange={(e) => setAssignOwnerId(e.target.value)}
                   >
-                    <option value="">Select a staff user</option>
+                    <option value="">{t("reassignDialog.selectStaff")}</option>
                     {(assignStaffQuery.data ?? []).map((s) => (
                       <option key={s.keycloakId} value={s.keycloakId}>
                         {staffDisplayName(s)} ({s.role})
@@ -1338,7 +1352,7 @@ export function ActivitiesPage() {
 
                 <div>
                   <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                    Team
+                    {t("reassignDialog.team")}
                   </label>
                   <select
                     className={inputClasses}
@@ -1346,7 +1360,7 @@ export function ActivitiesPage() {
                     disabled={assignActivityMutation.isPending || assignTeamsQuery.isLoading}
                     onChange={(e) => setAssignTeamId(e.target.value)}
                   >
-                    <option value="">No team</option>
+                    <option value="">{t("reassignDialog.noTeam")}</option>
                     {assignTeams.map((team) => (
                       <option key={team.id} value={team.id}>
                         {team.name}
@@ -1354,7 +1368,7 @@ export function ActivitiesPage() {
                     ))}
                   </select>
                   <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">
-                    When a team is set, the assignee must be one of its members.
+                    {t("reassignDialog.teamHint")}
                   </p>
                 </div>
               </div>
@@ -1365,7 +1379,7 @@ export function ActivitiesPage() {
                   onClick={() => setAssigningActivity(null)}
                   disabled={assignActivityMutation.isPending}
                 >
-                  Cancel
+                  {tc("cancel")}
                 </Button>
                 <Button
                   onClick={handleAssign}
@@ -1373,7 +1387,7 @@ export function ActivitiesPage() {
                   className="bg-[#3F51B5] hover:bg-[#303F9F] text-white"
                 >
                   {assignActivityMutation.isPending && <Loader2 size={15} className="animate-spin" />}
-                  Save
+                  {t("reassignDialog.save")}
                 </Button>
               </DialogFooter>
             </>
@@ -1387,11 +1401,9 @@ export function ActivitiesPage() {
           {deletingActivity && (
             <>
               <DialogHeader>
-                <DialogTitle>Delete activity?</DialogTitle>
+                <DialogTitle>{t("deleteDialog.title")}</DialogTitle>
                 <DialogDescription>
-                  This permanently removes{" "}
-                  <span className="font-semibold text-gray-700 dark:text-slate-200">{deletingActivity.subject}</span>. History
-                  already synced into a linked lead or contact is kept. This action cannot be undone.
+                  {t("deleteDialog.desc", { subject: deletingActivity.subject })}
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
@@ -1400,7 +1412,7 @@ export function ActivitiesPage() {
                   onClick={() => setDeletingActivity(null)}
                   disabled={deleteActivityMutation.isPending}
                 >
-                  Cancel
+                  {tc("cancel")}
                 </Button>
                 <Button
                   variant="destructive"
@@ -1408,7 +1420,7 @@ export function ActivitiesPage() {
                   disabled={deleteActivityMutation.isPending}
                 >
                   {deleteActivityMutation.isPending && <Loader2 size={15} className="animate-spin" />}
-                  Delete Activity
+                  {t("deleteDialog.deleteActivity")}
                 </Button>
               </DialogFooter>
             </>

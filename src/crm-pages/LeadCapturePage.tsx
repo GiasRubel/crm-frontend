@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { z } from "zod";
@@ -46,6 +47,7 @@ function FieldError({ message }: { message?: string }) {
  * Leads page (source: web form) and are auto-routed by region.
  */
 export function LeadCapturePage() {
+  const t = useTranslations("leadCapture");
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -82,7 +84,7 @@ export function LeadCapturePage() {
       setSubmitted(true);
     } catch (err) {
       setSubmitError(
-        err instanceof Error ? err.message : "Something went wrong — please try again.",
+        err instanceof Error ? err.message : t("genericError"),
       );
     }
   };
@@ -94,9 +96,9 @@ export function LeadCapturePage() {
           {submitted ? (
             <div className="flex flex-col items-center text-center gap-3 py-8">
               <CheckCircle2 size={48} className="text-emerald-500" />
-              <h1 className="text-xl font-bold text-gray-800 dark:text-white">Thanks for reaching out!</h1>
+              <h1 className="text-xl font-bold text-gray-800 dark:text-white">{t("thanks")}</h1>
               <p className="text-sm text-gray-500 dark:text-slate-400 max-w-sm">
-                We received your details. A member of our sales team will contact you shortly.
+                {t("received")}
               </p>
               <Button
                 variant="outline"
@@ -106,15 +108,15 @@ export function LeadCapturePage() {
                   setSubmitted(false);
                 }}
               >
-                Submit another enquiry
+                {t("submitAnother")}
               </Button>
             </div>
           ) : (
             <>
               <div className="mb-6">
-                <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Contact Sales</h1>
+                <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t("title")}</h1>
                 <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
-                  Tell us a bit about yourself and we&apos;ll get back to you.
+                  {t("subtitle")}
                 </p>
               </div>
 
@@ -129,14 +131,14 @@ export function LeadCapturePage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                      First Name *
+                      {t("firstName")}
                     </label>
                     <Input disabled={isSubmitting} {...form.register("firstName")} />
                     <FieldError message={form.formState.errors.firstName?.message} />
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                      Last Name *
+                      {t("lastName")}
                     </label>
                     <Input disabled={isSubmitting} {...form.register("lastName")} />
                     <FieldError message={form.formState.errors.lastName?.message} />
@@ -145,7 +147,7 @@ export function LeadCapturePage() {
 
                 <div>
                   <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                    Work Email *
+                    {t("workEmail")}
                   </label>
                   <Input
                     type="email"
@@ -159,7 +161,7 @@ export function LeadCapturePage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                      Phone
+                      {t("phone")}
                     </label>
                     <Input
                       type="tel"
@@ -171,7 +173,7 @@ export function LeadCapturePage() {
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                      Company
+                      {t("company")}
                     </label>
                     <Input placeholder="Acme Corp" disabled={isSubmitting} {...form.register("company")} />
                     <FieldError message={form.formState.errors.company?.message} />
@@ -180,26 +182,26 @@ export function LeadCapturePage() {
 
                 <div>
                   <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                    Region
+                    {t("region")}
                   </label>
                   <Input
-                    placeholder="e.g. EMEA, Berlin, us-east"
+                    placeholder={t("regionPlaceholder")}
                     disabled={isSubmitting}
                     {...form.register("region")}
                   />
                   <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-1">
-                    Helps us route your enquiry to the right regional team.
+                    {t("regionHint")}
                   </p>
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                    How can we help?
+                    {t("howCanWeHelp")}
                   </label>
                   <textarea
                     rows={3}
                     disabled={isSubmitting}
-                    placeholder="Tell us about your needs..."
+                    placeholder={t("messagePlaceholder")}
                     className={cn(inputClasses, "resize-none")}
                     {...form.register("message")}
                   />
@@ -209,7 +211,7 @@ export function LeadCapturePage() {
                 {/* Honeypot: visually hidden, must stay empty */}
                 <div className="absolute -left-[9999px] top-auto h-0 w-0 overflow-hidden" aria-hidden="true">
                   <label>
-                    Website
+                    {t("website")}
                     <input tabIndex={-1} autoComplete="off" {...form.register("website")} />
                   </label>
                 </div>
@@ -220,7 +222,7 @@ export function LeadCapturePage() {
                   className="w-full bg-[#3F51B5] hover:bg-[#303F9F] text-white gap-2"
                 >
                   {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-                  Send Enquiry
+                  {t("sendEnquiry")}
                 </Button>
               </form>
             </>

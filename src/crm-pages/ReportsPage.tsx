@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useTranslations } from "next-intl";
 import { BarChart3, LayoutDashboard } from "lucide-react";
 import { ReportsAnalytics } from "@/features/reports/components/ReportsAnalytics";
 import { ReportBuilder } from "@/features/reports/components/ReportBuilder";
@@ -9,6 +10,7 @@ import { cn } from "@/lib/utils";
 type Tab = "analytics" | "builder";
 
 export function ReportsPage() {
+  const t = useTranslations("reports");
   const [tab, setTab] = useState<Tab>("analytics");
 
   return (
@@ -17,9 +19,9 @@ export function ReportsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Reporting &amp; Analytics</h1>
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t("title")}</h1>
             <p className="text-sm text-gray-500 dark:text-slate-400">
-              Real-time overviews of your pipeline, conversion, and team — plus a custom report builder.
+              {t("subtitle")}
             </p>
           </div>
           {/* Tabs */}
@@ -31,7 +33,7 @@ export function ReportsPage() {
                 tab === "analytics" ? "bg-[#3F51B5] text-white" : "text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800",
               )}
             >
-              <LayoutDashboard size={16} /> Dashboards
+              <LayoutDashboard size={16} /> {t("tabs.dashboards")}
             </button>
             <button
               onClick={() => setTab("builder")}
@@ -40,7 +42,7 @@ export function ReportsPage() {
                 tab === "builder" ? "bg-[#3F51B5] text-white" : "text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800",
               )}
             >
-              <BarChart3 size={16} /> Report Builder
+              <BarChart3 size={16} /> {t("tabs.builder")}
             </button>
           </div>
         </div>
