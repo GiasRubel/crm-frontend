@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { ORGANIZATION_SLUG } from "@/lib/organization";
 
 // Mirrors the backend CaptureLeadDto validation (POST /leads/capture)
 const captureFormSchema = z.object({
@@ -71,6 +72,7 @@ export function LeadCapturePage() {
     setSubmitError(null);
     try {
       await leadApi.capture({
+        organizationSlug: ORGANIZATION_SLUG,
         firstName: values.firstName,
         lastName: values.lastName,
         email: values.email,

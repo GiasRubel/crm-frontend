@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { captureRequest, describeApiContract } from "../../../../test/utils/apiContract";
 import { kbApi } from "./kbApi";
+import { ORGANIZATION_SLUG } from "@/lib/organization";
 
 describeApiContract("kbApi — staff wiki", [
   { name: "getAll -> GET /kb", call: () => kbApi.getAll(), method: "GET", path: "/kb" },
@@ -70,12 +71,15 @@ describeApiContract("kbApi — staff wiki", [
   },
 ]);
 
+// The public routes are unauthenticated, so they carry organizationSlug — the
+// backend has no token to scope them by and would otherwise serve every tenant.
 describeApiContract("kbApi — public help centre", [
   {
     name: "getPublic -> GET /kb/public with no filters",
     call: () => kbApi.getPublic(),
     method: "GET",
     path: "/kb/public",
+    query: { organizationSlug: ORGANIZATION_SLUG },
     respond: () => Response.json([]),
   },
   {
@@ -83,7 +87,11 @@ describeApiContract("kbApi — public help centre", [
     call: () => kbApi.getPublic("reset", "Account"),
     method: "GET",
     path: "/kb/public",
-    query: { search: "reset", category: "Account" },
+    query: {
+      organizationSlug: ORGANIZATION_SLUG,
+      search: "reset",
+      category: "Account",
+    },
     respond: () => Response.json([]),
   },
   {
@@ -91,13 +99,14 @@ describeApiContract("kbApi — public help centre", [
     call: () => kbApi.getPublicBySlug("password-reset"),
     method: "GET",
     path: "/kb/public/password-reset",
+    query: { organizationSlug: ORGANIZATION_SLUG },
   },
   {
     name: "sendFeedback -> POST /kb/public/:id/feedback",
     call: () => kbApi.sendFeedback("k1", true),
     method: "POST",
     path: "/kb/public/k1/feedback",
-    body: { helpful: true },
+    body: { helpful: true, organizationSlug: ORGANIZATION_SLUG },
   },
 ]);
 
@@ -106,16 +115,25 @@ describe("kbApi — public query trimming", () => {
     const req = await captureRequest(() => kbApi.getPublic("  reset  ", "  Account  "), () =>
       Response.json([]),
     );
-    expect(Object.fromEntries(req.search)).toEqual({ search: "reset", category: "Account" });
+    expect(Object.fromEntries(req.search)).toEqual({
+      organizationSlug: ORGANIZATION_SLUG,
+      search: "reset",
+      category: "Account",
+    });
   });
 
-  it("drops whitespace-only values", async () => {
+  it("drops whitespace-only values but always keeps the org slug", async () => {
     const req = await captureRequest(() => kbApi.getPublic("   ", "  "), () => Response.json([]));
-    expect(req.search.toString()).toBe("");
+    expect(Object.fromEntries(req.search)).toEqual({
+      organizationSlug: ORGANIZATION_SLUG,
+    });
   });
 
   it("sends helpful: false for a negative rating", async () => {
     const req = await captureRequest(() => kbApi.sendFeedback("k1", false));
-    expect(JSON.parse(req.body)).toEqual({ helpful: false });
+    expect(JSON.parse(req.body)).toEqual({
+      helpful: false,
+      organizationSlug: ORGANIZATION_SLUG,
+    });
   });
 });

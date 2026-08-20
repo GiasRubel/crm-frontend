@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { captureRequest, describeApiContract } from "../../../../test/utils/apiContract";
 import { leadApi } from "./leadApi";
+import { ORGANIZATION_SLUG } from "@/lib/organization";
 
 describeApiContract("leadApi", [
   { name: "getAll -> GET /leads", call: () => leadApi.getAll(), method: "GET", path: "/leads" },
@@ -40,12 +41,28 @@ describeApiContract("leadApi", [
     body: { firstName: "Ann", lastName: "Bee", email: "a@b.com", source: "manual" },
   },
   {
+    // organizationSlug is required: the endpoint is unauthenticated, so the
+    // payload is the only thing that can name the tenant.
     name: "capture -> POST /leads/capture (public endpoint)",
     call: () =>
-      leadApi.capture({ firstName: "Ann", lastName: "Bee", email: "a@b.com", source: "web_form", website: "" }),
+      leadApi.capture({
+        organizationSlug: ORGANIZATION_SLUG,
+        firstName: "Ann",
+        lastName: "Bee",
+        email: "a@b.com",
+        source: "web_form",
+        website: "",
+      }),
     method: "POST",
     path: "/leads/capture",
-    body: { firstName: "Ann", lastName: "Bee", email: "a@b.com", source: "web_form", website: "" },
+    body: {
+      organizationSlug: ORGANIZATION_SLUG,
+      firstName: "Ann",
+      lastName: "Bee",
+      email: "a@b.com",
+      source: "web_form",
+      website: "",
+    },
   },
   {
     name: "update -> PATCH /leads/:id",
@@ -107,7 +124,13 @@ describeApiContract("leadApi", [
 describe("leadApi — capture honeypot", () => {
   it("sends the honeypot field verbatim so the backend can drop bot submissions", async () => {
     const req = await captureRequest(() =>
-      leadApi.capture({ firstName: "Bot", lastName: "Net", email: "b@n.com", website: "http://spam" }),
+      leadApi.capture({
+        organizationSlug: ORGANIZATION_SLUG,
+        firstName: "Bot",
+        lastName: "Net",
+        email: "b@n.com",
+        website: "http://spam",
+      }),
     );
     expect(JSON.parse(req.body).website).toBe("http://spam");
   });

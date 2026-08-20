@@ -107,6 +107,8 @@ export interface ConvertLeadDto {
 
 /** Public web-form payload for POST /leads/capture (no auth required). */
 export interface CaptureLeadDto {
+  /** Which organisation's CRM the submission belongs to — see lib/organization.ts. */
+  organizationSlug: string;
   firstName: string;
   lastName: string;
   email: string;

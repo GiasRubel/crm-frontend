@@ -5,6 +5,7 @@ import { server } from "../../test/msw/server";
 import { captureWrite, mockGetError, mockGets, mockPending } from "../../test/utils/pageHarness";
 import { renderWithProviders } from "../../test/utils/renderWithProviders";
 import { PublicFaqPage } from "./PublicFaqPage";
+import { ORGANIZATION_SLUG } from "@/lib/organization";
 
 const article = {
   id: "k1",
@@ -135,6 +136,10 @@ describe("PublicFaqPage — feedback", () => {
 
     await waitFor(() => expect(write.called).toBe(true));
     expect(write.pathname).toBe("/api/backend/kb/public/k1/feedback");
-    expect(write.body).toEqual({ helpful: true });
+    // organizationSlug rides along on every public route — see lib/organization.ts.
+    expect(write.body).toEqual({
+      helpful: true,
+      organizationSlug: ORGANIZATION_SLUG,
+    });
   });
 });

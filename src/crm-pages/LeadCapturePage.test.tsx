@@ -4,6 +4,7 @@ import { fieldByLabel } from "../../test/utils/fields";
 import { captureWrite, mockWriteError } from "../../test/utils/pageHarness";
 import { renderWithProviders } from "../../test/utils/renderWithProviders";
 import { LeadCapturePage } from "./LeadCapturePage";
+import { ORGANIZATION_SLUG } from "@/lib/organization";
 
 /** The public form lives outside (crm) — it must work with no session at all. */
 const renderPage = () => renderWithProviders(<LeadCapturePage />, { auth: { authenticated: false } });
@@ -60,6 +61,23 @@ describe("LeadCapturePage — public form", () => {
     await waitFor(() => expect(write.called).toBe(true));
     expect(write.pathname).toBe("/api/backend/leads/capture");
     expect(write.body).toMatchObject({ firstName: "Ann", lastName: "Bee", email: "ann@acme.com" });
+  });
+
+  // CaptureLeadDto requires organizationSlug: the endpoint is unauthenticated,
+  // so the form is the only thing that can say which tenant the lead belongs to.
+  it("names the organisation the submission belongs to", async () => {
+    const write = captureWrite("post", "/leads/capture", () => new Response(null, { status: 204 }));
+
+    const { user } = renderPage();
+    await screen.findByRole("heading", { name: /Contact Sales/ });
+
+    await fillRequired(user, document.body);
+    await user.click(screen.getByRole("button", { name: /Send|Submit|Contact/i }));
+
+    await waitFor(() => expect(write.called).toBe(true));
+    expect((write.body as Record<string, unknown>).organizationSlug).toBe(
+      ORGANIZATION_SLUG,
+    );
   });
 
   it("omits the honeypot when a human leaves it empty", async () => {
